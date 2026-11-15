@@ -1,0 +1,9 @@
+[project]
+name = "legume-advisor-payout"
+version = "0.1.0"
+description = "Synthetic, explainable advisor payout forecasts with an offline Campfire boundary"
+requires-python = ">=3.11"
+dependencies = []
+
+[tool.unittest]
+start-directory = "tests"

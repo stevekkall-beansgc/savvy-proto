@@ -1,0 +1,38 @@
+{
+  "tenant_id": "demo-workspace",
+  "entity_id": "entity-demo",
+  "currency": "USD",
+  "synthetic": true,
+  "brokers": [
+    {
+      "id": "broker-alex",
+      "name": "Alex Morgan",
+      "practice": "North practice"
+    },
+    {
+      "id": "broker-jordan",
+      "name": "Jordan Lee",
+      "practice": "East practice"
+    }
+  ],
+  "customers": [
+    {
+      "id": "customer-cedar",
+      "name": "Cedar household",
+      "service": "Managed portfolio",
+      "synthetic": true
+    },
+    {
+      "id": "customer-maple",
+      "name": "Maple household",
+      "service": "Planning",
+      "synthetic": true
+    },
+    {
+      "id": "customer-birch",
+      "name": "Birch household",
+      "service": "Planning",
+      "synthetic": true
+    }
+  ]
+}

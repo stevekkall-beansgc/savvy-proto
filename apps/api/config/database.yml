@@ -1,0 +1,14 @@
+default: &default
+  adapter: postgresql
+  encoding: unicode
+  host: <%= ENV.fetch('PGHOST', '127.0.0.1') %>
+  port: <%= ENV.fetch('PGPORT', '5432') %>
+  username: <%= ENV.fetch('PGUSER', ENV.fetch('USER', 'agent')) %>
+  password: <%= ENV['PGPASSWORD'] %>
+  pool: 5
+development:
+  <<: *default
+  database: advisor_economics_synthetic
+test:
+  <<: *default
+  database: advisor_economics_synthetic_test

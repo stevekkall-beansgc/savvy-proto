@@ -1,0 +1,24 @@
+[
+  {
+    "tenant_id": "demo-workspace",
+    "entity_id": "entity-demo",
+    "currency": "USD",
+    "id": "receipt-cedar",
+    "customer_id": "customer-cedar",
+    "amount_minor": 60000,
+    "status": "verified_cash",
+    "revision": 1,
+    "recorded_at": "2026-11-13T21:00:00Z"
+  },
+  {
+    "tenant_id": "demo-workspace",
+    "entity_id": "entity-demo",
+    "currency": "USD",
+    "id": "receipt-maple",
+    "customer_id": "customer-maple",
+    "amount_minor": 100000,
+    "status": "verified_cash",
+    "revision": 1,
+    "recorded_at": "2026-11-13T21:00:00Z"
+  }
+]

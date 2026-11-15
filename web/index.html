@@ -1,0 +1,61 @@
+<!doctype html>
+<html lang="en" data-color-scheme="light">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="description" content="A synthetic advisor payout forecast built by Legume Labs. Explore contract terms, cash collection assumptions, and accounting evidence.">
+  <title>Advisor payout outlook · Legume Labs</title>
+  <link rel="stylesheet" href="/shared/design-system/tokens.css">
+  <link rel="stylesheet" href="/shared/design-system/primitives.css">
+  <link rel="stylesheet" href="/styles.css">
+  <script src="/app.js" defer></script>
+</head>
+<body data-product-theme="evergreen">
+  <a href="#main" class="skip-link">Skip to forecast</a>
+  <aside class="sidebar" aria-label="Workspace navigation">
+    <div class="brand"><span class="brand-mark" aria-hidden="true">l.</span><div>legume labs<span>FINANCE WORKBENCH</span></div></div>
+    <div class="workspace-label">ADVISOR EARNINGS</div>
+    <nav class="main-nav" aria-label="Views">
+      <button class="nav-item selected" data-view="forecast" aria-current="page"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 19h16M6 15l4-5 4 3 5-8"/><path d="M15 5h4v4"/></svg>Payout forecast</button>
+      <button class="nav-item" data-view="accounting"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="5" y="3" width="14" height="18" rx="2"/><path d="M9 8h6M9 12h6M9 16h3"/></svg>Accounting evidence</button>
+      <button class="nav-item" data-view="research"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 4h11l3 3v13H5zM15 4v5h4M9 13h6M9 16h4"/></svg>Assumptions & research</button>
+    </nav>
+    <div class="workspace-label advisor-label">SAMPLE ADVISORS</div>
+    <div id="advisor-list" class="advisor-list" aria-label="Choose a sample advisor"></div>
+    <div class="sidebar-note"><span class="small-dot"></span><strong>Independent prototype</strong><p>Fictional advisors. Synthetic financial data. No ERP connection.</p><span class="version">LEGUME / 0.1</span></div>
+  </aside>
+
+  <div class="workspace">
+    <header class="topbar"><div class="breadcrumb">Finance workbench <span>/</span> Advisor earnings</div><div class="topbar-right"><span id="mode-badge" class="badge">Sample data</span><span class="user-avatar" aria-label="Demo workspace">LL</span></div></header>
+    <main id="main" tabindex="-1">
+      <div class="page-heading"><div><div class="eyebrow">NOVEMBER 2026</div><h1 id="page-title">Payout outlook</h1><p id="page-subtitle">See how your book and contract shape the next payment.</p></div><button id="export-button" class="secondary-button" disabled><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3v12m-4-4 4 4 4-4M5 16v4h14v-4"/></svg>Export snapshot</button></div>
+      <div id="error" class="notice danger" role="alert" hidden></div>
+      <p id="loading" class="loading">Loading the sample forecast…</p>
+      <noscript><p class="notice">This interactive preview needs JavaScript. The calculation contract and research are also included in the project documentation.</p></noscript>
+
+      <section id="view-forecast" aria-label="Payout forecast">
+        <div class="context-row"><div class="advisor-context"><span id="context-avatar" class="avatar">AM</span><div><h2 id="advisor-name">Sample advisor</h2><span id="advisor-description">Loading contract details</span></div></div><span id="as-of" class="cutoff">As of 13 Nov 2026</span></div>
+        <div class="dashboard-grid">
+          <div class="forecast-column">
+            <section class="payout-card" aria-labelledby="payout-heading"><div class="payout-card-top"><span id="payout-heading">Estimated next payout</span><span id="scenario-label" class="payout-status">Current outlook</span></div><div id="payout-value" class="payout-value">—</div><div class="payout-card-bottom"><div><span id="payout-delta" class="payout-delta">Based on the current outlook</span><span class="payout-caption">An estimate, subject to collections and finance review.</span></div><div class="payout-date"><span>ASSUMED PAYMENT DATE</span><strong id="payment-date">5 Dec 2026</strong></div></div></section>
+            <div class="metric-grid"><section class="metric"><span>Fees earned to date</span><strong id="earned-fees">—</strong><small>From fictional sample balances</small></section><section class="metric"><span>Projected period fees</span><strong id="period-fees">—</strong><small>Before the advisor split</small></section><section class="metric"><span>Current billable assets</span><strong id="current-aum">—</strong><small>Latest fictional closing value</small></section></div>
+            <section class="panel chart-panel" aria-labelledby="chart-heading"><div class="panel-heading"><div><h2 id="chart-heading">Your book, through month-end</h2><p>Sample historical assets and the selected scenario</p></div><div class="legend"><span><i class="legend-solid"></i>Observed</span><span><i class="legend-dashed"></i>Projected</span></div></div><div id="aum-chart" class="chart" role="img" aria-label="Billable assets over the month"></div><div class="chart-foot"><span>Market movements and client flows are modeled separately.</span><span id="chart-end-value"></span></div><details class="compact-details"><summary>View daily calculation data</summary><div class="table-scroll"><table><thead><tr><th>Date</th><th>Basis</th><th class="numeric">Billable assets</th><th class="numeric">Fee accrual</th></tr></thead><tbody id="daily-rows"></tbody></table></div></details></section>
+            <section class="panel waterfall-panel" aria-labelledby="waterfall-heading"><div class="panel-heading"><div><h2 id="waterfall-heading">From client fees to your payout</h2><p>Every adjustment, in calculation order</p></div><span class="small-badge">USD</span></div><div id="waterfall"></div><div class="waterfall-note" id="entitlement-context"></div><div class="waterfall-note">This cash estimate uses the collection assumption below. It does not certify that funds have been received or approved for payment.</div></section>
+          </div>
+          <div class="controls-column">
+            <section class="panel scenario-panel" aria-labelledby="scenario-heading"><div class="panel-heading"><div><h2 id="scenario-heading">What could change?</h2><p>Explore the rest of the month</p></div><button id="reset-button" class="text-button">Reset</button></div><div class="preset-grid" id="preset-list"></div><div id="live-controls"><div class="slider-field"><div><label for="market-input">One-time market move</label><output id="market-output" for="market-input">0%</output></div><input id="market-input" type="range" min="-10" max="10" step="1" value="0"><div class="range-labels"><span>−10%</span><span>+10%</span></div></div><div class="slider-field"><div><label for="flow-input">Net new assets</label><output id="flow-output" for="flow-input">$0</output></div><input id="flow-input" type="range" min="-5" max="5" step="0.5" value="0"><div class="range-labels"><span>−$5m</span><span>+$5m</span></div></div><div class="slider-field"><div><label for="collection-input">Collected by payout date</label><output id="collection-output" for="collection-input">100%</output></div><input id="collection-input" type="range" min="50" max="100" step="5" value="100"><div class="range-labels"><span>50%</span><span>100%</span></div></div></div><p id="scenario-note" class="help-text">Market and flow changes apply on 14 Nov. Earlier earnings stay unchanged. These are assumptions, not probabilities.</p><div class="scenario-result"><span>Expected fee collections</span><strong id="expected-collections">—</strong></div></section>
+            <section class="panel contract-panel"><div class="panel-heading"><div><h2>Your arrangement</h2><p>Illustrative contract terms</p></div><span class="document-icon" aria-hidden="true">↗</span></div><div id="contract-terms"></div><div id="expense-terms"></div><div class="loan-summary" id="loan-summary" hidden></div><details class="compact-details"><summary>Client fee assumptions</summary><div id="client-terms"></div></details></section>
+            <section class="coverage-card"><span class="coverage-icon" aria-hidden="true">i</span><div><strong>Know what’s included</strong><p>Monthly arrears and daily AUM accrual. Other billing methods need their own contract rules.</p><button class="text-button" data-view="research">Review assumptions <span aria-hidden="true">→</span></button></div></section>
+          </div>
+        </div>
+        <div id="model-warnings" class="model-warnings"></div>
+      </section>
+
+      <section id="view-accounting" aria-label="Accounting evidence" hidden><div class="notice"><strong>Campfire · sample records</strong><span>This adapter is offline. The amounts below are fictional accounting evidence and are not connected to Savvy or a Campfire workspace.</span></div><div id="accounting-content"></div></section>
+      <section id="view-research" aria-label="Assumptions and research" hidden><div class="research-grid"><section class="panel"><div class="panel-heading"><div><h2>What this model assumes</h2><p>Financial policies are visible and testable.</p></div></div><ol id="assumptions-list" class="assumptions-list"></ol></section><section class="panel"><div class="panel-heading"><div><h2>Where the evidence comes from</h2><p>Three different kinds of information</p></div></div><div class="evidence-kind"><span class="small-badge">Public sources</span><p>Savvy’s platform and disclosures; Campfire’s product and API documentation.</p></div><div class="evidence-kind"><span class="small-badge">Provided context</span><p>The requested advisor-payout problem; the project owner reports Campfire use, which has not been independently verified. Staging access was offered; this prototype has not inspected or connected to it.</p></div><div class="evidence-kind"><span class="small-badge">Demo assumptions</span><p>Every advisor, client, contract, asset balance, deduction, and payment shown here is fictional.</p></div></section></div><section class="panel sources-panel"><div class="panel-heading"><div><h2>Research and integration notes</h2><p>Primary sources used to shape the prototype</p></div></div><div id="source-list" class="source-list"></div></section><section class="panel receipt-panel"><h2>A reproducible calculation</h2><p>The exported snapshot contains the selected inputs, calculation, baseline, sample accounting evidence, and a deterministic checksum. It is a calculation receipt, not a payment authorization.</p><code id="receipt-hash"></code></section></section>
+      <footer class="page-footer"><span>Built by Legume Labs · Independent research prototype</span><span>All figures in USD · Synthetic data</span></footer>
+      <div id="live-status" class="sr-only" aria-live="polite" role="status"></div>
+    </main>
+  </div>
+</body>
+</html>

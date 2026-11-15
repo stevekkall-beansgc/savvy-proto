@@ -1,0 +1,2 @@
+class DemoScope < ApplicationRecord
+end

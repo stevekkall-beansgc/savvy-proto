@@ -1,0 +1,2 @@
+class DemoAllocation < ApplicationRecord
+end

@@ -1,0 +1,11 @@
+name: advisor_economics_synthetic
+version: 0.1.0
+config-version: 2
+profile: savvy_synthetic
+model-paths: [models]
+test-paths: [tests]
+models:
+  advisor_economics_synthetic:
+    +materialized: table
+    staging:
+      +materialized: view

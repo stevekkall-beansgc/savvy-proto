@@ -1,0 +1,133 @@
+{
+  "tenant_id": "demo-workspace",
+  "entity_id": "entity-demo",
+  "currency": "USD",
+  "id": "source-20261113-r1",
+  "source": "synthetic-internal-v1",
+  "synthetic": true,
+  "complete": true,
+  "business_date": "2026-11-13",
+  "watermark": "2026-11-13T21:00:00Z",
+  "minimum_watermark": "2026-11-13T20:00:00Z",
+  "recorded_at": "2026-11-13T21:05:00Z",
+  "facts": [
+    {
+      "tenant_id": "demo-workspace",
+      "entity_id": "entity-demo",
+      "currency": "USD",
+      "id": "fee-a",
+      "revision": 1,
+      "customer_id": "customer-cedar",
+      "service_id": "service-customer-cedar",
+      "component": "advisor_share",
+      "eligible_minor": 100000,
+      "dimensions": {
+        "customer_type": "individual",
+        "product_type": "managed"
+      },
+      "economic_date": "2026-11-13",
+      "observed_at": "2026-11-13T21:00:00Z",
+      "recorded_at": "2026-11-13T21:05:00Z"
+    },
+    {
+      "tenant_id": "demo-workspace",
+      "entity_id": "entity-demo",
+      "currency": "USD",
+      "id": "fee-b",
+      "revision": 1,
+      "customer_id": "customer-maple",
+      "service_id": "service-customer-maple",
+      "component": "advisor_share",
+      "eligible_minor": 100000,
+      "dimensions": {
+        "customer_type": "individual",
+        "product_type": "planning"
+      },
+      "economic_date": "2026-11-13",
+      "observed_at": "2026-11-13T21:00:00Z",
+      "recorded_at": "2026-11-13T21:05:00Z"
+    },
+    {
+      "tenant_id": "demo-workspace",
+      "entity_id": "entity-demo",
+      "currency": "USD",
+      "id": "fee-c",
+      "revision": 1,
+      "customer_id": "customer-birch",
+      "service_id": "service-customer-birch",
+      "component": "advisor_share",
+      "eligible_minor": 50000,
+      "dimensions": {
+        "customer_type": "individual",
+        "product_type": "planning"
+      },
+      "economic_date": "2026-11-13",
+      "observed_at": "2026-11-13T21:00:00Z",
+      "recorded_at": "2026-11-13T21:05:00Z"
+    }
+  ],
+  "assignments": [
+    {
+      "tenant_id": "demo-workspace",
+      "entity_id": "entity-demo",
+      "currency": "USD",
+      "approved": true,
+      "valid_from": "2026-11-01",
+      "valid_to": "2026-12-01",
+      "recorded_at": "2026-11-01T00:00:00Z",
+      "id": "assignment-customer-cedar",
+      "customer_id": "customer-cedar",
+      "broker_id": "broker-alex",
+      "role": "compensation_recipient",
+      "weight_bps": 10000
+    },
+    {
+      "tenant_id": "demo-workspace",
+      "entity_id": "entity-demo",
+      "currency": "USD",
+      "approved": true,
+      "valid_from": "2026-11-01",
+      "valid_to": "2026-12-01",
+      "recorded_at": "2026-11-01T00:00:00Z",
+      "id": "assignment-customer-maple",
+      "customer_id": "customer-maple",
+      "broker_id": "broker-alex",
+      "role": "compensation_recipient",
+      "weight_bps": 10000
+    },
+    {
+      "tenant_id": "demo-workspace",
+      "entity_id": "entity-demo",
+      "currency": "USD",
+      "approved": true,
+      "valid_from": "2026-11-01",
+      "valid_to": "2026-12-01",
+      "recorded_at": "2026-11-01T00:00:00Z",
+      "id": "assignment-customer-birch",
+      "customer_id": "customer-birch",
+      "broker_id": "broker-jordan",
+      "role": "compensation_recipient",
+      "weight_bps": 10000
+    }
+  ],
+  "grants": [
+    {
+      "tenant_id": "demo-workspace",
+      "entity_id": "entity-demo",
+      "currency": "USD",
+      "approved": true,
+      "valid_from": "2026-11-01",
+      "valid_to": "2026-12-01",
+      "recorded_at": "2026-11-01T00:00:00Z",
+      "id": "grant-alex",
+      "payer": "firm-demo",
+      "payee": "broker-alex",
+      "component": "advisor_share",
+      "customer_id": null,
+      "remaining_minor": 100000,
+      "upfront_cash_minor": 100000,
+      "priority": 1,
+      "mechanism": "monetary_credit"
+    }
+  ]
+}

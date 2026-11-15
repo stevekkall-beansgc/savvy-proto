@@ -1,0 +1,167 @@
+{
+  "obligations": [
+    {
+      "external_id": "billing-obligation-cedar-a",
+      "revision": 1,
+      "customer_id": "customer-cedar",
+      "service_id": "service-customer-cedar",
+      "broker_id": "broker-alex",
+      "account_id": "account-cedar",
+      "assignment_id": "assignment-customer-cedar",
+      "client_terms_ref": "client-terms-cedar-v1",
+      "source_id": "fee-a",
+      "source_revision": 1,
+      "legacy_charge_id": "charge-customer-cedar",
+      "route": "invoice",
+      "currency": "USD",
+      "amount_minor": 60000,
+      "service_period_start": "2026-11-01",
+      "service_period_end": "2026-12-01"
+    },
+    {
+      "external_id": "billing-obligation-cedar-b",
+      "revision": 1,
+      "customer_id": "customer-cedar",
+      "service_id": "service-customer-cedar",
+      "broker_id": "broker-alex",
+      "account_id": "account-cedar",
+      "assignment_id": "assignment-customer-cedar",
+      "client_terms_ref": "client-terms-cedar-v1",
+      "source_id": "fee-a",
+      "source_revision": 1,
+      "legacy_charge_id": "charge-customer-cedar",
+      "route": "invoice",
+      "currency": "USD",
+      "amount_minor": 40000,
+      "service_period_start": "2026-11-01",
+      "service_period_end": "2026-12-01"
+    },
+    {
+      "external_id": "billing-obligation-maple",
+      "revision": 1,
+      "customer_id": "customer-maple",
+      "service_id": "service-customer-maple",
+      "broker_id": "broker-alex",
+      "account_id": "account-maple",
+      "assignment_id": "assignment-customer-maple",
+      "client_terms_ref": "client-terms-maple-v1",
+      "source_id": "fee-b",
+      "source_revision": 1,
+      "legacy_charge_id": "charge-customer-maple",
+      "route": "invoice",
+      "currency": "USD",
+      "amount_minor": 100000,
+      "service_period_start": "2026-11-01",
+      "service_period_end": "2026-12-01"
+    },
+    {
+      "external_id": "billing-obligation-birch",
+      "revision": 1,
+      "customer_id": "customer-birch",
+      "service_id": "service-customer-birch",
+      "broker_id": "broker-jordan",
+      "account_id": "account-birch",
+      "assignment_id": "assignment-customer-birch",
+      "client_terms_ref": "client-terms-birch-v1",
+      "source_id": "fee-c",
+      "source_revision": 1,
+      "legacy_charge_id": "charge-customer-birch",
+      "route": "custodial",
+      "currency": "USD",
+      "amount_minor": 50000,
+      "service_period_start": "2026-11-01",
+      "service_period_end": "2026-12-01"
+    }
+  ],
+  "invoices": [
+    {
+      "external_id": "invoice-customer-cedar",
+      "revision": 1,
+      "debtor_id": "customer-cedar",
+      "amount_minor": 100000,
+      "currency": "USD",
+      "status": "commercial_fixture",
+      "legacy_invoice_id": "invoice-customer-cedar"
+    },
+    {
+      "external_id": "invoice-customer-maple",
+      "revision": 1,
+      "debtor_id": "customer-maple",
+      "amount_minor": 100000,
+      "currency": "USD",
+      "status": "commercial_fixture",
+      "legacy_invoice_id": "invoice-customer-maple"
+    }
+  ],
+  "invoice_lines": [
+    {
+      "external_id": "billing-line-cedar-a",
+      "invoice": "invoice-customer-cedar",
+      "obligation": "billing-obligation-cedar-a",
+      "amount_minor": 60000
+    },
+    {
+      "external_id": "billing-line-cedar-b",
+      "invoice": "invoice-customer-cedar",
+      "obligation": "billing-obligation-cedar-b",
+      "amount_minor": 40000
+    },
+    {
+      "external_id": "billing-line-maple",
+      "invoice": "invoice-customer-maple",
+      "obligation": "billing-obligation-maple",
+      "amount_minor": 100000
+    }
+  ],
+  "instructions": [
+    {
+      "external_id": "instruction-birch",
+      "revision": 1,
+      "amount_minor": 50000,
+      "status": "illustrative",
+      "execution_status": null
+    }
+  ],
+  "instruction_items": [
+    {
+      "instruction": "instruction-birch",
+      "obligation": "billing-obligation-birch",
+      "amount_minor": 50000
+    }
+  ],
+  "accounting": [
+    {
+      "external_id": "mock-campfire-cedar-earlier",
+      "invoice": "invoice-customer-cedar",
+      "commercial_revision": 1,
+      "reported_status": null,
+      "applied_minor": null,
+      "ar_minor": null,
+      "recognized_minor": null,
+      "observed_at": "2026-11-13T21:06:00Z",
+      "mocked": true
+    },
+    {
+      "external_id": "mock-campfire-cedar",
+      "invoice": "invoice-customer-cedar",
+      "commercial_revision": 1,
+      "reported_status": "mock_observed",
+      "applied_minor": null,
+      "ar_minor": null,
+      "recognized_minor": null,
+      "observed_at": "2026-11-13T21:10:00Z",
+      "mocked": true
+    },
+    {
+      "external_id": "mock-campfire-birch",
+      "instruction": "instruction-birch",
+      "commercial_revision": 1,
+      "reported_status": null,
+      "applied_minor": null,
+      "ar_minor": null,
+      "recognized_minor": null,
+      "observed_at": "2026-11-13T21:10:00Z",
+      "mocked": true
+    }
+  ]
+}

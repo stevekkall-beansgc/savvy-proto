@@ -1,0 +1,12 @@
+savvy_synthetic:
+  target: demo
+  outputs:
+    demo:
+      type: postgres
+      host: 127.0.0.1
+      port: 55437
+      user: savvy_analytics
+      password: ''
+      dbname: advisor_economics_synthetic
+      schema: analytics
+      threads: 2

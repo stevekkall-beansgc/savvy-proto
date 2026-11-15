@@ -1,0 +1,16 @@
+# Synthetic workspace and billing validation
+
+14 November 2026. This is a local synthetic exercise; it does not establish production authorization, provider behavior, accounting policy or load capacity. Reproduce from the project root, with exclusive access to the disposable Rails test database:
+
+```sh
+docker compose run --rm -e RAILS_ENV=test api bundle exec ruby test/billing_catalog_test.rb
+docker compose run --rm -e RAILS_ENV=test api bundle exec ruby test/workspace_stress_test.rb
+```
+
+Both suites call the guarded test-only reset; do not point them at retained history. The billing suite passed **4 tests, 53 assertions** (seed 7172). It checks explicit source/customer/service/charge/assignment lineage, the two-line Cedar invoice, retained Cedar and Maple invoice identities, Birch custodial instruction, unchanged commercial amounts across two mock accounting observations, null unknowns, advisor scoping, seed replay, read-only models, composite foreign keys and deferred conservation.
+
+The independent workspace stress suite passed **15 tests, 190 assertions** (seed 9315, 2.85 seconds). It includes ten four-worker same-key proposal replays, ten competing two-worker schedules and four-worker retries of each winning schedule, changed-payload conflicts, exact comparison/review and document-version binding, SQL overlap/open-ended/adjacent date boundaries with broker and configuration isolation, intersecting targeted priorities, signup day 0/day 6/day 7 and missing-data behavior, an incomplete-source comparison with both sides blocked, immutable previous comparisons and runs, all five simulated GraphQL roles, same-earnings source changes invalidating reviewed manifests, independent future examples, malformed or URL mock document references, and injected failures during proposal and schedule writes. At most four worker threads share the five-connection pool. These counts are bounded race checks, not sustained performance measurements or a proof against every interleaving.
+
+Three defects were reported during independent review and corrected by the domain owner before the passing run: incomplete source originally raised instead of returning a blocked comparison; a standard rate could expire exactly at the proposed effective date while the proposal still scheduled; and a future hypothetical source inherited completeness and metadata from the current source. The test suite and the domain owner's boundary regression cover those corrections.
+
+On the populated test database, dbt completed **72 of 72 steps**: 19 models and 53 data tests. Models retain separate obligation, invoice header, invoice line, custodial instruction and mock accounting observation grains. Invoice and instruction amounts represent the same underlying obligations and must not be added to them. Multiple mock accounting observations are non-additive; unknown accounting or execution amounts remain null. Each obligation in this bounded fixture has one broker, account and assignment; broader many-to-many attribution is not modeled. The local deferred conservation trigger scans synthetic tables globally and is not a production-scale design. No live provider calls, cash transfers, signatures, recognition postings or real customer records are involved.

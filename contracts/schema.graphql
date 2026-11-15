@@ -1,0 +1,79 @@
+type BrokerBook {
+  completeness: String!
+  coverage: Money
+  customers: JSON!
+  earned: Money
+  id: ID!
+  incrementalCash: Money
+  name: String!
+}
+
+enum Command {
+  ACTIVATE
+  CLOSE_RECONCILIATION
+  COMPARE_TERMS_PROPOSAL
+  CONSUME_ENTITLEMENT
+  IMPORT_SNAPSHOT
+  LINK_INVOICE
+  MATCH
+  PROJECT
+  RECORD_BANK_BATCH
+  RECORD_INVOICE_APPLICATION
+  REVERSE_BANK_BATCH
+  REVERSE_ENTITLEMENT
+  REVERSE_INVOICE_APPLICATION
+  REVERSE_MATCH
+  REVERSE_RECEIPT
+  REVIEW
+  REVIEW_TERMS_PROPOSAL
+  SAVE_POLICY
+  SAVE_TERMS_PROPOSAL
+  SCHEDULE_TERMS_PROPOSAL
+}
+
+type DomainError {
+  code: String!
+  message: String!
+  path: [String!]!
+}
+
+"""
+Represents untyped JSON
+"""
+scalar JSON
+
+type Money {
+  currency: String!
+  minorUnits: String!
+}
+
+type Mutation {
+  workbenchCommand(action: Command!, idempotencyKey: String!, input: JSON!): Payload!
+}
+
+type Payload {
+  data: JSON
+  errors: [DomainError!]!
+  run: Run
+}
+
+type Query {
+  brokerBook(brokerId: ID!, runId: ID): BrokerBook
+  collections(customerId: ID, knowledgeCutoff: String): JSON!
+  entitlementLedger(brokerId: ID): JSON!
+  productWorkspace(brokerId: ID, businessDate: String, workspace: String!): JSON!
+  reconciliation(closeId: ID, periodEndExclusive: String!, periodStart: String!): JSON!
+  reviewPacket(runId: ID!): JSON
+  run(id: ID!): Run
+  workbench: JSON!
+}
+
+type Run {
+  businessDate: String!
+  data: JSON!
+  id: ID!
+  inputManifestHash: String!
+  knowledgeCutoff: String!
+  policyHash: String!
+  status: String!
+}

@@ -1,0 +1,272 @@
+[
+  {
+    "id": "CONTEXT-ERP",
+    "title": "Project-owner context: ERP selection",
+    "url": null,
+    "publisher": "Project owner",
+    "retrieved_at": "2026-11-13",
+    "claims": ["The project owner reports that Savvy uses Campfire ERP.", "The relationship, modules, tenant configuration, and API access were not publicly or privately verified."],
+    "classification": "user_provided_unverified"
+  },
+  {
+    "id": "SAVVY-01",
+    "title": "Independent RIA platform for financial advisors",
+    "url": "https://www.savvywealth.com/ria-platform",
+    "publisher": "Savvy Wealth",
+    "retrieved_at": "2026-11-13",
+    "claims": ["Savvy describes a proprietary platform combined with billing, compliance, custodial and operational services.", "Advisor payout economics are described by book; no universal share percentage is established."],
+    "classification": "public_company_statement"
+  },
+  {
+    "id": "SAVVY-02",
+    "title": "Solutions for independent financial advisors",
+    "url": "https://www.savvywealth.com/independence",
+    "publisher": "Savvy Wealth",
+    "retrieved_at": "2026-11-13",
+    "claims": ["Savvy describes a revenue-sharing model and advisor control over client fee structure.", "The page does not disclose individual compensation contracts or expense deduction ordering."],
+    "classification": "public_company_statement"
+  },
+  {
+    "id": "SAVVY-03",
+    "title": "Savvy Advisors Form CRS, March 2026",
+    "url": "https://reports.adviserinfo.sec.gov/crs/crs_318493.pdf",
+    "publisher": "Savvy Advisors, Inc.; hosted by SEC IAPD",
+    "retrieved_at": "2026-11-13",
+    "claims": ["Client investment-management fees are negotiated, generally 0.3% to 1.9% annually.", "Billing frequency, advance/arrears timing and valuation basis depend on client agreement.", "Client fee terms do not establish advisor revenue-share rates."],
+    "classification": "public_regulatory_disclosure"
+  },
+  {
+    "id": "SAVVY-04",
+    "title": "Savvy Advisors Form ADV Part 2A, March 31, 2026",
+    "url": "https://info.savvywealth.com/hubfs/Form%20ADV%20%2B%20CRS/Savvy-Advisors-ADV.pdf",
+    "publisher": "Savvy Advisors, Inc.",
+    "retrieved_at": "2026-11-13",
+    "claims": ["Discloses household aggregation and prior-period-ending or average-daily asset valuation bases.", "Describes prorating account starts/terminations and return of unearned advance fees.", "Individual investment-management agreements remain the source for specific fee policies."],
+    "classification": "public_regulatory_disclosure"
+  },
+  {
+    "id": "SAVVY-05",
+    "title": "Technology platform for financial advisors",
+    "url": "https://www.savvywealth.com/solutions/technology",
+    "publisher": "Savvy Wealth",
+    "retrieved_at": "2026-11-13",
+    "claims": ["Public workflows include advisor dashboard, household reporting, CRM, client portal and service tasks.", "Savvy describes multi-custodian architecture above the custody layer."],
+    "classification": "public_company_statement"
+  },
+  {
+    "id": "SAVVY-06",
+    "title": "The five principles that guide design at Savvy",
+    "url": "https://www.savvywealth.com/builders-blog-posts/the-5-principles-that-guide-design-at-savvy",
+    "publisher": "Savvy Wealth; Monica Finc",
+    "retrieved_at": "2026-11-13",
+    "claims": ["Public design guidance favors complete service workflows, clear ownership, role-specific attention and contextual learning.", "The article describes neutral blue charts to avoid green implying positive financial performance."],
+    "classification": "public_company_design_guidance"
+  },
+  {
+    "id": "SAVVY-07",
+    "title": "Savvy: World Builders",
+    "url": "https://www.savvywealth.com/builders-blog-posts/savvy-world-builders",
+    "publisher": "Savvy Wealth; Russell Moss",
+    "retrieved_at": "2026-11-13",
+    "claims": ["The article describes governed internal tools and server-resolved identity for user-specific analytics.", "It is architecture context, not access to or verification of the earnings product."],
+    "classification": "public_company_engineering_statement"
+  },
+  {
+    "id": "SAVVY-08",
+    "title": "Senior Software Engineer, Remote LATAM",
+    "url": "https://jobs.ashbyhq.com/savvy/c3589bc5-04c0-470d-a50d-2d38d4828710",
+    "publisher": "Savvy, via Ashby",
+    "retrieved_at": "2026-11-13",
+    "claims": ["Advertised stack preferences include Rails, TypeScript, Next.js/React, SQL, GraphQL and automated testing.", "Text was retrieved in search; direct open returned a JavaScript shell. This does not verify the current target codebase."],
+    "classification": "public_hiring_statement_search_retrieved"
+  },
+  {
+    "id": "SAVVY-09",
+    "title": "Terms and disclosures",
+    "url": "https://www.savvywealth.com/disclosure",
+    "publisher": "Savvy Wealth",
+    "retrieved_at": "2026-11-13",
+    "claims": ["The technology parent and investment adviser are distinct entities.", "Some advisor practice trade names are marketing identities rather than separate registered entities."],
+    "classification": "public_company_disclosure"
+  },
+  {
+    "id": "CF-01",
+    "title": "Core accounting",
+    "url": "https://campfire.ai/core-accounting",
+    "publisher": "Campfire",
+    "retrieved_at": "2026-11-13",
+    "claims": ["Campfire describes multi-entity/multi-currency accounting, permissions, audit trails, reporting and source drill-down.", "Product capabilities do not establish Savvy's installed configuration."],
+    "classification": "public_vendor_capability_claim"
+  },
+  {
+    "id": "CF-02",
+    "title": "Revenue automation",
+    "url": "https://campfire.ai/revenue-automation",
+    "publisher": "Campfire",
+    "retrieved_at": "2026-11-13",
+    "claims": ["Campfire describes contract-based revenue schedules across subscription, usage, milestone and transaction models.", "Revenue contracts should not be presumed to be advisor compensation agreements."],
+    "classification": "public_vendor_capability_claim"
+  },
+  {
+    "id": "CF-03",
+    "title": "Forecast, powered by Ember",
+    "url": "https://campfire.ai/forecast",
+    "publisher": "Campfire",
+    "retrieved_at": "2026-11-13",
+    "claims": ["Forecast distinguishes posted actuals, subledger commitments and estimated remainder with explanations.", "The page does not establish advisor-share calculation, Savvy adoption or a public Forecast API."],
+    "classification": "public_vendor_capability_claim"
+  },
+  {
+    "id": "CF-04",
+    "title": "Official Campfire API documentation index",
+    "url": "https://docs.campfire.ai/llms.txt",
+    "publisher": "Campfire",
+    "retrieved_at": "2026-11-13",
+    "claims": ["Index covers accounting, company objects, AP, AR, cash, reconciliation, revenue and report APIs.", "Publishes OpenAPI location https://api.meetcampfire.com/api/schema?format=json; schema bytes were not retrieved in this research."],
+    "classification": "official_documentation_retrieved"
+  },
+  {
+    "id": "CF-05",
+    "title": "API quickstart",
+    "url": "https://docs.campfire.ai/quickstart",
+    "publisher": "Campfire",
+    "retrieved_at": "2026-11-13",
+    "claims": ["API-key auth uses Authorization: Token; roles include admin, clerk and view only.", "Published limit is 10 requests/second per API user; 429 supplies Retry-After."],
+    "classification": "official_documentation_retrieved"
+  },
+  {
+    "id": "CF-06",
+    "title": "OAuth apps",
+    "url": "https://docs.campfire.ai/guides/oauth-apps",
+    "publisher": "Campfire",
+    "retrieved_at": "2026-11-13",
+    "claims": ["Scoped OAuth access is intersected with authorizing-user permissions and selected workspace.", "Access tokens last one hour, refresh tokens are documented at 30 days, and rate limits are per connection.", "Feature availability may require workspace enablement."],
+    "classification": "official_documentation_retrieved"
+  },
+  {
+    "id": "CF-07",
+    "title": "Accounts payable workflows",
+    "url": "https://docs.campfire.ai/guides/accounts-payable",
+    "publisher": "Campfire",
+    "retrieved_at": "2026-11-13",
+    "claims": ["Bills relate to vendors, entities, expense accounts and optional departments/custom dimensions.", "Guide documents create/pay/void workflows, which are outside the read-only prototype scope."],
+    "classification": "official_documentation_retrieved"
+  },
+  {
+    "id": "CF-08",
+    "title": "Accounts receivable workflows",
+    "url": "https://docs.campfire.ai/guides/accounts-receivable",
+    "publisher": "Campfire",
+    "retrieved_at": "2026-11-13",
+    "claims": ["Invoices relate to customers, entities, products and optional contracts.", "Guide shows separate invoice, service-period and payment concepts."],
+    "classification": "official_documentation_retrieved"
+  },
+  {
+    "id": "CF-09",
+    "title": "Creating journal entries",
+    "url": "https://docs.campfire.ai/guides/journal-entries",
+    "publisher": "Campfire",
+    "retrieved_at": "2026-11-13",
+    "claims": ["Journal transactions include account/entity/currency and debit/credit representations with optional dimensions.", "Journal-writing functions are not part of the offline reader."],
+    "classification": "official_documentation_retrieved"
+  },
+  {
+    "id": "CF-10",
+    "title": "List chart transactions",
+    "url": "https://docs.campfire.ai/api-reference/core-accounting/list-chart-transactions",
+    "publisher": "Campfire",
+    "retrieved_at": "2026-11-13",
+    "claims": ["GET /coa/api/transaction supplies GL lines with date/dimension and modification-time filtering.", "include_deleted=true returns only deleted records; active and deleted streams are separate.", "Pagination uses limit/offset; documented default history starts six months ago."],
+    "classification": "official_documentation_retrieved"
+  },
+  {
+    "id": "CF-11",
+    "title": "List journal entries",
+    "url": "https://docs.campfire.ai/api-reference/core-accounting/list-journal-entries",
+    "publisher": "Campfire",
+    "retrieved_at": "2026-11-13",
+    "claims": ["GET /coa/api/journal_entry is the documented journal list path.", "Journal data must not be added to its corresponding invoice/bill as a second economic event."],
+    "classification": "official_documentation_retrieved"
+  },
+  {
+    "id": "CF-12",
+    "title": "List invoices",
+    "url": "https://docs.campfire.ai/api-reference/accounts-receivable/list-invoices",
+    "publisher": "Campfire",
+    "retrieved_at": "2026-11-13",
+    "claims": ["GET /coa/api/v1/invoice supports limit/offset and client, contract, entity, date and line-tag filters.", "download=true triggers an async export and email; a read-only adapter must omit it."],
+    "classification": "official_documentation_retrieved"
+  },
+  {
+    "id": "CF-13",
+    "title": "List invoice payments",
+    "url": "https://docs.campfire.ai/api-reference/accounts-receivable/list-invoice-payments",
+    "publisher": "Campfire",
+    "retrieved_at": "2026-11-13",
+    "claims": ["GET /coa/api/v1/invoice-payments exposes allocation IDs, invoice linkage, amount/currency, dates, type, source and void state.", "Supports cursor and modification-time incremental sync with voids visible.", "CREDIT_MEMO appears in the example; a full payment-type enum and CASH semantics were not verified."],
+    "classification": "official_documentation_retrieved"
+  },
+  {
+    "id": "CF-14",
+    "title": "List accounting bills",
+    "url": "https://docs.campfire.ai/api-reference/accounts-payable/list-accounting-bills",
+    "publisher": "Campfire",
+    "retrieved_at": "2026-11-13",
+    "claims": ["GET /coa/api/v1/bill is the documented bill list path.", "Its relationship to advisor payables depends on actual accounting configuration."],
+    "classification": "official_documentation_retrieved"
+  },
+  {
+    "id": "CF-15",
+    "title": "List bill payments",
+    "url": "https://docs.campfire.ai/api-reference/accounts-payable/list-bill-payments",
+    "publisher": "Campfire",
+    "retrieved_at": "2026-11-13",
+    "claims": ["GET /coa/api/v1/bill-payments exposes bill linkage, amount/currency, payment date, source/source_id, void and modification timestamps.", "Supports cursor pagination and modification-time incremental filters; omitted void filtering includes both states."],
+    "classification": "official_documentation_retrieved"
+  },
+  {
+    "id": "CF-16",
+    "title": "List revenue contracts",
+    "url": "https://docs.campfire.ai/api-reference/revenue-recognition/list-contracts",
+    "publisher": "Campfire",
+    "retrieved_at": "2026-11-13",
+    "claims": ["GET /rr/api/v1/contracts exposes revenue-contract records.", "The source does not establish that Savvy advisor compensation agreements use these records."],
+    "classification": "official_documentation_retrieved"
+  },
+  {
+    "id": "CF-17",
+    "title": "List bank reconciliation reports",
+    "url": "https://docs.campfire.ai/api-reference/bank-reconciliation/list-bank-reconciliation-reports",
+    "publisher": "Campfire",
+    "retrieved_at": "2026-11-13",
+    "claims": ["GET /coa/api/v2/reconciliation lists reconciliation reports.", "A report's existence alone does not prove a particular advisor payment settled."],
+    "classification": "official_documentation_retrieved"
+  },
+  {
+    "id": "CF-18",
+    "title": "Webhooks",
+    "url": "https://docs.campfire.ai/guides/webhooks",
+    "publisher": "Campfire",
+    "retrieved_at": "2026-11-13",
+    "claims": ["Admin-managed signed webhooks cover invoices, bills, journals, contracts and credit/debit memos.", "Payment and paid topics can both fire; deliveries may duplicate or arrive out of order.", "HMAC uses timestamp plus raw body; subscription UUID is not an event identifier."],
+    "classification": "official_documentation_retrieved"
+  },
+  {
+    "id": "CF-19",
+    "title": "AI integration with Model Context Protocol",
+    "url": "https://docs.campfire.ai/guides/ai-integration",
+    "publisher": "Campfire",
+    "retrieved_at": "2026-11-13",
+    "claims": ["Documents hosted MCP endpoint https://api.meetcampfire.com/mcp.", "Documented tools cover accounting/company data, reports, budgets, contracts and aging; no authenticated use was performed."],
+    "classification": "official_documentation_retrieved"
+  },
+  {
+    "id": "CF-20",
+    "title": "Campfire is the first ERP with an MCP store",
+    "url": "https://campfire.ai/blog/campfire-is-the-first-erp-with-an-mcp-store",
+    "publisher": "Campfire",
+    "retrieved_at": "2026-11-13",
+    "claims": ["Campfire describes an MCP store inside Ember.", "This direction of integration is distinct from an external assistant calling Campfire's hosted MCP server."],
+    "classification": "public_vendor_capability_claim"
+  }
+]

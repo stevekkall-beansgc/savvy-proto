@@ -1,0 +1,52 @@
+/* Public Savvy website tokens and type, retrieved 13 November 2026.
+   Asset provenance and interpretation: docs/SAVVY-BRAND-REFERENCE.md. */
+@font-face {
+  font-family: "ABC Diatype";
+  src: url("/savvy/fonts/diatype-regular.otf") format("opentype");
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: "ABC Diatype";
+  src: url("/savvy/fonts/diatype-medium.otf") format("opentype");
+  font-weight: 500 600;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: "ABC Diatype";
+  src: url("/savvy/fonts/diatype-bold.otf") format("opentype");
+  font-weight: 650 900;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: "Big Caslon";
+  src: url("/savvy/fonts/big-caslon-regular.woff2") format("woff2");
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+:root {
+  --savvy-black: #000000;
+  --savvy-ink: #171615;
+  --savvy-dark-green: #08261e;
+  --savvy-green: #175242;
+  --savvy-gold: #8e7e57;
+  --savvy-ecru: #c7bca1;
+  --savvy-vanilla: #fff8f1;
+  --savvy-paper: #fcfbf9;
+  --savvy-ecru-20: #f5f2ec;
+  --savvy-ecru-30: #eeeae1;
+  --savvy-gray: #89837c;
+  --savvy-border: #d3cdc4;
+  --savvy-teal: #6ae9b8;
+  --savvy-light-teal: #eef7f4;
+  --savvy-blue: #095972;
+  --savvy-red: #b63d35;
+  --savvy-orange: #f19e70;
+  --font-sans: "ABC Diatype", Arial, sans-serif;
+  --font-serif: "Big Caslon", Georgia, serif;
+  --font-mono: ui-monospace, "SFMono-Regular", Consolas, monospace;
+}

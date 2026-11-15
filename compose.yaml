@@ -1,0 +1,38 @@
+name: savvy-prototype
+services:
+  db:
+    image: postgres:17-alpine@sha256:d3244e8ce3f165ee3c93d9c4a4b1d0fe48b3a89e2287b717fdcbbde92d405065
+    environment:
+      POSTGRES_USER: savvy_demo
+      POSTGRES_DB: advisor_economics_synthetic
+      POSTGRES_HOST_AUTH_METHOD: trust
+    ports: ['127.0.0.1:55437:5432']
+    volumes:
+      - savvy_data:/var/lib/postgresql/data
+    networks: [synthetic, local_bridge]
+    healthcheck:
+      test: [CMD-SHELL, "pg_isready -U savvy_demo -d advisor_economics_synthetic"]
+      interval: 2s
+      timeout: 2s
+      retries: 30
+  api:
+    build:
+      context: .
+      dockerfile: apps/api/Dockerfile
+    environment:
+      PGHOST: db
+      PGUSER: savvy_demo
+      RAILS_ENV: development
+      SYNTHETIC_DEMO: '1'
+    ports: ['127.0.0.1:3101:3101']
+    volumes: ['.:/work']
+    networks: [synthetic, local_bridge]
+    depends_on:
+      db:
+        condition: service_healthy
+networks:
+  local_bridge: {}
+  synthetic:
+    internal: true
+volumes:
+  savvy_data: {}

@@ -1,0 +1,38 @@
+[
+  {
+    "tenant_id": "demo-workspace",
+    "entity_id": "entity-demo",
+    "currency": "USD",
+    "id": "charge-customer-cedar",
+    "customer_id": "customer-cedar",
+    "amount_minor": 100000,
+    "status": "approved_for_collection",
+    "service_period_start": "2026-11-01",
+    "service_period_end": "2026-12-01",
+    "revision": 1
+  },
+  {
+    "tenant_id": "demo-workspace",
+    "entity_id": "entity-demo",
+    "currency": "USD",
+    "id": "charge-customer-maple",
+    "customer_id": "customer-maple",
+    "amount_minor": 100000,
+    "status": "approved_for_collection",
+    "service_period_start": "2026-11-01",
+    "service_period_end": "2026-12-01",
+    "revision": 1
+  },
+  {
+    "tenant_id": "demo-workspace",
+    "entity_id": "entity-demo",
+    "currency": "USD",
+    "id": "charge-customer-birch",
+    "customer_id": "customer-birch",
+    "amount_minor": 50000,
+    "status": "approved_for_collection",
+    "service_period_start": "2026-11-01",
+    "service_period_end": "2026-12-01",
+    "revision": 1
+  }
+]

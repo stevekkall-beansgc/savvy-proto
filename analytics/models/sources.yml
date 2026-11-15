@@ -1,0 +1,107 @@
+version: 2
+sources:
+  - name: synthetic
+    schema: raw_demo
+    description: Approved read-only views of the local fictional application, not a Savvy replica.
+    tables:
+      - name: records
+      - name: match_history
+      - name: entitlement_entries
+      - name: billing_obligations
+      - name: billing_invoices
+      - name: billing_invoice_lines
+      - name: billing_instructions
+      - name: billing_instruction_items
+      - name: billing_accounting_facts
+      - name: operational_matches
+models:
+  - name: stg_evidence
+    description: One accepted current immutable revision per tenant, entity, kind and external ID. Source history remains upstream.
+    columns:
+      - name: evidence_key
+        data_tests: [unique, not_null]
+  - name: fct_customer_charge
+    description: One fictional approved charge line per tenant, entity, customer, currency and source charge ID. Unmatched is not accounting AR.
+    columns:
+      - name: charge_key
+        data_tests: [unique, not_null]
+  - name: fct_customer_cash_application
+    description: One internal operational match allocation. This is neither an invoice application nor bank-settlement evidence.
+    columns:
+      - name: application_id
+        data_tests: [unique, not_null]
+  - name: fct_broker_economics
+    description: One frozen run x source fee observation x compensation assignment. Never sum alternative runs together.
+    columns:
+      - name: line_key
+        data_tests: [unique, not_null]
+  - name: fct_preinvoice_charge_match
+    description: One customer charge with aggregated operational matches, customer-attributed receipts and separately linked invoice evidence. All unsupported accounting amounts remain NULL.
+    columns:
+      - name: charge_key
+        data_tests: [unique, not_null]
+  - name: fct_accounting_exceptions
+    description: One charge missing invoice application, bank or recognition evidence. No financial posting is made by this project.
+
+  - name: fct_cash_match_history
+    description: One immutable original match plus its optional one-to-one reversal. Reversed rows remain evidence and do not enter active cash totals.
+    columns:
+      - name: application_id
+        data_tests: [unique, not_null]
+  - name: fct_entitlement_entry
+    description: One fictional coverage consume or exact original-grant reversal. No payment or accounting posting.
+    columns:
+      - name: entry_id
+        data_tests: [unique, not_null]
+  - name: fct_entitlement_balance
+    description: One immutable grant opening plus signed recorded entry total. Opposite payer/payee directions are separate.
+    columns:
+      - name: grant_key
+        data_tests: [unique, not_null]
+  - name: fct_invoice_application_history
+    description: One independent invoice application and its optional full reversal; never an operational match.
+    columns:
+      - name: application_key
+        data_tests: [unique, not_null]
+  - name: fct_invoice_balance
+    description: One current invoice; applied and open amounts are unknown until application evidence exists.
+    columns:
+      - name: invoice_key
+        data_tests: [unique, not_null]
+  - name: fct_bank_batch
+    description: One entity-grain batch with gross, fee and net. Filter active status for current totals; never allocate fees to customers.
+    columns:
+      - name: batch_key
+        data_tests: [unique, not_null]
+  - name: bridge_bank_batch_receipt
+    description: One batch and receipt membership; contains no batch amounts to prevent accidental fanout.
+    columns:
+      - name: membership_key
+        data_tests: [unique, not_null]
+  - name: fct_reconciliation_exceptions
+    description: Actionable independent-evidence conflicts and unknown invoice applications.
+  - name: fct_native_billing_obligation
+    description: One scoped commercial fee obligation. Never add the invoice or instruction representation to the obligation amount.
+    columns:
+      - name: obligation_key
+        data_tests: [unique, not_null]
+  - name: fct_native_invoice_line
+    description: One scoped commercial invoice line, with explicit obligation and source lineage; headers stay at invoice grain.
+    columns:
+      - name: line_key
+        data_tests: [unique, not_null]
+  - name: fct_mock_accounting_fact
+    description: Mock-reported accounting facts, independent of canonical commercial amounts; null remains unknown.
+    columns:
+      - name: accounting_key
+        data_tests: [unique, not_null]
+  - name: fct_native_invoice
+    description: One commercial invoice header. Sum only at header grain; lines are separate.
+    columns:
+      - name: invoice_key
+        data_tests: [unique, not_null]
+  - name: fct_native_instruction
+    description: One custodial instruction with execution status independent of the commercial amount.
+    columns:
+      - name: instruction_key
+        data_tests: [unique, not_null]

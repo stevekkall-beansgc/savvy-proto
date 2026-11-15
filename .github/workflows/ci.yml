@@ -1,0 +1,45 @@
+name: Prototype checks
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: '22'
+          cache: npm
+          cache-dependency-path: apps/web/package-lock.json
+      - uses: actions/setup-python@6d4fd22b20465ccc0f7354476588e8df7c9ca0e0 # v7.1.0
+        with:
+          python-version: '3.12'
+      - name: Install frontend and synthetic API runtime
+        run: |
+          npm ci --prefix apps/web --no-audit --no-fund
+          docker compose build api
+          docker compose up -d db
+      - name: Python, Ruby, PostgreSQL and frontend checks
+        run: ./scripts/check.sh
+      - name: Seed isolated reporting fixture
+        run: |
+          docker compose run --rm api bundle exec rails db:prepare db:seed
+          docker compose exec -T db psql -U savvy_demo -d advisor_economics_synthetic -v ON_ERROR_STOP=1 < analytics/bootstrap.sql
+      - name: Reporting checks
+        env:
+          DBT_SEND_ANONYMOUS_USAGE_STATS: 'false'
+        run: |
+          python -m pip install -r analytics/requirements.lock
+          dbt build --project-dir analytics --profiles-dir analytics
+      - name: Stop disposable services
+        if: always()
+        run: docker compose down -v

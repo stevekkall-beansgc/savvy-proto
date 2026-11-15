@@ -1,0 +1,2 @@
+class CommercialRate < ApplicationRecord
+end

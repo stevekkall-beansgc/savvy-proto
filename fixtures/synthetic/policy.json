@@ -1,0 +1,133 @@
+{
+  "tenant_id": "demo-workspace",
+  "entity_id": "entity-demo",
+  "currency": "USD",
+  "id": "policy-v1",
+  "synthetic": true,
+  "version": 1,
+  "profile": "demo-policy-profile-v1",
+  "required_dimensions": [
+    "customer_type",
+    "product_type"
+  ],
+  "allowed_dimensions": {
+    "customer_type": [
+      "individual",
+      "trust"
+    ],
+    "product_type": [
+      "managed",
+      "planning"
+    ]
+  },
+  "rates": [
+    {
+      "tenant_id": "demo-workspace",
+      "entity_id": "entity-demo",
+      "currency": "USD",
+      "approved": true,
+      "valid_from": "2026-11-01",
+      "valid_to": "2026-12-01",
+      "recorded_at": "2026-11-01T00:00:00Z",
+      "id": "broker-alex-standard",
+      "broker_id": "broker-alex",
+      "component": "advisor_share",
+      "kind": "standard",
+      "selector": {},
+      "numerator": 80,
+      "denominator": 100,
+      "priority": null
+    },
+    {
+      "tenant_id": "demo-workspace",
+      "entity_id": "entity-demo",
+      "currency": "USD",
+      "approved": true,
+      "valid_from": "2026-11-10",
+      "valid_to": "2026-11-21",
+      "recorded_at": "2026-11-01T00:00:00Z",
+      "id": "broker-alex-promotion",
+      "broker_id": "broker-alex",
+      "component": "advisor_share",
+      "kind": "promotion",
+      "selector": {},
+      "numerator": 85,
+      "denominator": 100,
+      "priority": null
+    },
+    {
+      "tenant_id": "demo-workspace",
+      "entity_id": "entity-demo",
+      "currency": "USD",
+      "approved": true,
+      "valid_from": "2026-11-01",
+      "valid_to": "2026-12-01",
+      "recorded_at": "2026-11-01T00:00:00Z",
+      "id": "broker-alex-override",
+      "broker_id": "broker-alex",
+      "component": "advisor_share",
+      "kind": "override",
+      "selector": {
+        "product_type": "managed"
+      },
+      "numerator": 90,
+      "denominator": 100,
+      "priority": null
+    },
+    {
+      "tenant_id": "demo-workspace",
+      "entity_id": "entity-demo",
+      "currency": "USD",
+      "approved": true,
+      "valid_from": "2026-11-01",
+      "valid_to": "2026-12-01",
+      "recorded_at": "2026-11-01T00:00:00Z",
+      "id": "broker-jordan-standard",
+      "broker_id": "broker-jordan",
+      "component": "advisor_share",
+      "kind": "standard",
+      "selector": {},
+      "numerator": 80,
+      "denominator": 100,
+      "priority": null
+    },
+    {
+      "tenant_id": "demo-workspace",
+      "entity_id": "entity-demo",
+      "currency": "USD",
+      "approved": true,
+      "valid_from": "2026-11-10",
+      "valid_to": "2026-11-21",
+      "recorded_at": "2026-11-01T00:00:00Z",
+      "id": "broker-jordan-promotion",
+      "broker_id": "broker-jordan",
+      "component": "advisor_share",
+      "kind": "promotion",
+      "selector": {},
+      "numerator": 85,
+      "denominator": 100,
+      "priority": null
+    },
+    {
+      "tenant_id": "demo-workspace",
+      "entity_id": "entity-demo",
+      "currency": "USD",
+      "approved": true,
+      "valid_from": "2026-11-01",
+      "valid_to": "2026-12-01",
+      "recorded_at": "2026-11-01T00:00:00Z",
+      "id": "broker-jordan-override",
+      "broker_id": "broker-jordan",
+      "component": "advisor_share",
+      "kind": "override",
+      "selector": {
+        "product_type": "managed"
+      },
+      "numerator": 90,
+      "denominator": 100,
+      "priority": null
+    }
+  ],
+  "guarantees": [],
+  "clause_text": "Draft example only. The advisor receives 80% of eligible fees. From 10 November through 20 November inclusive, 85% replaces the standard share. Managed services use 90%, taking precedence over the promotion. Final terms require Legal and Finance review."
+}
