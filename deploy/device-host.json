@@ -1,0 +1,12 @@
+{
+  "hostname": "savvy-proto.beanshop.top",
+  "tunnel_name": "savvy-proto-mac",
+  "origin": "http://127.0.0.1:3100",
+  "access_app_id": "2110c116-64f1-4718-a119-51f2f396d87d",
+  "access_aud": "90aa37669e53f7c7f21e6d82423f2a488a13ca844cf7e50a112b9d83a0670523",
+  "access_team": "small-cell-591b",
+  "access_policy_id": "3af05446-44d9-4201-8651-53fd4663a08c",
+  "tunnel_id": "6b3e3d69-3207-4042-b58f-4b2631bd5a84",
+  "zone_id": "895a0f675d3432f2bd1545f7aad3bf3d",
+  "dns_record_id": "94e9837bc8de76d5ada2186e0fc24a69"
+}

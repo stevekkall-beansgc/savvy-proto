@@ -34,6 +34,17 @@ jobs:
         run: |
           docker compose run --rm api bundle exec rails db:prepare db:seed
           docker compose exec -T db psql -U savvy_demo -d advisor_economics_synthetic -v ON_ERROR_STOP=1 < analytics/bootstrap.sql
+      - name: Hosted frontend origin boundaries
+        run: |
+          docker compose up -d api
+          SAVVY_PUBLIC_ORIGIN=https://savvy-proto.beanshop.top npm --prefix apps/web run start > /tmp/savvy-web.log 2>&1 &
+          savvy_web_pid=$!
+          trap 'kill "$savvy_web_pid" 2>/dev/null || true' EXIT
+          for attempt in $(seq 1 30); do
+            if curl --fail --silent http://127.0.0.1:3100/ > /dev/null && curl --fail --silent http://127.0.0.1:3101/health > /dev/null; then break; fi
+            sleep 1
+          done
+          python scripts/host_check.py
       - name: Reporting checks
         env:
           DBT_SEND_ANONYMOUS_USAGE_STATS: 'false'

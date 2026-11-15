@@ -1,27 +1,83 @@
-# Hosting status — 15 November 2026
+# Device hosting — 15 November 2026
 
-The owner authorized persistent hosting using existing infrastructure only, with
-no new spend. The full app remains local at http://127.0.0.1:3100. Its PostgreSQL
-volume retains the existing synthetic history and scheduled proposal.
+Live private app: **https://savvy-proto.beanshop.top/**
 
-The current full application is Next.js → Rails → PostgreSQL. A source repository
-alone does not host it. Its API currently enforces loopback origins and uses
-simulated roles; those are deliberate local boundaries, not a hosted login system.
+The owner authorized the full application on this Mac, using existing
+Cloudflare/GCP infrastructure with no new spend. This is the current interactive
+Next.js → Rails → PostgreSQL application; Campfire and CLM remain mocked.
+Private source: https://github.com/stevekkall-beansgc/savvy-proto.
 
-Discovery found an existing owner-private Sites project, created November 13 and
-never deployed, bound locally by ignored `.openai/hosting.json`. It supports static
-or Cloudflare Worker deployment, not the existing Rails/PostgreSQL runtime. The
-historical `dist/` output is the older Python-reference preview and must not be
-published as though it were the current workspace.
+## Traffic and access
 
-No running OCI compute instances were returned across accessible compartments in
-the configured us-ashburn-1 region. The configured GCP project's Compute API is
-disabled; it was not enabled. Tailscale's local daemon is unavailable. No new
-server, paid service, subscription or provider account was created.
+Cloudflare DNS/TLS → dedicated Savvy named Tunnel → loopback Next.js port 3100 →
+loopback Rails port 3101 → retained PostgreSQL volume (port 55437).
 
-A current private walkthrough can use the existing Sites project with read-only
-workspace data. It must retain the current UI, distinguish saved scenario data
-from interactive writes, and cannot claim server-backed edits or shared durable
-PostgreSQL storage. The owner was asked whether to publish that bounded walkthrough
-or keep only the source backup. The full app needs an existing compatible host or
-separate authorization before a different hosting architecture is introduced.
+The entire hostname, including /api/graphql, has an owner-only Cloudflare Access
+policy for the existing owner Google/email identity. The existing Google and
+email-code identity providers handle login. The tunnel also verifies the app's
+Access JWT before forwarding. Unmatched hostnames return 404. No public API/DB
+port, router inbound rule, bypass policy or service token was added. The isolated
+subdomain does not replace the apex site or existing routes. Simulated product
+roles are separate from this authenticated owner identity.
+
+Next.js permits the exact HTTPS origin via SAVVY_PUBLIC_ORIGIN; localhost still
+works. Unrelated origins, suffix lookalikes and insecure HTTP are rejected.
+Non-secret resource IDs are in deploy/device-host.json. The tunnel token is
+fetched at launch through Cloudflare's token API using the existing BeanLaunch
+credential mirror, then passed through its environment, never argv or disk.
+No new Secret Manager version, paid tier or rented server was created.
+
+The configuration follows Cloudflare's current [origin JWT documentation](https://developers.cloudflare.com/tunnel/reference/origin-parameters/)
+and [remote tunnel API](https://developers.cloudflare.com/cloudflare-one/networks/connectors/cloudflare-tunnel/get-started/create-remote-tunnel-api/).
+
+## Persistence and availability
+
+Two user LaunchAgents run after login and restart on exit:
+
+- com.beanlabs.savvy-proto.app starts the existing Docker stack, waits for API
+  health, then serves the optimized frontend. Docker services have restart policies.
+- com.beanlabs.savvy-proto.tunnel retrieves the tunnel token in memory and starts
+  cloudflared. Path normalization is explicitly enabled.
+
+The app prevents automatic system sleep on AC power while serving, without
+changing global sleep settings. This does not override manual sleep, lid closure,
+shutdown, network loss or logout. The Mac must stay powered, connected and logged
+in, with Docker Desktop running. This is not independent cloud uptime.
+The PostgreSQL volume retains history across process/container restarts. GitHub
+stores source/seed fixtures, not the retained database volume.
+
+## Operate and recover
+
+Build with npm --prefix apps/web run build. Install/reload both login services
+with python3 deploy/install-device.py. The installer only manages the two Savvy
+labels and refuses another working directory. First-time dependency/API image
+setup remains ./scripts/setup.sh. Keep this source path or reinstall after moving.
+Do not start a competing frontend on port 3100 while its login service owns it.
+
+Inspect launchctl print gui/$(id -u)/com.beanlabs.savvy-proto.app and the same
+.tunnel target; docker compose ps shows the API/DB. Logs are ignored under
+.runtime/hosting/. python3 scripts/host_check.py verifies actual proxy boundaries.
+Restart one job with launchctl kickstart -k against its gui/<uid>/<label> target.
+
+To suspend hosting, launchctl bootout both Savvy targets; merely killing a process
+will cause restart. Keep the Access policy. To retire it, remove only the recorded
+Savvy DNS record after checking its ID, then retire its dedicated tunnel/app.
+Do not change other sites or delete the database volume.
+
+For upgrades: commit/push reviewed source, wait for exact-commit CI, build and
+restart the app service. Do not reset or reseed main history to deploy UI changes.
+Take a logical backup before future schema changes; the recovery checker restores
+only into a disposable database.
+
+## Validation
+
+Optimized frontend/TypeScript build, shell/Python syntax, six actual proxy origin
+checks and 21 product HTTP checks passed. Anonymous edge requests redirect to
+Access login. Browser Google sign-in as the owner loaded live earnings
+($1,750/$1,000/$750) and the retained November 16 scheduled proposal, its separate
+$850→$950 example, and both reviews. The two installed plists contain no tokens.
+A service restart check verifies app/tunnel recovery without replacing data.
+
+The earlier unpublished Sites placeholder is unused. It was not substituted for
+this application. No real provider integration, payment, signature or real
+company/customer data was introduced.

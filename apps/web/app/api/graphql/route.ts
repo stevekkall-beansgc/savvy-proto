@@ -1,12 +1,13 @@
 export const runtime = "nodejs";
 export async function POST(request: Request) {
   const origin = request.headers.get("origin");
-  if (
-    origin &&
-    !["http://127.0.0.1:3100", "http://localhost:3100"].includes(origin)
-  ) {
+  const allowedOrigins = new Set(["http://127.0.0.1:3100", "http://localhost:3100"]);
+  if (process.env.SAVVY_PUBLIC_ORIGIN) {
+    allowedOrigins.add(new URL(process.env.SAVVY_PUBLIC_ORIGIN).origin);
+  }
+  if (origin && !allowedOrigins.has(origin)) {
     return Response.json(
-      { errors: [{ message: "Local demo origin required" }] },
+      { errors: [{ message: "This origin is not allowed." }] },
       { status: 403 },
     );
   }
@@ -34,7 +35,7 @@ export async function POST(request: Request) {
         errors: [
           {
             message:
-              "The local calculation service is unavailable. Start the Rails service and retry.",
+              "Unable to load data. Please try again.",
           },
         ],
       },

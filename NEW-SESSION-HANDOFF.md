@@ -1,5 +1,24 @@
 # Savvy execution handoff
 
+## Full device-hosted application — 15 November 2026
+
+Live: https://savvy-proto.beanshop.top/ behind owner-only Cloudflare Access.
+Private source: https://github.com/stevekkall-beansgc/savvy-proto (main).
+The owner explicitly chose this Mac as the host using existing Cloudflare/GCP
+infrastructure and no new spend. Read docs/HOSTING.md before operating it.
+Two Savvy LaunchAgents own the frontend and dedicated Tunnel, restarting after
+login/exit. API/PostgreSQL stay in the retained Docker stack with restart policies.
+Credentials are runtime-fetched, not stored in source or login-service files.
+Only the dedicated subdomain/tunnel/Access app were added; no existing route was
+replaced. The Sites placeholder remains unpublished and unused.
+
+Mac must stay powered, connected and logged in, with Docker available. An AC-only
+sleep assertion runs with the app. Manual sleep/lid closure/logout can interrupt
+availability. Source backup is not a backup of the live DB volume. The exact
+public HTTPS origin is allowlisted; API/database ports stay loopback-only.
+Campfire/CLM remain mocked. Local port 3100 still works, but do not start a
+competing frontend while its LaunchAgent owns that port.
+
 ## Product copy cleanup — 15 November 2026
 
 The owner requested product-facing language without repeated “illustrative”, demo

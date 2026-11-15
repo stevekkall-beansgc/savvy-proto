@@ -5,6 +5,10 @@ by Stephen Kall / Legume Labs. GitHub Releases are the versioned changelog;
 the synthetic API contract is currently 0.5.0. Source backup does not include the
 retained Docker database volume. Current handoff: [NEW-SESSION-HANDOFF.md](NEW-SESSION-HANDOFF.md).
 
+**Live private app:** https://savvy-proto.beanshop.top/ — the full application runs
+on the owner's Mac behind Cloudflare Access. Sign in with the owner's existing
+Google account or email code. See [hosting and recovery](docs/HOSTING.md).
+
 The full application requires Next.js, Rails and PostgreSQL. The historical
 `dist/` directory is an older Python-reference preview, not a deployment of the
 current application. Hosting status and supported behavior belong in
