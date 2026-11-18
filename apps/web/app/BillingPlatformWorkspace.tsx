@@ -26,7 +26,7 @@ export default function BillingPlatformWorkspace({caseId,audience,view,request,o
  async function openPanel(kind:string){try{const d=await load({section:kind,offset:0,subjectId:null});setPanel({kind,data:d})}catch(e){setError((e as Error).message)}}
  const paginate=()=>{if(!data||!data.page||data.page.total<=20)return null;const page=data.page;return <nav className="aud-pagination" aria-label="Billing pages"><span>{offset+1}–{Math.min(offset+20,page.total)} of {page.total}</span><div><button disabled={!offset} onClick={()=>setOffset(Math.max(0,offset-20))}>Previous</button><button disabled={offset+20>=page.total} onClick={()=>setOffset(offset+20)}>Next</button></div></nav>};
  const documents=(items:Row[])=><div className="aud-list">{items.map(doc=><button key={doc.id} onClick={()=>openRecord(doc.id)}><span><strong>{nice(doc.type)} · {doc.subject_id}</strong><small>{period(doc)} · Issued {displayDate(doc.issued_on)}</small></span><strong>{doc.type==="credit_note"?"−":""}{dollars(doc.amount_minor)}</strong></button>)}</div>;
- if(!data)return <section className="ws-panel aud-panel">{error?<p className="ws-alert" role="alert">{error}</p>:<p>Opening billing…</p>}</section>;
+ if(!data||data.section!==section||data.case_id!==caseId||data.audience!==effectiveAudience)return <section className="ws-panel aud-panel">{error?<p className="ws-alert" role="alert">{error}</p>:<p>Opening billing…</p>}</section>;
  if(!data.available)return <section className="ws-panel aud-panel"><h1>Billing workspace</h1><p>The billing examples have not been installed in this database.</p></section>;
  const s=data.summary||{},from=data.period?.start,to=data.period?.end_exclusive;
  return <section className="dw-shell" aria-label="Billing workspace">

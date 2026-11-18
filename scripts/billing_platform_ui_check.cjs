@@ -15,12 +15,12 @@ assert(['http://127.0.0.1:3100','http://127.0.0.1:3104','http://127.0.0.1:3106']
  try{
  await page.goto(base);await ready('Your business at a glance.');
  for(const business of ['advisor','ria']){
-  await page.getByLabel('Business',{exact:true}).selectOption(business);await ready('Your business at a glance.');
-  check(await page.getByLabel('Billing period',{exact:true}).locator('option').count()>=2,'Both products have multiple issued periods');
+  await page.locator('.aud-account-label select').selectOption(business);await ready('Your business at a glance.');
+  check(await page.locator('.dw-heading select').locator('option').count()>=2,'Both products have multiple issued periods');
   await nav('Clients');await ready('Clients & accounts.');
-  check(await page.locator('.aud-list>button').count()===3,'Book starts with client groups');
+  await page.locator('.aud-list>button').first().waitFor();check(await page.locator('.aud-list>button').count()===3,'Book starts with client groups');
   await page.locator('.aud-list>button').first().click();await page.getByRole('button',{name:'← Back to clients'}).waitFor();
-  check(await page.getByRole('button',{name:'View billing →'}).count()===2,'Accounts are behind a client drilldown');
+  await page.getByRole('button',{name:'View billing →'}).first().waitFor();check(await page.getByRole('button',{name:'View billing →'}).count()===2,'Accounts are behind a client drilldown');
   await page.getByRole('button',{name:'View billing →'}).first().click();await page.getByRole('dialog').waitFor();
   check((await page.getByRole('dialog').innerText()).includes('Invoice'),'Client drilldown opens its billing documents');await page.keyboard.press('Escape');
   await nav('Statements');await ready('Statements & invoices.');await page.locator('.aud-list>button').first().click();await page.getByRole('dialog').waitFor();
