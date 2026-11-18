@@ -103,6 +103,17 @@ class PreviewControlTest(unittest.TestCase):
                 control.record('candidate-a', stage['api'], 'candidate')
         self.assertFalse((control.RUNTIME/'candidate-build.json').exists())
 
+    def test_served_route_cache_is_hashed(self):
+        path = self.web / '.next-candidate-a'
+        route = path / 'server/route-cache/APP_PAGE'
+        route.mkdir(parents=True)
+        (route/'index.html').write_text('original')
+        before = control.tree_hash(path)
+        (route/'index.html').write_text('changed')
+        self.assertNotEqual(before, control.tree_hash(path))
+        (route/'index.rsc').write_text('new served data')
+        self.assertNotEqual(before, control.tree_hash(path))
+
     def test_hash_tracks_asset_changes(self):
         path = self.web / '.next-candidate-a'
         path.mkdir()

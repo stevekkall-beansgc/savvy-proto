@@ -20,7 +20,7 @@ reset or retained seed is required.
 ## Observed local checks before candidate publication
 
 - Ruby/PostgreSQL regression: 208 tests, 12,294 assertions, zero failures/errors/skips.
-- Python reference and deployment tests: 62 pass.
+- Python reference and deployment tests: 63 pass.
 - Reporting: 23 models and 69 data tests; all 92 steps pass on disposable data.
 - TypeScript and Rails eager loading pass.
 
@@ -33,7 +33,7 @@ which candidate is actually served. No tests send real provider writes.
 
 Cross-review caught stale mocks, a historical assignment fixture conflict,
 unconfirmed source evidence, request histories sliced after loading, and an
-artifact mutation window during validation. These were corrected and checked.
+artifact mutation window during validation and runtime page-cache writes. These were corrected and checked. Next runtime cache remains in memory; served build files stay covered by the artifact hash.
 
 This is a bounded synthetic prototype. The existing RIA cost-only disclosure,
 parent-child account modeling and production identity remain outside this fix.

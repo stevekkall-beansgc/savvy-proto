@@ -13,6 +13,7 @@ const selected = process.env.SAVVY_BUILD_DIRECTORY;
 if (selected && !Object.hasOwn(buildDirectories, selected)) throw new Error("Unknown build directory");
 const config: NextConfig = {
   poweredByHeader: false,
+  experimental: { isrFlushToDisk: false },
   distDir: buildDirectories[process.env.SAVVY_BUILD_DIRECTORY || ""] || ".next",
 };
 export default config;
