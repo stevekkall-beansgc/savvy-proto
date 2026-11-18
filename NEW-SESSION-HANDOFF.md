@@ -16,7 +16,7 @@ commit CI, retains Cloudflare Access, and writes the actual activation commit to
 `.runtime/hosting/activation.json`. Verify that receipt before claiming a
 specific hosted version. Earlier deployment descriptions below are historical.
 
-Acceptance: 25 read-only desktop/mobile browser checks, 102 disclosure HTTP
+Acceptance: 29 read-only desktop/mobile browser checks, 102 disclosure HTTP
 checks, 50 audience checks, 66 disclosure/document checks, optimized build and
 49 reference tests pass. Browser acceptance now runs in Prototype checks.
 Synthetic fresh setup explicitly installs presentation examples; page reads and

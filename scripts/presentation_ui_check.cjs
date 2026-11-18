@@ -15,7 +15,7 @@ assert(['http://127.0.0.1:3100','http://127.0.0.1:3104','http://127.0.0.1:3106']
  const identity=async(value)=>{const d=page.locator('.aud-presenter details');if(!await d.getAttribute('open').then(v=>v!==null))await d.locator('summary').click();await page.getByLabel('View as').selectOption(value)};
  try{
  await page.goto(base);await ready('Your business at a glance.');
- let t=await text();check(t.includes('$1,000.00')&&t.includes('$500.00')&&t.includes('$200.00'),'Overview uses household invoice, credit and outstanding cash');check(!t.includes('Sep ')&&!t.includes('September'),'No legacy period on default overview');
+ let t=await text();check(t.includes('$1,000.00')&&t.includes('$500.00')&&t.includes('$200.00'),'Overview uses household invoice, credit and outstanding cash');check(t.includes('Your compensation')&&t.includes('$5,000.00')&&t.includes('Client fees billed'),'Advisor entitlements are distinct from client fees');check(!t.includes('Sep ')&&!t.includes('September'),'No legacy period on default overview');
  await page.getByRole('button',{name:'View statement →',exact:true}).click();await page.getByRole('button',{name:'Invoice details →',exact:true}).waitFor();
  check(await page.locator('table tbody tr').count()===2,'Two traditional invoice lines');
  check((await text()).includes('$600.00')&&(await text()).includes('$400.00'),'Allocation amounts visible');
@@ -25,9 +25,10 @@ assert(['http://127.0.0.1:3100','http://127.0.0.1:3104','http://127.0.0.1:3106']
  await nav('Clients');await ready('Clients & accounts.');check(await page.locator('main .aud-list button').count()===1,'Book shows household before account drilldown');await page.getByRole('button',{name:/Alder household/}).click();await page.getByRole('button',{name:'Invoice details →',exact:true}).waitFor();
  await identity('product');await ready('How the billing engine arrives at the charge');
  check(!((await text()).includes('Sep ')||(await text()).includes('September')),'Product stays in household period');
- for(const title of ['1. Select billable assets','2. Apply agreed terms','3. Calculate the charge','4. Allocate to accounts']){
+ for(const title of ['Select billable assets','Apply agreed terms','Calculate the charge','Allocate to accounts']){
   await page.getByRole('button').filter({hasText:title}).click();await page.getByRole('dialog').waitFor();check((await page.getByRole('dialog').innerText()).length>60,`${title} opens evidence`);await page.keyboard.press('Escape');
  }
+ check(!(await text()).includes('Publish reviewed policy'),'Review decisions stay in the dedicated queue');
  check(await page.getByRole('link',{name:'Explore the technical architecture ↗'}).getAttribute('href')==='https://savvy.beanshop.top/','Product links public architecture');
  await nav('Work queue');await ready('Household terms requests');check(!(await text()).includes('Advisor business · Compensation'),'Queue contains household requests only');
  await identity('finance');await ready('Household billing: cash and recognition');t=await text();check(t.includes('$1,000.00')&&t.includes('$500.00')&&t.includes('$300.00')&&t.includes('$200.00'),'Finance separates invoice, credit, confirmed refund and balance');check(!t.includes('Quarterly service')&&!t.includes('Sep '),'Unrelated finance fixtures absent');
@@ -40,6 +41,8 @@ assert(['http://127.0.0.1:3100','http://127.0.0.1:3104','http://127.0.0.1:3106']
  await page.setViewportSize({width:390,height:844});check(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth),'Mobile overview has no horizontal overflow');
  await nav('Statements');await page.getByRole('button',{name:'Invoice details →',exact:true}).waitFor();check(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth),'Mobile statement has no page overflow');
  if(process.env.SAVVY_SCREENSHOT)await page.screenshot({path:process.env.SAVVY_SCREENSHOT,fullPage:true});
+ await identity('product');await ready('How the billing engine arrives at the charge');check(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth),'Mobile Product has no page overflow');
+ await identity('finance');await ready('Household billing: cash and recognition');check(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth),'Mobile Finance has no page overflow');
  check(errors.length===0,`No browser errors: ${errors.join('; ')}`);console.log(JSON.stringify({checks,base,errors}));
  }finally{await browser.close()}
 })().catch(e=>{console.error(e);process.exitCode=1});
