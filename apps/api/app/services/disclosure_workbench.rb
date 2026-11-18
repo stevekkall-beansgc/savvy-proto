@@ -323,6 +323,65 @@ class DisclosureWorkbench
     error('INVALID_INTERVAL') if finish && start >= finish
   end
   def identifier(prefix) = "disclosure-#{prefix}-#{SecureRandom.uuid}"
+  def policy_window!(policy, from, to)
+    start=@m.date!(from.to_s); finish=to && @m.date!(to.to_s)
+    error('INVALID_INTERVAL','Assignment must be contained within the policy effective window') unless policy.starts_on && finish && policy.starts_on <= start && (policy.ends_on.nil? || finish <= policy.ends_on)
+  end
+  # Compare economic outputs with the retained native invoice and its bound lines.
+  def correction_required?(result, policy, original_run)
+    invoice=BillingInvoice.find_by!(**@w.scope,external_id:'disclosure-invoice-v1')
+    details=result.fetch('details'); original=original_run.payload.fetch('result').fetch('details')
+    standard=policy.payload.dig('fields','basis')=='ending_value' && policy.payload.dig('fields','cadence')=='monthly'
+    expected_class=standard ? 'obligation' : 'comparison'
+    pick=lambda do |items,id|
+      matches=items.select { |d| d['id']==id }
+      error('INCOMPLETE_SOURCE','Missing or duplicate billing output') unless matches.one? && matches.first['assessed_minor'].is_a?(Integer) && matches.first['assessed_minor']>=0
+      matches.first
+    end
+    validate_output=lambda do |item|
+      valid=item['role']=='terminal' && item['unit']=='USD_minor' && item['basis']=='assessed' && item['output_class']==expected_class && item['currency'].is_a?(String) && !item['currency'].empty? && item['interval'].is_a?(Hash) && item['interval']['start'].is_a?(String) && item['interval']['end_exclusive'].is_a?(String)
+      valid &&= %w[payer payee].all? { |key| standard ? item[key].is_a?(String) && !item[key].empty? : item[key].nil? || (item[key].is_a?(String) && !item[key].empty?) }
+      error('INCOMPLETE_SOURCE','Invalid billing output contract') unless valid
+    end
+    charge=pick.call(details,'charge'); original_charge=pick.call(original,'charge'); validate_output.call(charge)
+    error('INCOMPLETE_SOURCE','Missing retained billing party') unless original_charge['payer']==invoice.debtor_id && original_charge['payee'].is_a?(String) && !original_charge['payee'].empty?
+    interval={'start'=>START,'end_exclusive'=>FINISH}
+    economic=lambda do |item|
+      [item['currency'],item['payer'],item['payee'],item['interval'],item['basis'],item['unit'],item['output_class']]
+    end
+    changed=charge['assessed_minor']!=invoice.amount_minor || economic.call(charge)!=[invoice.currency,invoice.debtor_id,original_charge['payee'],interval,'assessed',"#{invoice.currency}_minor",'obligation']
+    bindings=%w[a b].map { |member| get('fact',"disclosure-billing-binding-#{member}").payload }
+    lines=bindings.map do |binding|
+      error('INCOMPLETE_SOURCE','Invoice binding does not match original run') unless binding['run_id']==original_run.external_id && binding['run_revision']==original_run.revision && binding['run_hash']==original_run.payload_hash && binding['invoice_id']==invoice.external_id
+      line=BillingInvoiceLine.find_by!(**@w.scope,external_id:binding.fetch('invoice_line_id'),billing_invoice_id:invoice.id)
+      obligation=BillingObligation.find_by!(**@w.scope,id:line.billing_obligation_id,external_id:binding.fetch('obligation_id'))
+      error('INCOMPLETE_SOURCE','Invoice binding does not match retained line') unless line.amount_minor==binding['amount_minor'] && obligation.amount_minor==line.amount_minor && obligation.currency==invoice.currency
+      [binding, line, obligation]
+    end
+    error('INCOMPLETE_SOURCE','Retained invoice does not balance') unless lines.map { |_,line,_| line.amount_minor }.sum==invoice.amount_minor && BillingInvoiceLine.where(**@w.scope,billing_invoice_id:invoice.id).count==lines.size
+    allocated=policy.payload.dig('fields','basis').in?(%w[ending_value average_daily_balance])
+    unless allocated
+      error('INCOMPLETE_SOURCE','Unexpected partial allocation') if details.any? { |d| %w[line_a line_b].include?(d['id']) }
+      return true
+    end
+    expected_ids=['charge']+bindings.map { |binding| binding.fetch('output_id') }
+    unexpected=details.any? { |detail| detail['role']=='terminal' && %w[obligation net_balance].include?(detail['output_class']) && detail['unit'].is_a?(String) && detail['unit'].end_with?('_minor') && !expected_ids.include?(detail['id']) }
+    error('INCOMPLETE_SOURCE','Unexpected billable output') if unexpected
+    outputs=lines.map do |binding,line,obligation|
+      item=pick.call(details,binding.fetch('output_id')); old_item=pick.call(original,binding.fetch('output_id')); validate_output.call(item)
+      error('INCOMPLETE_SOURCE','Missing retained billing party') unless old_item['payer']==obligation.customer_id && old_item['payee'].is_a?(String) && !old_item['payee'].empty?
+      changed ||= item['assessed_minor']!=line.amount_minor || economic.call(item)!=[obligation.currency,obligation.customer_id,old_item['payee'],{'start'=>obligation.service_period_start.iso8601,'end_exclusive'=>obligation.service_period_end.iso8601},'assessed',"#{obligation.currency}_minor",'obligation']
+      expected_account="disclosure-alder-#{binding.fetch('output_id').delete_prefix('line_')}"
+      nodes=policy.payload.fetch('graph').fetch('nodes').select { |node| node['id']==binding.fetch('output_id') }
+      error('INCOMPLETE_SOURCE','Missing allocation identity') unless nodes.one? && nodes.first['recipient'].is_a?(String)
+      changed ||= obligation.account_id!=expected_account || nodes.first['recipient']!=obligation.account_id
+      item['assessed_minor']
+    end
+    error('INCOMPLETE_SOURCE','Allocation does not balance') unless outputs.sum==charge['assessed_minor']
+    changed
+  rescue KeyError, ActiveRecord::RecordNotFound
+    error('INCOMPLETE_SOURCE','Missing retained billing evidence')
+  end
   def save_policy(input,key)
     @w.guard!('operator'); keys!(input,%w[case_id base_policy_id policy effective_from effective_to reason])
     case_check!(input['case_id']); interval!(input['effective_from'],input['effective_to']); @m.reason!(input['reason'])
@@ -385,6 +444,7 @@ class DisclosureWorkbench
     interval!(input['effective_from'],input['effective_to']); @m.reason!(input['reason'])
     @w.operate('disclosure_assign_policy',input,key) do
       policy=get('policy',input['policy_id'])
+      policy_window!(policy,input['effective_from'],input['effective_to'])
       expected=policy.payload.dig('fields','cadence')=='quarterly' ? ['2027-01-01','2027-04-01'] : [START,FINISH]
       error('INVALID_INTERVAL','The selected fixture policy requires its matching service period') unless [input['effective_from'],input['effective_to']]==expected
       pub=rows('publication').where("payload->>'policy_id' = ? AND payload->>'comparison_id' IS NOT NULL",policy.external_id).order(:id).last
@@ -412,12 +472,14 @@ class DisclosureWorkbench
       active=candidates.reject { |r| candidates.any? { |newer| newer.payload['supersedes_assignment_id']==r.external_id } }
       error('RULE_CONFLICT') unless active.one?
       assignment=active.first; policy=get('policy',assignment.payload.fetch('policy_id'))
+      policy_window!(policy,assignment.starts_on,assignment.ends_on)
       old=get('run','disclosure-run-v1')
       standard=policy.payload.dig('fields','basis')=='ending_value' && policy.payload.dig('fields','cadence')=='monthly'
       manifest=standard ? manifest_for(assignment,input['knowledge_cutoff']) : alternative_manifest_for(policy,assignment,input['knowledge_cutoff'])
       result=engine_run(policy,manifest,cutoff:input['knowledge_cutoff']); error('INCOMPLETE_SOURCE') unless result['status']=='completed'
+      changed=correction_required?(result,policy,old)
       id=identifier('run'); run=store('run',id:id,status:'completed',payload:{'policy_id'=>policy.external_id,'policy_hash'=>policy.payload_hash,'assignment_id'=>assignment.external_id,'input_manifest'=>manifest,'implementation_hash'=>implementation_hash,'knowledge_cutoff'=>input['knowledge_cutoff'],'result'=>result},parent:policy)
-      publication_id=identifier('publication'); changed=amount(result,'charge')!=amount(old.payload.fetch('result'),'charge')
+      publication_id=identifier('publication')
       store('publication',id:publication_id,status:'published',payload:{'run_id'=>id,'run_hash'=>run.payload_hash,'policy_id'=>policy.external_id,'invoice_id'=>'disclosure-invoice-v1','correction_required'=>changed},parent:run)
       {'id'=>id,'run_id'=>id,'publication_id'=>publication_id,'amount_minor'=>amount(result,'charge'),'correction_required'=>changed,'invoice_reissued'=>false}
     end

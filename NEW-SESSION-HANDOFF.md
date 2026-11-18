@@ -1,5 +1,23 @@
 # Savvy execution handoff
 
+## Eight-issue corrective milestone — 18 November 2026
+
+Read `docs/EIGHT-ISSUE-FIX-PLAN.md` and `docs/EIGHT-ISSUE-VALIDATION.md` first.
+Billing corrections compare native invoice/line economics, assignments enforce
+policy validity, Finance sees review work and evidenced receipt/refund/loan cash,
+and histories are bounded before loading. The single engine and API policy model
+remain intact; Campfire and CLM remain mocked. No schema migration is needed.
+
+Deployment now uses explicit inactive candidate slots and a source-immutable,
+read-only API image. Follow `docs/DEMO-PREVIEW.md`; do not rebuild the active slot
+or replace an API by loading live source. Actual activation/publication SHAs live
+in `.runtime/hosting/activation.json` and `.runtime/publication/deployment.json`.
+Verify them before claiming the working tree is the hosted version. The baseline
+API on 3102 and older frontends are retained for rollback. Page reads and activation
+never seed retained history. Existing comparisons become stale when implementation
+bindings change; Product must explicitly compare again before review/publication.
+
+
 ## OpenAPI and GraphQL reference — 18 November 2026
 
 Public API reference: `https://savvy.beanshop.top/api/`; YAML at

@@ -21,6 +21,8 @@ node_modules/
 .next-evidence/
 .next-evidence-final/
 .next-presentation/
+.next-candidate-a/
+.next-candidate-b/
 .runtime/
 .bundle/
 log/

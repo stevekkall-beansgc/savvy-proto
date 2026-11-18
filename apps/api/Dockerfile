@@ -4,5 +4,19 @@ WORKDIR /work/apps/api
 COPY apps/api/Gemfile* ./
 ENV BUNDLE_FROZEN=true
 RUN bundle install
+COPY apps/api/app ./app
+COPY apps/api/config/*.rb apps/api/config/database.yml ./config/
+COPY apps/api/config/environments/development.rb ./config/environments/development.rb
+COPY apps/api/config/initializers/filter_parameter_logging.rb ./config/initializers/filter_parameter_logging.rb
+COPY apps/api/bin ./bin
+COPY apps/api/config.ru apps/api/Rakefile ./
+COPY fixtures/finance /work/fixtures/finance
+COPY fixtures/synthetic /work/fixtures/synthetic
+COPY fixtures/disclosures /work/fixtures/disclosures
+COPY fixtures/medallion /work/fixtures/medallion
+RUN ln -s /tmp /work/apps/api/tmp
+ARG SOURCE_REVISION=unknown
+LABEL org.opencontainers.image.revision=$SOURCE_REVISION
+ENV SAVVY_SOURCE_REVISION=$SOURCE_REVISION
 ENV BUNDLE_GEMFILE=/work/apps/api/Gemfile
 CMD ["bundle", "exec", "rails", "server", "-b", "0.0.0.0", "-p", "3101"]

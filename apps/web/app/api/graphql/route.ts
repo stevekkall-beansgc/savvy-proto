@@ -27,7 +27,7 @@ export async function POST(request: Request) {
     const api = new URL(process.env.SAVVY_API_URL || "http://127.0.0.1:3101");
     if (
       api.protocol !== "http:" ||
-      !["3101", "3102"].includes(api.port) ||
+      !["3101", "3102", "3108", "3109"].includes(api.port) ||
       !["127.0.0.1", "localhost", "::1", "[::1]"].includes(api.hostname) ||
       api.username ||
       api.password ||

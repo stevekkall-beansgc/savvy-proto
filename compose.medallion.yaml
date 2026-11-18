@@ -18,18 +18,22 @@ services:
       retries: 30
   api:
     restart: unless-stopped
+    read_only: true
+    tmpfs: ['/tmp']
     image: savvy-medallion-api
     command: ["/bin/sh", "-c", "rm -f /tmp/savvy-medallion-api.pid && exec bundle exec rails server -b 0.0.0.0 -p 3101 -P /tmp/savvy-medallion-api.pid"]
     build:
       context: .
       dockerfile: apps/api/Dockerfile
+      args:
+        SOURCE_REVISION: ${SAVVY_SOURCE_REVISION:-unknown}
     environment:
       PGHOST: db
       PGUSER: savvy_demo
       RAILS_ENV: development
       SYNTHETIC_DEMO: '1'
+      SAVVY_IMMUTABLE_PREVIEW: '1'
     ports: ['127.0.0.1:3102:3101']
-    volumes: ['.:/work']
     networks: [synthetic, local_bridge]
     depends_on:
       db:

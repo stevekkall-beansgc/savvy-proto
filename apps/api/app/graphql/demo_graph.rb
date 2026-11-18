@@ -63,6 +63,7 @@ module DemoGraph
     field :disclosure_workspace, GraphQL::Types::JSON, null: false do
       argument :case_id, ID, required: true
       argument :audience, String, required: true
+      argument :page_changes, Boolean, required: false
       argument :limit, Integer, required: false
       argument :offset, Integer, required: false
     end
@@ -110,6 +111,8 @@ module DemoGraph
       argument :case_id, ID, required: true
       argument :run_id, ID, required: false
       argument :scenario_id, ID, required: false
+      argument :limit, Integer, required: false
+      argument :offset, Integer, required: false
     end
     field :product_workspace, GraphQL::Types::JSON, null: false do
       argument :workspace, String, required: true
@@ -148,8 +151,8 @@ module DemoGraph
       raise Economics::Error.new("FORBIDDEN") if w.role=="ria"
       w
     end
-    def medallion_workspace(workspace:, case_id:, run_id: nil, scenario_id: nil)
-      DemoGraph.present(context.fetch(:workbench).medallion.view(workspace:workspace,case_id:case_id,run_id:run_id,scenario_id:scenario_id))
+    def medallion_workspace(workspace:, case_id:, run_id: nil, scenario_id: nil, limit: nil, offset: nil)
+      DemoGraph.present(context.fetch(:workbench).medallion.view(workspace:workspace,case_id:case_id,run_id:run_id,scenario_id:scenario_id,limit:limit,offset:offset))
     end
     def entitlement_ledger(broker_id: nil) = DemoGraph.present(service.entitlement_ledger(broker_id))
     def product_workspace(workspace:, broker_id: nil, business_date: nil) = DemoGraph.present(service.product_workspace(workspace: workspace, broker_id: broker_id, business_date: business_date))

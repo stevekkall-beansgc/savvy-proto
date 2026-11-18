@@ -8,7 +8,7 @@ import urllib.request
 QUERY = "query($workspace:String!,$broker:ID){productWorkspace(workspace:$workspace,brokerId:$broker)}"
 ROOT = Path(__file__).resolve().parent.parent
 API_ORIGIN = os.environ.get("SAVVY_API_ORIGIN", "http://127.0.0.1:3101")
-if API_ORIGIN not in {"http://127.0.0.1:3101", "http://127.0.0.1:3102"}:
+if API_ORIGIN not in {"http://127.0.0.1:3101", "http://127.0.0.1:3102", "http://127.0.0.1:3108", "http://127.0.0.1:3109"}:
     raise ValueError("Expected an allowlisted local synthetic API origin")
 
 

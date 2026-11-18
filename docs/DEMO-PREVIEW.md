@@ -26,29 +26,39 @@ Page reads and preview activation never seed data.
 ## Updating the existing preview
 
 Build and test in an inactive directory. Never rebuild a live Next directory.
-The current candidate uses `SAVVY_BUILD_DIRECTORY=presentation` and
-`apps/web/.next-presentation`; choose a different slot for subsequent updates.
-Port 3106 is a temporary staging listener and is not publicly routed.
+Read `.runtime/hosting/activation.json` and the owned LaunchAgent to identify the
+active pair; historical build-slot names below are not deployment authority.
+Port 3106 is staging only. API slots 3108/3109 are loopback-only; 3102 remains the
+source-frozen baseline rollback API.
 
-1. Build the inactive slot, run `scripts/presentation_ui_check.cjs` against its
-   loopback staging listener, and run the read-only HTTP checks. The browser check
-   also runs in the existing Prototype checks workflow.
-2. Commit and push with verified profile `stevekkall-beansgc`. Wait for successful
-   **Prototype checks** on that exact commit, including the full domain suite,
-   reporting, origin checks and the new browser journey.
-3. Record the candidate's commit and `.next-presentation/BUILD_ID` in
-   `.runtime/hosting/presentation-build.json` after building that exact source.
-4. `python3 deploy/activate-preview.py` verifies readiness without changes.
-   `python3 deploy/activate-preview.py --apply` updates only the owned clarity
-   preview service and the existing Savvy tunnel route. It retains the Access
-   audience, team and required JWT validation, confirms allowed/denied origins,
-   and saves local rollback copies and an activation receipt.
+1. Commit reviewed source. `python3 deploy/preview-control.py candidate-a`
+   (or `candidate-b`) verifies both owned preview services, rejects an active or
+   unknown slot, holds a shared build/activation lock and builds exact clean source.
+2. Build the API from a `git archive` of the same final commit, passing
+   `SOURCE_REVISION`. Run it without source mounts, with a read-only filesystem,
+   temporary `/tmp`, `SAVVY_IMMUTABLE_PREVIEW=1`, and the retained DB connection.
+   Do not run database preparation, migrations or seeds. Image labels and health
+   metadata must identify the exact source and disabled reloading.
+3. Start the inactive frontend on 3106 with its slot and candidate API URL. Run
+   `python3 deploy/preview-control.py candidate-a --record --api http://127.0.0.1:3108 --container CONTAINER`.
+   This verifies the staged frontend/API pair, runs read-only browser and HTTP
+   acceptance, then binds the exact source, BUILD_ID, served-asset hash and image
+   identity in `.runtime/hosting/candidate-build.json`. Set the installed
+   `SAVVY_PLAYWRIGHT_MODULE` when needed. Mutations are never part of this check.
+4. Push using verified profile `stevekkall-beansgc`. Both **Prototype checks** and
+   **Architecture checks** must succeed on the exact candidate/main commit.
+5. `python3 deploy/activate-preview.py` performs preflight only.
+   `python3 deploy/activate-preview.py --apply` promotes the verified inactive pair
+   through the owned clarity service on 3104, preserves Cloudflare Access and
+   records `.runtime/hosting/activation.json`. The existing route is not rewritten
+   if already correct. Failed readiness, changed artifacts or image identity cause
+   rollback to the previous frontend/API pair and receipt.
 
-The script checks the exact remote main and CI, refuses unowned services/routes,
-and restores the previous service and tunnel configuration on a failed activation.
-It retries macOS service-label release errors briefly before readiness checks.
-It never resets, migrates or seeds a database. Both retained volumes and the older
-port 3100 deployment stay intact. No new paid infrastructure is provisioned.
+Build and activation refuse concurrent operations, unowned services/routes,
+source drift, writable/mounted API containers and stale CI. Neither operation
+resets, migrates or seeds data. Original invoices/history and both retained
+volumes stay intact. The older 3100 deployment and the previous source-frozen API
+remain available for rollback. No new paid infrastructure is provisioned.
 This is a preview update; semver releases remain governed by the repository's
 release gates and are not created by this script.
 

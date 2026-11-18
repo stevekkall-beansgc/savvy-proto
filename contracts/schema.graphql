@@ -88,7 +88,7 @@ type Payload {
 }
 
 type Query {
-  disclosureWorkspace(audience: String!, caseId: ID!, limit: Int, offset: Int): JSON!
+  disclosureWorkspace(audience: String!, caseId: ID!, limit: Int, offset: Int, pageChanges: Boolean): JSON!
   audienceClient(caseId: ID!, clientId: ID!, limit: Int, offset: Int): JSON!
   audienceClients(caseId: ID!, limit: Int, offset: Int, search: String): JSON!
   audienceStatement(caseId: ID!, limit: Int, offset: Int): JSON!
@@ -99,7 +99,7 @@ type Query {
   financeWorkspace(caseId: ID!): JSON!
   lineageRecord(caseId: ID!, limit: Int, offset: Int, recordId: ID!): JSON!
   lineageRecords(caseId: ID!, limit: Int, offset: Int, search: String): JSON!
-  medallionWorkspace(caseId: ID!, runId: ID, scenarioId: ID, workspace: String!): JSON!
+  medallionWorkspace(caseId: ID!, limit: Int, offset: Int, runId: ID, scenarioId: ID, workspace: String!): JSON!
   productWorkspace(brokerId: ID, businessDate: String, workspace: String!): JSON!
   reconciliation(closeId: ID, periodEndExclusive: String!, periodStart: String!): JSON!
   reviewPacket(runId: ID!): JSON

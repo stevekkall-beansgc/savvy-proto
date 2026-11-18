@@ -604,8 +604,8 @@ class MedallionWorkbench
       {'id'=>id,'status'=>row.status,'result'=>result,'synthetic'=>true}
     end
   end
-  def view(workspace:,case_id:,run_id:nil,scenario_id:nil)
-    MedallionPresenter.new(workbench).view(workspace:workspace,case_id:case_id,run_id:run_id,scenario_id:scenario_id)
+  def view(workspace:,case_id:,run_id:nil,scenario_id:nil,limit:nil,offset:nil)
+    MedallionPresenter.new(workbench).view(workspace:workspace,case_id:case_id,run_id:run_id,scenario_id:scenario_id,limit:limit,offset:offset)
   end
   PARTIES={'advisor'=>%w[firm-demo advisor-demo], 'ria'=>%w[firm-demo ria-harbor network-fixture]}.freeze
   EVENT_KINDS=%w[one_time_charge one_time_credit compensation_entitlement payout_request].freeze

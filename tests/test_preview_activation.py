@@ -5,6 +5,8 @@ from pathlib import Path
 import plistlib
 import subprocess
 import tempfile
+from types import SimpleNamespace
+from io import BytesIO
 import unittest
 from unittest.mock import patch
 import urllib.error
@@ -25,10 +27,13 @@ class PreviewActivationTest(unittest.TestCase):
         self.app.RUNTIME.mkdir(parents=True)
         self.app.PLIST = root / 'preview.plist'
         (root / 'deploy').mkdir()
-        (root / 'apps/web/.next-presentation').mkdir(parents=True)
-        (root / 'apps/web/.next-presentation/BUILD_ID').write_text('synthetic-build')
+        (root / 'apps/web/.next-candidate-a').mkdir(parents=True)
+        (root / 'apps/web/.next-candidate-a/BUILD_ID').write_text('synthetic-build')
         self.sha = 'a' * 40
-        (self.app.RUNTIME / 'presentation-build.json').write_text(json.dumps({'commit': self.sha, 'build_id': 'synthetic-build'}))
+        (self.app.RUNTIME / 'candidate-build.json').write_text(json.dumps({'commit': self.sha, 'build_id': 'synthetic-build', 'slot': 'candidate-a', 'asset_hash': 'hash', 'api_endpoint': 'http://127.0.0.1:3108', 'api_container': 'candidate', 'api_image_id': 'image', 'validation': ['presentation_ui_check', 'product_http_check']}))
+        self.control = SimpleNamespace(inactive=lambda slot: root / 'apps/web/.next-candidate-a', tree_hash=lambda path: 'hash', image_identity=lambda *args: 'image')
+        stage = json.dumps({'api': 'http://127.0.0.1:3108', 'slot': 'candidate-a', 'health': {'source_revision': self.sha}}).encode()
+        self.stage = lambda *args, **kwargs: BytesIO(stage)
         self.cfg = {'hostname': 'savvy-proto.beanshop.top', 'tunnel_id': 'synthetic-tunnel', 'access_team': 'synthetic-team', 'access_aud': 'synthetic-audience'}
         (root / 'deploy/device-host.json').write_text(json.dumps(self.cfg))
         (root / 'deploy/run-tunnel.py').write_text("def secret(name): return 'synthetic-test-value'\n")
@@ -46,7 +51,22 @@ class PreviewActivationTest(unittest.TestCase):
         if args[:2] == ('git', 'rev-parse'): return self.sha
         if args[:2] == ('git', 'ls-remote'): return self.sha + '\trefs/heads/main'
         if args[:3] == ('gh', 'api', 'user'): return 'stevekkall-beansgc'
-        return json.dumps({'check_runs': [{'name': 'check', 'status': 'completed', 'conclusion': 'success'}]})
+        return json.dumps({'check_runs': [{'name': name, 'status': 'completed', 'conclusion': 'success'} for name in ['check', 'architecture-compliance']]})
+
+    def test_both_latest_exact_commit_checks_must_succeed(self):
+        for checks in [
+            [{'name':'check','status':'completed','conclusion':'success'}],
+            [{'name':'check','status':'completed','conclusion':'success'}, {'name':'architecture-compliance','status':'completed','conclusion':'failure'}],
+            [{'name':'check','status':'completed','conclusion':'success'}, {'name':'architecture-compliance','status':'completed','conclusion':'success','started_at':'1'}, {'name':'architecture-compliance','status':'in_progress','conclusion':None,'started_at':'2'}],
+        ]:
+            def command(*args):
+                if args[:2] == ('gh','api') and args[2].startswith('repos/'):
+                    return json.dumps({'check_runs':checks})
+                return self.run_command(*args)
+            with self.subTest(checks=checks), patch.object(self.app, 'run', command), patch.object(self.app, 'request') as remote:
+                with self.assertRaisesRegex(AssertionError, 'architecture-compliance'):
+                    self.app.activate(True, self.control)
+                remote.assert_not_called()
 
     def test_remote_failure_restores_local_service_even_when_remote_rollback_fails(self):
         requests = []
@@ -60,8 +80,8 @@ class PreviewActivationTest(unittest.TestCase):
             return {'success': True, 'result': {'config': self.config}}
         def restart(verify_hosted=True):
             restarts.append((verify_hosted, plistlib.loads(self.app.PLIST.read_bytes())))
-        with patch.object(self.app, 'run', self.run_command), patch.object(self.app, 'request', request), patch.object(self.app, 'restart', restart):
-            with self.assertRaises(urllib.error.HTTPError): self.app.main(True)
+        with patch.object(self.app, 'run', self.run_command), patch.object(self.app, 'request', request), patch.object(self.app, 'restart', restart), patch.object(self.app.urllib.request, 'urlopen', self.stage):
+            with self.assertRaises(urllib.error.HTTPError): self.app.activate(True, self.control)
         self.assertEqual(self.original_bytes, self.app.PLIST.read_bytes())
         self.assertEqual([True, False], [verify for verify, _ in restarts])
         self.assertEqual(self.before, restarts[-1][1])
@@ -73,10 +93,26 @@ class PreviewActivationTest(unittest.TestCase):
     def test_unowned_service_stops_before_external_access(self):
         unowned = {**self.before, 'WorkingDirectory': '/another-project'}
         self.app.PLIST.write_bytes(plistlib.dumps(unowned))
-        with patch.object(self.app, 'run', self.run_command), patch.object(self.app, 'request') as remote:
-            with self.assertRaisesRegex(AssertionError, 'Unowned'): self.app.main(True)
+        with patch.object(self.app, 'run', self.run_command), patch.object(self.app, 'request') as remote, patch.object(self.app.urllib.request, 'urlopen', self.stage):
+            with self.assertRaisesRegex(AssertionError, 'Unowned'): self.app.activate(True, self.control)
             remote.assert_not_called()
         self.assertEqual(unowned, plistlib.loads(self.app.PLIST.read_bytes()))
+
+    def test_existing_route_skips_write_and_failure_restores_receipt(self):
+        self.config['ingress'][0]['service'] = self.app.ORIGIN
+        receipt = self.app.RUNTIME / 'activation.json'
+        receipt.write_text('previous receipt')
+        calls = []
+        def request(url, body=None, headers=None, method=None):
+            calls.append(method)
+            return {'success': True, 'result': {'config': self.config}}
+        def fail_after_restart(*args, **kwargs):
+            raise RuntimeError('injected after service switch')
+        with patch.object(self.app, 'run', self.run_command), patch.object(self.app, 'request', request), patch.object(self.app, 'restart', side_effect=fail_after_restart), patch.object(self.app.urllib.request, 'urlopen', self.stage):
+            with self.assertRaises(RuntimeError): self.app.activate(True, self.control)
+        self.assertNotIn('PUT', calls)
+        self.assertEqual('previous receipt', receipt.read_text())
+        self.assertEqual(self.original_bytes, self.app.PLIST.read_bytes())
 
     def test_service_bootstrap_retries_transient_unload_error(self):
         ok = subprocess.CompletedProcess([], 0)

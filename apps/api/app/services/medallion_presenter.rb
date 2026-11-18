@@ -45,17 +45,18 @@ class MedallionPresenter
     @service = workbench.medallion
   end
 
-  def view(workspace:, case_id:, run_id: nil, scenario_id: nil)
+  def view(workspace:, case_id:, run_id: nil, scenario_id: nil, limit: nil, offset: nil)
     @case_id = @service.case!(case_id)
     @scenario = @service.scenario!(scenario_id)
     authorize!(workspace)
-    DemoScope.transaction do
-      DemoScope.where(**@workbench.scope).lock.first!
-      runs = rows('run')
-      @run = run_id ? @service.get!(@case_id, @scenario, 'run', run_id) : runs.last
+    @limit = limit || 50; @offset = offset || 0
+    @service.error('VALIDATION_ERROR') unless @limit.is_a?(Integer) && @limit.between?(1,100) && @offset.is_a?(Integer) && @offset >= 0
+    read = proc do
+      @run = run_id ? @service.get!(@case_id, @scenario, 'run', run_id) : relation('run').last
+      runs = workspace == 'internal' ? rows('run') : []
       @result = @run&.payload&.fetch('result', {}) || {}
       @details = @result.fetch('details', []).index_by { |detail| detail.fetch('id') }
-      @policy = @run && rows('policy').find { |p| p.external_id == @run.payload['policy_id'] }
+      @policy = @run && relation('policy').find_by(external_id: @run.payload['policy_id'])
       @statement = statement_view(historical: run_id.present?)
       out = {
         'case_id'=>@case_id, 'scenario_id'=>@scenario, 'workspace'=>workspace,
@@ -64,6 +65,11 @@ class MedallionPresenter
       }
       out.merge!(internal_view(runs)) if workspace == 'internal'
       out
+    end
+    if DemoScope.connection.transaction_open?
+      read.call
+    else
+      DemoScope.transaction(isolation: :repeatable_read, &read)
     end
   end
 
@@ -82,8 +88,12 @@ class MedallionPresenter
     end
   end
 
+  def relation(kind)
+    @service.source(@case_id, @scenario, kind).order(:id)
+  end
+
   def rows(kind)
-    @service.source(@case_id, @scenario, kind).order(:id).to_a
+    relation(kind).reorder(id: :desc).offset(@offset).limit(@limit).to_a.reverse
   end
 
   def item(id, description: nil)
@@ -203,7 +213,7 @@ class MedallionPresenter
   end
 
   def terms_view
-    rows('policy').select { |p| @service.published?(p) }.map do |policy|
+    relation('policy').where(id: relation('policy').reorder(id: :desc).offset(@offset).limit(@limit).select(:id)).or(relation('policy').where(id: @policy&.id)).to_a.select { |p| @service.published?(p) }.map do |policy|
       graph = policy.payload.fetch('policy')
       rates = CommercialRate.where(**@workbench.scope, configuration_id: policy.payload['rate_configuration_id']).order(:external_id)
       parameter_labels = { 'floor'=>'Monthly earnings floor', 'cap'=>'Platform charge cap', 'fixed'=>'Monthly platform charge', 'price'=>'Price per eligible account-month' }
@@ -309,11 +319,15 @@ class MedallionPresenter
 
   def internal_view(runs)
     policies = rows('policy')
-    events = rows('event').map do |event|
-      review = rows('event_review').select { |r| r.parent_id == event.id }.last
+    policies << @policy if @policy && policies.none? { |policy| policy.id == @policy.id }
+    event_rows = rows('event')
+    reviews = relation('event_review').where(parent_id:event_rows.map(&:id)).reorder(:parent_id, id: :desc).select('DISTINCT ON (parent_id) medallion_evidence.*').to_a.index_by(&:parent_id)
+    events = event_rows.map do |event|
+      review = reviews[event.id]
       serialize(event).merge('status'=>review&.status || event.status)
     end
-    reversed = rows('application_reversal').map(&:parent_id)
+    applications = rows('application')
+    reversed = relation('application_reversal').where(parent_id:applications.map(&:id)).pluck(:parent_id)
     scenarios = MedallionEvidence.where(**@workbench.scope, case_id:@case_id).distinct.order(:scenario_id).pluck(:scenario_id)
     {
       'parties'=>MedallionWorkbench::PARTIES.fetch(@case_id).map { |id| { 'id'=>id, 'name'=>party_name(id) } },
@@ -337,9 +351,10 @@ class MedallionPresenter
       'comparisons'=>rows('comparison').map { |r| serialize(r) },
       'reviews'=>rows('review').map { |r| serialize(r) }, 'events'=>events,
       'payments'=>rows('payment').map { |r| serialize(r) },
-      'payment_applications'=>rows('application').map { |r| serialize(r).merge('status'=>reversed.include?(r.id) ? 'reversed' : 'confirmed') },
+      'payment_applications'=>applications.map { |r| serialize(r).merge('status'=>reversed.include?(r.id) ? 'reversed' : 'confirmed') },
       'statements'=>rows('statement').map { |r| serialize(r) },
       'runs'=>runs.map { |r| { 'id'=>r.external_id, 'case_id'=>@case_id, 'scenario_id'=>@scenario, 'status'=>r.payload.dig('result', 'status') || r.status, 'knowledge_cutoff'=>r.payload['knowledge_cutoff'] } },
+      'page'=>%w[assignment policy comparison review event payment application statement run].to_h { |kind| [kind, {'total'=>relation(kind).count, 'limit'=>@limit, 'offset'=>@offset}] },
       'pipeline'=>pipeline_view
     }
   end
@@ -349,15 +364,15 @@ class MedallionPresenter
   end
 
   def pipeline_view
-    artifacts = rows('artifact')
-    deliveries = rows('delivery')
+    artifacts = relation('artifact')
+    deliveries = relation('delivery')
     facts = @run&.payload&.dig('input_manifest', 'facts') || {}
     {
       'stages'=>[
-        { 'name'=>'Bronze', 'summary'=>'Original deliveries and every retained revision', 'count'=>artifacts.size,
-          'samples'=>artifacts.first(4).map { |r| serialize(r).merge('byte_count'=>r.original_bytes&.bytesize) } },
-        { 'name'=>'Deliveries', 'summary'=>'Arrival, acceptance and rejection history', 'count'=>deliveries.size,
-          'samples'=>deliveries.last(4).map { |r| serialize(r) } },
+        { 'name'=>'Bronze', 'summary'=>'Original deliveries and every retained revision', 'count'=>artifacts.count,
+          'samples'=>artifacts.limit(4).map { |r| serialize(r).merge('byte_count'=>r.original_bytes&.bytesize) } },
+        { 'name'=>'Deliveries', 'summary'=>'Arrival, acceptance and rejection history', 'count'=>deliveries.count,
+          'samples'=>deliveries.reorder(id: :desc).limit(4).to_a.reverse.map { |r| serialize(r) } },
         { 'name'=>'Silver facts', 'summary'=>'Known source facts with original identity, basis and unit', 'count'=>facts.size,
           'samples'=>facts.first(5).map { |id, fact| fact.merge('fact_key'=>id) } },
         { 'name'=>'Silver term binding', 'summary'=>'The common engine selects the applicable terms', 'count'=>@result.fetch('bindings', []).size,

@@ -3,7 +3,7 @@ class DisclosureReadModel
   def initialize(workbench)
     @w=workbench; @m=workbench.medallion
   end
-  def view(case_id,audience:,limit:nil,offset:nil)
+  def view(case_id,audience:,limit:nil,offset:nil,page_changes:false)
     @m.case!(case_id)
     @m.error('VALIDATION_ERROR') unless %w[client product finance].include?(audience)
     if audience=='client'
@@ -13,11 +13,12 @@ class DisclosureReadModel
     else
       @w.guard!('operator','legal','auditor')
     end
+    @m.error('VALIDATION_ERROR') unless [true,false].include?(page_changes)
     limit=limit || 20; offset=offset || 0
     @m.error('VALIDATION_ERROR') unless limit.is_a?(Integer) && limit.between?(1,100) && offset.is_a?(Integer) && offset>=0
     body={'contract_version'=>'disclosure/v1','available'=>false,'case_id'=>case_id,'audience'=>audience,
       'context'=>{'namespace'=>DisclosureWorkbench::NS,'currency'=>'USD','service_start'=>DisclosureWorkbench::START,'service_end_exclusive'=>DisclosureWorkbench::FINISH,'knowledge_cutoff'=>DisclosureWorkbench::CUTOFF},
-      'summary'=>{},'sections'=>%w[billing valuation terms lifecycle compensation costs recognition policy_options changes].to_h { |name| [name,[]] },'page'=>{'limit'=>limit,'offset'=>offset,'total'=>0},'exceptions'=>[]}
+      'summary'=>{},'sections'=>%w[billing valuation terms lifecycle compensation costs recognition policy_options changes].to_h { |name| [name,[]] },'page'=>{'limit'=>limit,'offset'=>offset,'total'=>0,'mode'=>page_changes ? 'changes' : 'all'},'exceptions'=>[]}
     if case_id=='ria'
       row=@m.source(case_id,DisclosureWorkbench::NS,'fact').find_by(external_id:'disclosure-ria-cost-source')
       return body unless row
@@ -25,7 +26,7 @@ class DisclosureReadModel
       body['available']=true; body['context']['knowledge_cutoff']=obs['recorded_at']
       cost={'id'=>row.external_id,'label'=>'Observed custodial charge','classification'=>obs['classification'],'amount_minor'=>obs['amount_minor'],'currency'=>obs['currency'],'payer'=>obs['payer'],'payee'=>obs['payee'],'charger'=>obs['charger'],'category'=>obs['category'],'source'=>'Custodian statement','service_start'=>obs['service_start'],'service_end_exclusive'=>obs['service_end_exclusive'],'reason'=>obs['reason'],'included_in_subtotal'=>false}
       cost['record_id']=row.id.to_s if audience!='client'
-      body['sections']['costs']=[cost].drop(offset).take(limit);body['page']['total']=1
+      body['sections']['costs']=page_changes ? [cost] : [cost].drop(offset).take(limit);body['page']['total']=page_changes ? 0 : 1
       return body
     end
     return body unless case_id==DisclosureWorkbench::CASE
@@ -106,11 +107,11 @@ class DisclosureReadModel
       credit=find_row.call('event','disclosure-credit')
       credit_run=credit && find_row.call('run',credit.payload['run_id'])
       credit_detail=credit_run && credit_run.payload.fetch('result').fetch('details').find { |d| d['id']==credit.payload['output_id'] }
-      credit_valid=credit && credit_detail && credit_detail['assessed_minor']==credit.payload['amount_minor']
+      credit_valid=credit && credit.status=='approved' && credit_detail && credit_detail['assessed_minor']==credit.payload['amount_minor']
       refund=find_row.call('payment','disclosure-refund')
       receipt=find_row.call('payment','disclosure-receipt')
       application=find_row.call('application','disclosure-refund-application')
-      refund_linked=refund && receipt && credit_valid && application && application.status=='confirmed' && application.payload['payment_id']==refund.external_id && application.payload['payment_hash']==refund.payload_hash && application.payload['credit_id']==credit.external_id && application.payload['credit_hash']==credit.payload_hash && application.payload['original_receipt_id']==receipt.external_id && application.payload['original_receipt_hash']==receipt.payload_hash && application.payload['amount_minor']==refund.payload['amount_minor']
+      refund_linked=refund && refund.status=='confirmed' && receipt && receipt.status=='confirmed' && credit_valid && application && application.status=='confirmed' && application.payload['payment_id']==refund.external_id && application.payload['payment_hash']==refund.payload_hash && application.payload['credit_id']==credit.external_id && application.payload['credit_hash']==credit.payload_hash && application.payload['original_receipt_id']==receipt.external_id && application.payload['original_receipt_hash']==receipt.payload_hash && application.payload['amount_minor']==refund.payload['amount_minor']
       body['sections']['lifecycle'] << item.call('disclosure-credit','Termination credit','commercial_credit',credit_detail['assessed_minor'],'event','disclosure-credit',{'reason'=>'Approved credit for unused prepaid service; it is separate from refund cash.','run_id'=>credit.payload['run_id'],'output_id'=>'credit','payer'=>'firm-demo','payee'=>DisclosureWorkbench::SUBJECT}) if credit_valid
       if outputs['service_retained']
         body['sections']['lifecycle'] << item.call('disclosure-service-retained','Charge for service retained','retained_service_charge',amount_for.call('service_retained'),'run','disclosure-lifecycle-run-v1',{'reason'=>'The portion of the original invoice retained after the termination credit; not an additional charge.','run_id'=>lifecycle.external_id,'output_id'=>'service_retained'})
@@ -123,20 +124,20 @@ class DisclosureReadModel
           body['sections']['lifecycle'] << item.call("disclosure-credit-#{member}","Termination credit · account #{member.upcase}",'credit_allocation',detail['assessed_minor'],'event','disclosure-credit',{'reason'=>'Allocation of the termination credit to the original account invoice line; not an additional credit.','run_id'=>credit_run.external_id,'output_id'=>output,'payer'=>'firm-demo','payee'=>DisclosureWorkbench::SUBJECT})
         end
       end
-      body['sections']['lifecycle'] << item.call('disclosure-refund','Refund sent','confirmed_outbound_refund',refund.payload['amount_minor'],'payment','disclosure-refund',{'reason'=>'Separately evidenced outbound cash.','payer'=>'firm-demo','payee'=>DisclosureWorkbench::SUBJECT}) if refund_linked
+      body['sections']['lifecycle'] << item.call('disclosure-refund','Refund sent','confirmed_outbound_refund',refund.payload['amount_minor'],'payment','disclosure-refund',{'reason'=>'Separately evidenced outbound cash.','source'=>'Confirmed payment and refund application evidence','payer'=>'firm-demo','payee'=>DisclosureWorkbench::SUBJECT}) if refund_linked
       if refund && !refund_linked
         body['exceptions'] << {'id'=>'disclosure-refund-unmatched','reason'=>'Refund evidence is not linked to the original receipt and credit; review the application.'}
       end
       body['sections']['lifecycle'] << item.call('disclosure-refund-remaining','Refund still outstanding','refund_obligation',amount_for.call('refund_remaining'),'application','disclosure-refund-application',{'reason'=>'Remaining credit after the evidenced refund.','run_id'=>lifecycle.external_id,'output_id'=>'refund_remaining','payer'=>'firm-demo','payee'=>DisclosureWorkbench::SUBJECT}) if refund_linked
-      body['sections']['lifecycle'] << item.call('disclosure-receipt','Original receipt','confirmed_inbound_receipt',receipt.payload['amount_minor'],'payment','disclosure-receipt',{'reason'=>'Separately evidenced inbound cash.'}) if audience=='finance' && receipt
-      if audience!='finance'
+      body['sections']['lifecycle'] << item.call('disclosure-receipt','Original receipt','confirmed_inbound_receipt',receipt.payload['amount_minor'],'payment','disclosure-receipt',{'reason'=>'Separately evidenced inbound cash.','source'=>'Confirmed payment evidence'}) if audience=='finance' && receipt && receipt.status=='confirmed'
+      begin
         [['salary_entitlement','Salary entitlement','salary','disclosure-salary-terms','Salary entitlement; this observation records no confirmed payment.'],['bonus_entitlement','Bonus entitlement','bonus','disclosure-bonus-event','Bonus entitlement; payment is not inferred.'],['loan_entitlement','Transition loan principal','loan_principal','disclosure-loan-terms','Loan principal is not fee revenue or salary.'],['forgiveness_entitlement','Loan forgiveness','loan_forgiveness','disclosure-forgiveness-event','A separate forgiveness event; it is not another cash payment.'],['loan_outstanding','Loan principal outstanding','loan_balance','disclosure-forgiveness-event','Outstanding principal after forgiveness.']].each do |output,label,classification,source,reason|
           body['sections']['compensation'] << item.call("disclosure-#{output.tr('_','-')}",label,classification,amount_for.call(output),'fact',source,{'reason'=>reason,'run_id'=>lifecycle.external_id,'output_id'=>output,'payer'=>'firm-demo','payee'=>'advisor-demo'})
         end
         loan_cash=find_row.call('payment','disclosure-loan-cash')
         loan_terms=find_row.call('fact','disclosure-loan-terms')
         if loan_cash && loan_terms && loan_cash.status=='confirmed' && loan_cash.payload['loan_terms_id']==loan_terms.external_id && loan_cash.payload['loan_terms_hash']==loan_terms.payload_hash
-          body['sections']['compensation'] << item.call('disclosure-loan-cash','Loan cash advance','confirmed_loan_advance',loan_cash.payload['amount_minor'],'payment','disclosure-loan-cash',{'reason'=>'Separately evidenced outbound loan cash; not salary or advisory revenue.','payer'=>'firm-demo','payee'=>'advisor-demo'})
+          body['sections']['compensation'] << item.call('disclosure-loan-cash','Loan cash advance','confirmed_loan_advance',loan_cash.payload['amount_minor'],'payment','disclosure-loan-cash',{'reason'=>'Separately evidenced outbound loan cash; not salary or advisory revenue.','source'=>'Confirmed payment linked to loan terms','payer'=>'firm-demo','payee'=>'advisor-demo'})
         end
         equity=find_row.call('fact','disclosure-equity-award')
         if equity
@@ -183,33 +184,79 @@ class DisclosureReadModel
         body['sections']['recognition'] << {'id'=>'disclosure-recognition-missing','label'=>'Correction posting not received','classification'=>'missing_posting','amount_minor'=>nil,'reason'=>'Await independent posting for the credit correction.'}
       end
     end
+    prefix_total=body['sections'].values.sum(&:size)
+    option_total=0
     if audience=='product'
+      option_scope=@m.source(case_id,DisclosureWorkbench::NS,'run').where("payload->>'comparison_only' = ?",'true').order(:id)
+      option_total=1+option_scope.count
+      option_start=page_changes ? 0 : [offset-prefix_total,0].max
+      option_end=page_changes ? [option_total,101].min : [offset+limit-prefix_total,option_total].min
       body['sections']['policy_options'] << {'id'=>policy.external_id,'label'=>"Selected #{policy.payload.fetch('fields')['basis'].to_s.tr('_',' ')} terms",'classification'=>'selected_policy','fields'=>policy.payload['fields'],'comparison_only'=>false,'record_id'=>policy.id.to_s}
-      @m.source(case_id,DisclosureWorkbench::NS,'run').where("payload->>'comparison_only' = ?",'true').order(:id).each do |option|
+      body['sections']['policy_options'].clear unless option_start==0 && option_end>0
+      option_scope.offset([option_start-1,0].max).limit([option_end-[option_start,1].max,0].max).each do |option|
         detail=option.payload.fetch('result').fetch('details').find { |d| d['id']=='charge' }
         option_policy=@m.get!(case_id,DisclosureWorkbench::NS,'policy',option.payload.fetch('policy_id'))
         body['sections']['policy_options'] << {'id'=>option.payload['policy_id'],'label'=>option.payload['policy_id'].delete_prefix('disclosure-option-').tr('-',' ').capitalize,
           'classification'=>'comparison','amount_minor'=>detail['assessed_minor'],'currency'=>'USD','comparison_only'=>true,'fields'=>option_policy.payload['fields'],'baseline_run_id'=>option.external_id,'service_start'=>option.payload['service_start'],'service_end_exclusive'=>option.payload['service_end_exclusive'],'invoice_on'=>option.payload['invoice_on'],'due_on'=>option.payload['due_on'],'invoice_timing'=>option.payload['invoice_timing'],'cash_status'=>option.payload['cash_status'],'run_id'=>option.external_id,'output_id'=>'charge','record_id'=>option.id.to_s}
       end
-      # A request has one current comparison; older versions remain in lineage.
-      comparisons=@m.source(case_id,DisclosureWorkbench::NS,'comparison').order(:id).to_a
-      comparisons.group_by { |row| row.payload.dig('binding','policy_id') }.values.map(&:last).each do |comparison|
+    end
+    if %w[product finance].include?(audience)
+      # Page the latest comparison for each policy, followed by unmatched drafts.
+      comparison_scope=@m.source(case_id,DisclosureWorkbench::NS,'comparison')
+      latest=comparison_scope.select("DISTINCT ON (payload->'binding'->>'policy_id') id, payload->'binding'->>'policy_id' AS policy_id, MIN(id) OVER (PARTITION BY payload->'binding'->>'policy_id') AS sort_id")
+        .order(Arel.sql("payload->'binding'->>'policy_id', id DESC")).to_sql
+      draft_scope=@m.source(case_id,DisclosureWorkbench::NS,'policy').where(status:'draft')
+        .where("COALESCE(payload->>'comparison_only','false') <> 'true'")
+      draft_sql=draft_scope.where("NOT EXISTS (SELECT 1 FROM (#{latest}) latest WHERE latest.policy_id = medallion_evidence.external_id)").select('id').to_sql
+      union="SELECT id, 0 AS kind_order, sort_id FROM (#{latest}) latest"
+      union += " UNION ALL SELECT id, 1 AS kind_order, id AS sort_id FROM (#{draft_sql}) drafts" if audience=='product'
+      connection=ActiveRecord::Base.connection
+      change_total=connection.select_value("SELECT count(*) FROM (#{union}) changes").to_i
+      change_start=page_changes ? offset : [offset-prefix_total-option_total,0].max
+      change_end=page_changes ? [offset+limit,change_total].min : [offset+limit-prefix_total-option_total,change_total].min
+      selected=connection.exec_query("SELECT id, kind_order FROM (#{union}) changes ORDER BY kind_order, sort_id LIMIT #{[change_end-change_start,0].max} OFFSET #{change_start}").to_a
+      comparison_ids=selected.select { |row| row['kind_order']==0 }.map { |row| row['id'] }
+      draft_ids=selected.select { |row| row['kind_order']==1 }.map { |row| row['id'] }
+      comparison_by_id=comparison_scope.where(id:comparison_ids).index_by(&:id)
+      comparisons=comparison_ids.filter_map { |id| comparison_by_id[id] }
+      review_rows=@m.source(case_id,DisclosureWorkbench::NS,'review').where(parent_id:comparisons.map(&:id))
+        .select("DISTINCT ON (parent_id, payload->>'role') medallion_evidence.*")
+        .order(Arel.sql("parent_id, payload->>'role', id DESC")).to_a.group_by(&:parent_id)
+      published_ids=@m.source(case_id,DisclosureWorkbench::NS,'publication')
+        .where("payload->>'comparison_id' IN (?)",comparisons.map(&:external_id))
+        .distinct.pluck(Arel.sql("payload->>'comparison_id'"))
+      comparisons.each do |comparison|
         p=comparison.payload; binding=p.fetch('binding')
-        reviews=@m.source(case_id,DisclosureWorkbench::NS,'review').where(parent_id:comparison.id).order(:id).to_a.group_by { |r| r.payload['role'] }.values.map(&:last).map { |r| {'id'=>r.external_id,'role'=>r.payload['role'],'decision'=>r.payload['decision']} }
-        published=@m.source(case_id,DisclosureWorkbench::NS,'publication').where("payload->>'comparison_id' = ?",comparison.external_id).exists?
-        body['sections']['changes'] << {'id'=>comparison.external_id,'label'=>'Terms comparison','status'=>published ? 'published' : 'compared','policy_id'=>binding['policy_id'],
+        reviews=Array(review_rows[comparison.id]).map { |r| {'id'=>r.external_id,'role'=>r.payload['role'],'decision'=>r.payload['decision']} }
+        published=published_ids.include?(comparison.external_id)
+        stale=begin
+          DisclosureWorkbench.new(@w).binding_current!(comparison); false
+        rescue Economics::Error
+          true
+        end
+        body['sections']['changes'] << {'needs_fresh_comparison'=>stale,'id'=>comparison.external_id,'label'=>'Terms comparison','status'=>published ? 'published' : 'compared','policy_id'=>binding['policy_id'],
           'comparison_id'=>comparison.external_id,'baseline_run_id'=>binding['baseline_run_id'],'required_roles'=>p['required_roles'],'reviews'=>reviews,'old_amount_minor'=>p['old_amount_minor'],'new_amount_minor'=>p['new_amount_minor'],'record_id'=>comparison.id.to_s}
       end
-      @m.source(case_id,DisclosureWorkbench::NS,'policy').where(status:'draft').order(:id).each do |draft|
-        next if draft.payload['comparison_only'] || body['sections']['changes'].any? { |c| c['policy_id']==draft.external_id }
+      if audience=='product'
+      draft_scope.where(id:draft_ids).order(:id).each do |draft|
         base_run=@m.source(case_id,DisclosureWorkbench::NS,'run').where("payload->>'policy_id' = ?",draft.payload['base_policy_id']).order(:id).last
         body['sections']['changes'] << {'baseline_run_id'=>draft.payload['baseline_run_id']||base_run&.external_id,'id'=>draft.external_id,'label'=>'Draft terms change','status'=>'draft','policy_id'=>draft.external_id,'comparison_id'=>nil,'required_roles'=>%w[legal finance],'reviews'=>[],'record_id'=>draft.id.to_s}
       end
+      end
     end
-    body['page']['total']=body['sections'].values.sum(&:size)
+    change_total ||= 0
+    body['page']['policy_options_total']=option_total if page_changes && audience=='product'
+    if page_changes
+      body['page']['total']=change_total
+      return body
+    end
+    body['page']['total']=prefix_total+option_total+change_total
     cursor=0
     body['sections'].each do |key,list|
-      section_start=cursor; cursor+=list.size
+      section_start=cursor
+      size=key=='policy_options' ? option_total : key=='changes' ? change_total : list.size
+      cursor+=size
+      next if %w[policy_options changes].include?(key)
       start=[offset-section_start,0].max
       finish=[offset+limit-section_start,list.size].min
       body['sections'][key]=finish>start ? list.slice(start,finish-start) : []

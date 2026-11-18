@@ -7,9 +7,11 @@ import urllib.error
 import urllib.request
 
 ROOT = Path(__file__).resolve().parent.parent
-API = 'http://127.0.0.1:3102/graphql'
+API = os.environ.get('SAVVY_API_ORIGIN', 'http://127.0.0.1:3102') + '/graphql'
+if API not in {'http://127.0.0.1:3102/graphql', 'http://127.0.0.1:3108/graphql'}:
+    raise ValueError('Acceptance only targets isolated local APIs')
 PREVIEW = os.environ.get('SAVVY_PREVIEW_ORIGIN', 'http://127.0.0.1:3104')
-if PREVIEW not in {'http://127.0.0.1:3103', 'http://127.0.0.1:3104'}:
+if PREVIEW not in {'http://127.0.0.1:3103', 'http://127.0.0.1:3104', 'http://127.0.0.1:3106'}:
     raise ValueError('Acceptance only targets isolated local previews')
 checks = []
 
@@ -75,6 +77,13 @@ def main():
         row = options['disclosure-option-' + name]
         check(row['comparison_only'] is True and int(row['amount_minor']) == amount, f'{name} is the exact separate comparison')
     finance = view('finance', 'advisor', 'finance')
+    cash = by_id(finance['sections']['lifecycle'] + finance['sections']['compensation'])
+    for key, amount in [('disclosure-receipt', 100000), ('disclosure-refund', 30000), ('disclosure-loan-cash', 1200000)]:
+        check(cash[key]['amount_minor'] == amount and bool(cash[key].get('record_id')), f'{key} is separately evidenced Finance cash')
+    product_changes = by_id(product['sections']['changes'])
+    finance_changes = by_id(finance['sections']['changes'])
+    for key, change in finance_changes.items():
+        check(product_changes.get(key) == change, 'Finance and Product see the same comparison')
     recognition = by_id(finance['sections']['recognition'])
     check(int(recognition['disclosure-recognition-posted']['amount_minor']) == 50000, 'Recognition is supplied independently')
     check(recognition['disclosure-recognition-missing']['amount_minor'] is None, 'Missing accounting posting remains missing')

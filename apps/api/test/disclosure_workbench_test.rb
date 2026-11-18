@@ -116,3 +116,84 @@ class DisclosureWorkbenchTest < Minitest::Test
   end
 
 end
+
+class DisclosureEconomicCorrectionTest < Minitest::Test
+  def setup
+    SyntheticReset.call
+    @w=Workbench.new(role:'operator'); @w.seed!
+    @service=DisclosureWorkbench.new(@w); @service.bootstrap({},'economic-bootstrap')
+    @policy=@service.get('policy','disclosure-policy-v1'); @original=@service.get('run','disclosure-run-v1')
+    @result=Economics::Canonical.copy(@original.payload.fetch('result'))
+  end
+  def detail(result,id) = result.fetch('details').find { |item| item['id']==id }
+  def correction(result) = @service.correction_required?(result,@policy,@original)
+  def test_line_identity_amount_and_order
+    refute correction(@result)
+    @result['details'].reverse!; refute correction(@result)
+    detail(@result,'line_a')['assessed_minor']+=10000; detail(@result,'line_b')['assessed_minor']-=10000
+    assert correction(@result)
+    detail(@result,'line_a')['assessed_minor']-=9999; detail(@result,'line_b')['assessed_minor']+=9999
+    assert correction(@result)
+    detail(@result,'line_a')['assessed_minor']=0; detail(@result,'line_b')['assessed_minor']=100000
+    assert correction(@result)
+    detail(@result,'charge')['assessed_minor']=100001; detail(@result,'line_b')['assessed_minor']=100001
+    assert correction(@result)
+    assert_equal [40000,60000],BillingInvoiceLine.where(billing_invoice_id:BillingInvoice.find_by!(external_id:'disclosure-invoice-v1').id).pluck(:amount_minor).sort
+  end
+  def test_equal_total_nonallocated_output_still_requires_correction
+    policy=@service.get('policy','disclosure-option-hourly')
+    result=Economics::Canonical.copy(@service.get('run','disclosure-option-run-hourly').payload.fetch('result'))
+    detail(result,'charge')['assessed_minor']=100000
+    assert @service.correction_required?(result,policy,@original)
+  end
+  def test_unexpected_billable_terminal_fails_closed_but_intermediate_does_not
+    extra=Economics::Canonical.copy(detail(@result,'line_a'))
+    extra['id']='line_extra'; extra['assessed_minor']=1
+    @result.fetch('details') << extra
+    assert_equal 'INCOMPLETE_SOURCE',assert_raises(Economics::Error) { correction(@result) }.code
+    extra['role']='intermediate'
+    refute correction(@result)
+  end
+  def test_invalid_allocations_fail_closed_and_economic_metadata_changes
+    detail(@result,'line_a')['assessed_minor']=nil
+    assert_equal 'INCOMPLETE_SOURCE',assert_raises(Economics::Error) { correction(@result) }.code
+    @result=Economics::Canonical.copy(@original.payload.fetch('result'))
+    detail(@result,'line_a')['assessed_minor']+=1
+    assert_equal 'INCOMPLETE_SOURCE',assert_raises(Economics::Error) { correction(@result) }.code
+    %w[payer payee unit basis output_class role].each do |field|
+      @result=Economics::Canonical.copy(@original.payload.fetch('result'))
+      detail(@result,'line_a')[field]=nil
+      assert_equal 'INCOMPLETE_SOURCE',assert_raises(Economics::Error) { correction(@result) }.code,field
+    end
+    @result=Economics::Canonical.copy(@original.payload.fetch('result'))
+    detail(@result,'line_a')['currency']='EUR'; assert correction(@result)
+    @result=Economics::Canonical.copy(@original.payload.fetch('result'))
+    detail(@result,'charge')['payer']='other'; assert correction(@result)
+    @result=Economics::Canonical.copy(@original.payload.fetch('result'))
+    detail(@result,'line_b')['interval']['end_exclusive']='2027-02-28'; assert correction(@result)
+  end
+  def test_assign_and_historical_assignment_reject_outside_policy_window
+    draft=@service.save_policy({'case_id'=>'advisor','base_policy_id'=>'disclosure-policy-v1','policy'=>@service.fields,'effective_from'=>'2027-02-02','effective_to'=>nil,'reason'=>'Future policy'},'bad-window-save')
+    input={'case_id'=>'advisor','policy_id'=>draft['policy_id'],'subject_id'=>'disclosure-alder-household','effective_from'=>'2027-02-01','effective_to'=>'2027-03-01','reason'=>'Out of range','supersedes_assignment_id'=>'disclosure-assignment-v1'}
+    assert_equal 'INVALID_INTERVAL',assert_raises(Economics::Error) { @service.assign(input,'bad-window-assign') }.code
+    [nil,'2027-02-30','2027-03-02'].each_with_index do |value,index|
+      bad=input.merge('effective_to'=>value)
+      assert_raises(Economics::Error) { @service.assign(bad,"bad-end-#{index}") }
+    end
+    assert_equal 'VALIDATION_ERROR',assert_raises(Economics::Error) { @service.assign(input.except('effective_to'),'missing-end') }.code
+    policy=@service.get('policy',draft['policy_id'])
+    @service.store('assignment',id:'historical-bad-assignment',status:'published',payload:{'policy_id'=>policy.external_id,'policy_hash'=>policy.payload_hash,'subject_id'=>DisclosureWorkbench::SUBJECT,'supersedes_assignment_id'=>'disclosure-assignment-v1'},parent:policy,recorded_at:Time.iso8601('2027-02-01T00:00:00Z'),schedule_version:2)
+    assert_equal 'INVALID_INTERVAL',assert_raises(Economics::Error) { @service.evaluate({'case_id'=>'advisor','knowledge_cutoff'=>'2027-02-28T23:59:59Z'},'historical-bad-evaluate') }.code
+  end
+  def test_policy_window_is_half_open_and_comparison_is_unrestricted
+    draft=@service.save_policy({'case_id'=>'advisor','base_policy_id'=>'disclosure-policy-v1','policy'=>@service.fields,'effective_from'=>'2027-02-02','effective_to'=>nil,'reason'=>'Future start'},'window-save')
+    @service.compare({'case_id'=>'advisor','policy_id'=>draft['policy_id'],'baseline_run_id'=>'disclosure-run-v1'},'window-compare')
+    policy=@service.get('policy',draft['policy_id'])
+    assert_equal 'INVALID_INTERVAL',assert_raises(Economics::Error) { @service.policy_window!(policy,'2027-02-01','2027-03-01') }.code
+    @service.policy_window!(policy,'2027-02-02','2027-03-01')
+    finite=@service.get('policy','disclosure-policy-v1')
+    @service.policy_window!(finite,'2027-02-01','2027-03-01')
+    assert_equal 'INVALID_INTERVAL',assert_raises(Economics::Error) { @service.policy_window!(finite,'2027-02-01','2027-03-02') }.code
+    assert_equal 'INVALID_INTERVAL',assert_raises(Economics::Error) { @service.policy_window!(finite,'2027-02-01',nil) }.code
+  end
+end

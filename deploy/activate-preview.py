@@ -78,17 +78,36 @@ def restart(verify_hosted=True):
 
 
 def main(apply):
+    spec = importlib.util.spec_from_file_location('preview_control', ROOT / 'deploy/preview-control.py')
+    control = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(control)
+    with control.locked():
+        return activate(apply, control)
+
+
+def activate(apply, control):
     assert not run('git', 'status', '--porcelain'), 'Commit reviewed changes first'
     sha = run('git', 'rev-parse', 'HEAD')
     assert run('gh', 'api', 'user', '--jq', '.login') == 'stevekkall-beansgc'
     remote = run('git', 'ls-remote', 'origin', 'refs/heads/main').split()[0]
     assert remote == sha, 'Remote main differs from this candidate'
     checks = json.loads(run('gh', 'api', f'repos/stevekkall-beansgc/savvy-proto/commits/{sha}/check-runs'))['check_runs']
-    assert any(c['name'] == 'check' and c['conclusion'] == 'success' and c['status'] == 'completed' for c in checks), 'Exact-commit prototype CI is required'
-    assert (ROOT / 'apps/web/.next-presentation/BUILD_ID').is_file()
-    build_proof = json.loads((RUNTIME / 'presentation-build.json').read_text())
-    assert build_proof['commit'] == sha, 'Build must be recorded against this commit'
-    assert build_proof['build_id'] == (ROOT / 'apps/web/.next-presentation/BUILD_ID').read_text().strip(), 'Build identity changed'
+    for required in ('check', 'architecture-compliance'):
+        matching = [c for c in checks if c['name'] == required]
+        latest = max(matching, key=lambda c: c.get('started_at') or '') if matching else None
+        assert latest and latest['conclusion'] == 'success' and latest['status'] == 'completed', f'Exact-commit {required} CI is required'
+    build_proof = json.loads((RUNTIME / 'candidate-build.json').read_text())
+    slot = build_proof['slot']
+    path = control.inactive(slot)
+    assert build_proof['commit'] == sha, 'Build commit mismatch'
+    assert build_proof['build_id'] == (path / 'BUILD_ID').read_text().strip(), 'Build identity changed'
+    assert build_proof['asset_hash'] == control.tree_hash(path), 'Build assets changed'
+    assert build_proof['validation'] == ['presentation_ui_check', 'product_http_check'], 'Candidate validation missing'
+    endpoint = build_proof['api_endpoint']
+    assert control.image_identity(build_proof['api_container'], endpoint, sha) == build_proof['api_image_id'], 'API image changed'
+    with urllib.request.urlopen('http://127.0.0.1:3106/api/preview-health', timeout=10) as response:
+        stage = json.load(response)
+    assert stage.get('api') == endpoint and stage.get('slot') == slot and stage.get('health', {}).get('source_revision') == sha, 'Staged pair changed'
     previous_bytes = PLIST.read_bytes()
     previous = plistlib.loads(previous_bytes)
     assert previous['Label'] == LABEL
@@ -97,16 +116,16 @@ def main(apply):
     assert args[-4:] == ['--hostname', '127.0.0.1', '--port', '3104']
     next_plist = copy.deepcopy(previous)
     env = next_plist['EnvironmentVariables']
-    env.update(SAVVY_API_URL='http://127.0.0.1:3102', SAVVY_BUILD_DIRECTORY='presentation', SAVVY_PUBLIC_ORIGIN=HOST)
+    env.update(SAVVY_API_URL=endpoint, SAVVY_BUILD_DIRECTORY=slot, SAVVY_PUBLIC_ORIGIN=HOST)
     spec = importlib.util.spec_from_file_location('savvy_tunnel', ROOT / 'deploy/run-tunnel.py')
     tunnel = importlib.util.module_from_spec(spec)
     spec.loader.exec_module(tunnel)
     account = tunnel.secret('shared__CLOUDFLARE_ACCOUNT_ID')
     token = tunnel.secret('shared__CLOUDFLARE_API_TOKEN')
     cfg = json.loads((ROOT / 'deploy/device-host.json').read_text())
-    endpoint = f'https://api.cloudflare.com/client/v4/accounts/{account}/cfd_tunnel/{cfg["tunnel_id"]}/configurations'
+    tunnel_endpoint = f'https://api.cloudflare.com/client/v4/accounts/{account}/cfd_tunnel/{cfg["tunnel_id"]}/configurations'
     auth = {'Authorization': f'Bearer {token}', 'Content-Type': 'application/json'}
-    before = request(endpoint, headers=auth)
+    before = request(tunnel_endpoint, headers=auth)
     assert before['success']
     original = before['result']['config']
     updated = copy.deepcopy(original)
@@ -123,32 +142,46 @@ def main(apply):
     RUNTIME.mkdir(parents=True, exist_ok=True)
     (RUNTIME / 'preview-before.plist').write_bytes(previous_bytes)
     (RUNTIME / 'tunnel-before-activation.json').write_text(json.dumps(original, indent=2))
+    receipt_path = RUNTIME / 'activation.json'
+    previous_receipt = receipt_path.read_bytes() if receipt_path.exists() else None
     tunnel_attempted = False
+    assert build_proof['build_id'] == (path / 'BUILD_ID').read_text().strip() and build_proof['asset_hash'] == control.tree_hash(path), 'Build assets changed before activation'
+    assert control.image_identity(build_proof['api_container'], endpoint, sha) == build_proof['api_image_id'], 'API image changed before activation'
     try:
         PLIST.write_bytes(plistlib.dumps(next_plist))
         PLIST.chmod(0o600)
         restart()
-        tunnel_attempted = True
-        outcome = request(endpoint, {'config': updated}, auth, 'PUT')
-        assert outcome['success']
-        after = request(endpoint, headers=auth)
-        assert after['success'] and after['result']['config'] == updated
+        with urllib.request.urlopen(ORIGIN + '/api/preview-health', timeout=10) as response:
+            live = json.load(response)
+        assert live.get('api') == endpoint and live.get('slot') == slot and live.get('health', {}).get('source_revision') == sha, 'Promoted pair mismatch'
+        assert build_proof['build_id'] == (path / 'BUILD_ID').read_text().strip() and build_proof['asset_hash'] == control.tree_hash(path), 'Build assets changed during activation'
+        assert control.image_identity(build_proof['api_container'], endpoint, sha) == build_proof['api_image_id'], 'API image changed during activation'
+        if updated != original:
+            tunnel_attempted = True
+            outcome = request(tunnel_endpoint, {'config': updated}, auth, 'PUT')
+            assert outcome['success']
+            after = request(tunnel_endpoint, headers=auth)
+            assert after['success'] and after['result']['config'] == updated
         # Identify our own health checker; the zone rejects Python's generic UA.
         public_probe = urllib.request.Request(HOST, headers={'User-Agent': 'Savvy-Prototype-Preview-Check/1.0'})
         with urllib.request.urlopen(public_probe, timeout=30) as response:
             assert response.url.startswith('https://' + cfg['access_team'] + '.cloudflareaccess.com/'), 'Access must still protect the app'
-        receipt = {'commit': sha, 'host': HOST, 'origin': ORIGIN, 'access_preserved': True,
+        receipt = {**build_proof, 'commit': sha, 'host': HOST, 'origin': ORIGIN, 'access_preserved': True,
                    'data_mutations': 0, 'old_origin': next(r['service'] for r in original['ingress'] if r.get('hostname') == cfg['hostname'])}
         (RUNTIME / 'activation.json').write_text(json.dumps(receipt, indent=2) + '\n')
         print('Preview activated; hosted route verified; Access retained.')
     except Exception:
         try:
             if tunnel_attempted:
-                restored = request(endpoint, {'config': original}, auth, 'PUT')
+                restored = request(tunnel_endpoint, {'config': original}, auth, 'PUT')
                 assert restored['success'], 'Tunnel rollback failed'
         finally:
             # Local rollback must still run if the remote API is unavailable.
             PLIST.write_bytes(previous_bytes)
+            if previous_receipt is None:
+                receipt_path.unlink(missing_ok=True)
+            else:
+                receipt_path.write_bytes(previous_receipt)
             restart(verify_hosted=False)
         raise
 
