@@ -125,7 +125,9 @@ def main(apply):
         assert outcome['success']
         after = request(endpoint, headers=auth)
         assert after['success'] and after['result']['config'] == updated
-        with urllib.request.urlopen(HOST, timeout=30) as response:
+        # Identify our own health checker; the zone rejects Python's generic UA.
+        public_probe = urllib.request.Request(HOST, headers={'User-Agent': 'Savvy-Prototype-Preview-Check/1.0'})
+        with urllib.request.urlopen(public_probe, timeout=30) as response:
             assert response.url.startswith('https://' + cfg['access_team'] + '.cloudflareaccess.com/'), 'Access must still protect the app'
         receipt = {'commit': sha, 'host': HOST, 'origin': ORIGIN, 'access_preserved': True,
                    'data_mutations': 0, 'old_origin': next(r['service'] for r in original['ingress'] if r.get('hostname') == cfg['hostname'])}
