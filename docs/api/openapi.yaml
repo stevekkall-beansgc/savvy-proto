@@ -11,7 +11,7 @@ servers:
   description: Device-hosted full application; Cloudflare Access browser login required.
 externalDocs:
   description: Authoritative GraphQL SDL in the repository
-  url: https://github.com/stevekkall-beansgc/savvy-proto/blob/d12499be1fae164d401adb6362bab2a66d3c7fd8/contracts/schema.graphql
+  url: https://github.com/stevekkall-beansgc/savvy-proto/blob/c2828ac56a48182bd5b3b50012f927a7e792767a/contracts/schema.graphql
 tags:
 - name: GraphQL transport
 - name: Local service
@@ -2099,7 +2099,7 @@ x-command-examples:
 x-contract-sources:
   graphql_sdl: contracts/schema.graphql
   graphql_sdl_sha256: 4849d0529f952e8d273572ad6988afe022a711a2c1f741a8a4ecdb28a348f3e7
-  source_commit: d12499be1fae164d401adb6362bab2a66d3c7fd8
+  source_commit: c2828ac56a48182bd5b3b50012f927a7e792767a
   controller: apps/api/app/controllers/graphql_controller.rb
   proxy: apps/web/app/api/graphql/route.ts
 x-agent-interfaces:
