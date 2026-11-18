@@ -30,7 +30,7 @@ class PreviewActivationTest(unittest.TestCase):
         (root / 'apps/web/.next-candidate-a').mkdir(parents=True)
         (root / 'apps/web/.next-candidate-a/BUILD_ID').write_text('synthetic-build')
         self.sha = 'a' * 40
-        (self.app.RUNTIME / 'candidate-build.json').write_text(json.dumps({'commit': self.sha, 'build_id': 'synthetic-build', 'slot': 'candidate-a', 'asset_hash': 'hash', 'api_endpoint': 'http://127.0.0.1:3108', 'api_container': 'candidate', 'api_image_id': 'image', 'validation': ['presentation_ui_check', 'product_http_check']}))
+        (self.app.RUNTIME / 'candidate-build.json').write_text(json.dumps({'commit': self.sha, 'build_id': 'synthetic-build', 'slot': 'candidate-a', 'asset_hash': 'hash', 'api_endpoint': 'http://127.0.0.1:3108', 'api_container': 'candidate', 'api_image_id': 'image', 'validation': ['presentation_ui_check', 'billing_platform_ui_check', 'product_http_check']}))
         self.control = SimpleNamespace(inactive=lambda slot: root / 'apps/web/.next-candidate-a', tree_hash=lambda path: 'hash', image_identity=lambda *args: 'image')
         stage = json.dumps({'api': 'http://127.0.0.1:3108', 'slot': 'candidate-a', 'health': {'source_revision': self.sha}}).encode()
         self.stage = lambda *args, **kwargs: BytesIO(stage)
@@ -52,6 +52,17 @@ class PreviewActivationTest(unittest.TestCase):
         if args[:2] == ('git', 'ls-remote'): return self.sha + '\trefs/heads/main'
         if args[:3] == ('gh', 'api', 'user'): return 'stevekkall-beansgc'
         return json.dumps({'check_runs': [{'name': name, 'status': 'completed', 'conclusion': 'success'} for name in ['check', 'architecture-compliance']]})
+
+    def test_shared_billing_acceptance_is_required_before_any_switch(self):
+        proof=self.app.RUNTIME / 'candidate-build.json'
+        data=json.loads(proof.read_text())
+        data['validation'].remove('billing_platform_ui_check')
+        proof.write_text(json.dumps(data))
+        with patch.object(self.app, 'run', self.run_command), patch.object(self.app, 'request') as remote:
+            with self.assertRaisesRegex(AssertionError, 'Candidate validation missing'):
+                self.app.activate(True, self.control)
+            remote.assert_not_called()
+        self.assertEqual(self.original_bytes,self.app.PLIST.read_bytes())
 
     def test_both_latest_exact_commit_checks_must_succeed(self):
         for checks in [

@@ -102,7 +102,7 @@ def activate(apply, control):
     assert build_proof['commit'] == sha, 'Build commit mismatch'
     assert build_proof['build_id'] == (path / 'BUILD_ID').read_text().strip(), 'Build identity changed'
     assert build_proof['asset_hash'] == control.tree_hash(path), 'Build assets changed'
-    assert build_proof['validation'] == ['presentation_ui_check', 'product_http_check'], 'Candidate validation missing'
+    assert build_proof['validation'] == ['presentation_ui_check', 'billing_platform_ui_check', 'product_http_check'], 'Candidate validation missing'
     endpoint = build_proof['api_endpoint']
     assert control.image_identity(build_proof['api_container'], endpoint, sha) == build_proof['api_image_id'], 'API image changed'
     with urllib.request.urlopen('http://127.0.0.1:3106/api/preview-health', timeout=10) as response:
