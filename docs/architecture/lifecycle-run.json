@@ -1,0 +1,92 @@
+{
+  "schema": "billing-lifecycle-proof/v1",
+  "synthetic": true,
+  "captured_on": "2026-11-18",
+  "description": "Executed synthetic cases exported without calculating or changing data. Cash and accounting are independent evidence.",
+  "cases": [
+    {
+      "case_id": "advisor",
+      "label": "Advisor business",
+      "billing_period": "October 2026",
+      "billing": {
+        "target_id": "bp-doc-cb20b291-7efe-4091-8eec-88b33eea7099",
+        "assessed_minor": 106918,
+        "applied_minor": 53459,
+        "outstanding_minor": 53459,
+        "ledger_hash": "90e74ce591b62a5b13cf6ad48ce3001b775ef61202488fcd5bfca2a032f1c79c"
+      },
+      "credit": {
+        "target_id": "bp-doc-e29e051c-bd23-437d-802b-5b23d1c852b3",
+        "credit_balance_minor": 3000,
+        "ledger_hash": "d204f1ac6b2ccd638822f9a9460bf2d472a5388fba48ad2cd75b52e642fab23d",
+        "requested_minor": 5000,
+        "confirmed_refund_minor": 2000
+      },
+      "earnings": {
+        "target_id": "bp-payable-6e057ec7-c25b-4e0d-9559-3c45eb6cf3f2",
+        "assessed_minor": 775523,
+        "applied_minor": 100000,
+        "outstanding_minor": 675523,
+        "ledger_hash": "7004f643d9e59dc983c314e77e3670452add908b9622f4032c33a6f5bb7d8c12"
+      },
+      "accounting": {
+        "package_id": "bp-accounting_package-20acf32a-bb2e-46ba-841e-5ed6ab88243d",
+        "package_hash": "1a71e26252ed2215e000b117ad5f218f1141d6fa15658d4dd76c57e3b24e4d10",
+        "recognized_minor": 106918,
+        "deferred_minor": 0,
+        "reported_ar_minor": 53459,
+        "journal_id": "mock-october-advisor",
+        "current": true,
+        "mocked": true
+      },
+      "worker": {
+        "job_id": "0e3efef6-195e-4b6e-aff9-8a6b3173e3d4",
+        "job_class": "BillingEvaluateJob",
+        "attempts": 1,
+        "status": "completed"
+      }
+    },
+    {
+      "case_id": "ria",
+      "label": "Independent RIA",
+      "billing_period": "October 2026",
+      "billing": {
+        "target_id": "bp-doc-551bc9c2-81bf-4e44-ac98-23a8fb64fda6",
+        "assessed_minor": 16000,
+        "applied_minor": 12500,
+        "outstanding_minor": 3500,
+        "ledger_hash": "eb4965cca018e13ea1ba8326df203f498bf593bf9fccb250187a747c8a3ffbe4"
+      },
+      "credit": {
+        "target_id": "bp-doc-cd54ba04-17e0-42d6-9b4e-1d6442194499",
+        "credit_balance_minor": 3000,
+        "ledger_hash": "03d7b6a85ac768e5ab6f38e8eccaf6f8b5bec9dd802748f169ea3472b45afcc2",
+        "requested_minor": 5000,
+        "confirmed_refund_minor": 2000
+      },
+      "earnings": {
+        "target_id": "bp-payable-b78c7374-1261-4808-b6e8-803c958cb90d",
+        "assessed_minor": 5000,
+        "applied_minor": 2000,
+        "outstanding_minor": 3000,
+        "ledger_hash": "edb75972f3e0e1164c3620e5f5626695ff77a38e2c0bbfd5161f82bfdb38dc90"
+      },
+      "accounting": {
+        "package_id": "bp-accounting_package-5600d1da-3917-42e0-91e1-53c784e1d1ca",
+        "package_hash": "5b5f815609e1c5f5e4285bfbd3409b8f1bacb65cbe459b5544c98eec46df8910",
+        "recognized_minor": 16000,
+        "deferred_minor": 0,
+        "reported_ar_minor": 3500,
+        "journal_id": "mock-october-ria",
+        "current": true,
+        "mocked": true
+      },
+      "worker": {
+        "job_id": "4a7b5f39-41df-484f-ae0f-c478d95b7f65",
+        "job_class": "BillingEvaluateJob",
+        "attempts": 1,
+        "status": "completed"
+      }
+    }
+  ]
+}

@@ -30,7 +30,11 @@ class BillingPolicy
         when 'aum'
           fail! unless %w[service_end prior_period_end].include?(component.fetch('valuation','service_end'))
           fail! if component['valuation']=='prior_period_end' && component.fetch('basis','daily')!='ending_value'
-          fail! unless %w[daily ending_value].include?(component.fetch('basis','daily'))
+          fail! unless %w[daily average_daily ending_value].include?(component.fetch('basis','daily'))
+          basis=component.fetch('basis','daily')
+          fail! if basis=='daily' && component['period_factor']
+          fail! if basis!='daily' && component['day_basis']
+          fail! if basis!='ending_value' && component['valuation']
           fail! unless [360,365,366].include?(component.fetch('day_basis',365))
           ratio!(component['period_factor']) if component['period_factor']
           ratio!(component['rate']) if component.key?('rate')
@@ -107,7 +111,7 @@ class BillingPolicy
     return {'balances'=>'daily'} if config['graph']
     components=config.fetch('components'); opening=components.any? { |c| c['valuation']=='prior_period_end' }
     bases=components.select { |c| c['kind']=='aum' && c['valuation']!='prior_period_end' }.map { |c| c.fetch('basis','daily') }
-    mode=bases.include?('daily') ? 'daily' : (bases.any? || config['allocation']=='balance') && !opening ? 'ending' : 'none'
+    mode=(bases&%w[daily average_daily]).any? ? 'daily' : (bases.any? || config['allocation']=='balance') && !opening ? 'ending' : 'none'
     mode=mode=='none' ? 'opening' : mode+'_opening' if opening
     {'balances'=>mode}
   end
@@ -257,9 +261,9 @@ class BillingPolicy
         else literal("#{key}_rate",component.fetch('rate')) end
         node("#{key}_rated",'accrue','USD_minor','exact_accrual',{'left'=>source,'right'=>rate})
       end
-      factor=component.fetch('basis','daily')=='daily' ? Rational(1,component.fetch('day_basis',365)) : Rational(account ? active_days(account).size : (@b-@a).to_i,(@bill_b-@bill_a).to_i)*Rational(component.fetch('period_factor','1/12'))
+      factor=component.fetch('basis','daily')=='daily' ? Rational(1,component.fetch('day_basis',365)) : component['basis']=='average_daily' ? Rational(component.fetch('period_factor','1/12'))/(@bill_b-@bill_a).to_i : Rational(account ? active_days(account).size : (@b-@a).to_i,(@bill_b-@bill_a).to_i)*Rational(component.fetch('period_factor','1/12'))
       scalar=literal("#{key}_calendar",factor)
-      node("#{key}_exact",'multiply','USD_minor','exact_accrual',{'left'=>exact,'right'=>scalar,'component'=>component['id'],'explanation'=>component.fetch('basis','daily')=='daily' ? "Accrual for #{day}" : "Valuation as of #{component['valuation']=='prior_period_end' ? @a-1 : @b-1}",**(component.fetch('basis','daily')=='daily' ? {'interval_fact'=>calendar} : {})})
+      node("#{key}_exact",'multiply','USD_minor','exact_accrual',{'left'=>exact,'right'=>scalar,'component'=>component['id'],'explanation'=>component.fetch('basis','daily')!='ending_value' ? "Accrual for #{day}" : "Valuation as of #{component['valuation']=='prior_period_end' ? @a-1 : @b-1}",**(component.fetch('basis','daily')!='ending_value' ? {'interval_fact'=>calendar} : {})})
     end
     exact=add("#{id}_accrual",parts,'exact_accrual')
     node(id,'assess','USD_minor','assessed',{'input'=>exact,'rounding'=>'half_up'})

@@ -13,14 +13,14 @@ The two service periods show real synthetic input flowing through the shared pat
 Advisor compensation and reported custody income are separate from billed fees.
 
 Internal Product opens source processing, terms, calculations and native documents
-through the four-step overview. Finance reviews exact billing corrections. Campfire
+through the four-step overview. Finance opens the connected bill/cash/recognition view and reviews exact corrections. Earnings separates calculated amounts, approved native payables and confirmed payments. The pipeline has PostgreSQL-backed scheduled work and retained execution attempts. Campfire
 and CLM remain mocked; supplied payment/accounting observations do not imply a live
 operation. Real disclosures retain view/download options; signed agreements remain
 absent. Earlier household/book examples remain under Demo identity.
 
 Fresh setup explicitly runs `script/seed_presentation.rb` and
-`script/seed_billing_platform.rb` after schema preparation and base seeds. Page reads
-and preview activation never seed. Read `FOUR-CAPABILITY-VALIDATION.md` for limits.
+`script/seed_billing_platform.rb` and `script/seed_billing_closure.rb` after schema preparation and base seeds. Page reads
+and preview activation never seed. Read `FOUR-CAPABILITY-CLOSURE-VALIDATION.md` for current scope and limits.
 
 The new schema is rehearsed on a restored database clone at 55440, container
 `savvy-platform-preview-db`, volume `savvy-platform-preview-data`. Before activation,
@@ -34,7 +34,7 @@ use a forward fix or an explicit reconciliation before any later rollback.
 Build and test in an inactive directory. Never rebuild a live Next directory.
 Read `.runtime/hosting/activation.json` and the owned LaunchAgent to identify the
 active pair; historical build-slot names below are not deployment authority.
-Port 3106 is staging only. API slots 3108/3109 are loopback-only; 3102 remains the
+Port 3106 is staging only. The closure candidate uses a fresh retained clone at 55441; verify actual container names in the activation receipt before connecting. API slots 3108/3109 are loopback-only; 3102 remains the
 source-frozen baseline rollback API.
 
 1. Commit reviewed source. `python3 deploy/preview-control.py candidate-a`
@@ -45,7 +45,8 @@ source-frozen baseline rollback API.
    temporary `/tmp`, `SAVVY_IMMUTABLE_PREVIEW=1`, and the prepared retained-clone DB connection.
    Do not run database preparation, migrations or seeds. Image labels and health
    metadata must identify the exact source and disabled reloading.
-3. Start the inactive frontend on 3106 with its slot and candidate API URL. Run
+3. Run a worker from the same immutable API image with `bundle exec rails runner script/billing_worker.rb`, using the prepared database. It requires no public port or source mount.
+   Start the inactive frontend on 3106 with its slot and candidate API URL. Run
    `python3 deploy/preview-control.py candidate-a --record --api http://127.0.0.1:3108 --container CONTAINER`.
    This verifies the staged frontend/API pair, runs read-only browser and HTTP
    acceptance, then binds the exact source, BUILD_ID, served-asset hash and image

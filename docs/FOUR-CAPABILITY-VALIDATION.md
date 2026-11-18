@@ -1,4 +1,8 @@
-# Shared billing validation
+# Shared billing foundation validation
+
+Historical foundation milestone. It did not fully complete the four priorities.
+Current closure scope and evidence: `FOUR-CAPABILITY-CLOSURE.md` and
+`FOUR-CAPABILITY-CLOSURE-VALIDATION.md`. Earlier limits below describe that build.
 
 This milestone implements both product cases through the same source, policy,
 engine and native document path. Existing household/book examples remain retained.

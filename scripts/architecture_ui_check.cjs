@@ -24,6 +24,8 @@ function check(value, name) { assert.ok(value, name); checks.push(name); }
     await page.goto(origin);
     await page.evaluate(() => document.fonts.ready);
     check(await page.getByRole('tab').count() === 3, 'Three architecture views');
+    check(await page.locator('#lifecycle-proof [data-component="proof"]').count()===3,'Mental model includes both executed product examples');
+    await page.locator('#lifecycle-proof [data-component="proof"]').first().click();await page.locator('#detail[open]').waitFor();check((await page.locator('#detail-body').innerText()).includes('Refund independently confirmed'),'Mental model links actual refund and payout proof');await page.keyboard.press('Escape');
     const components = await page.evaluate(() => Object.keys(DATA.components));
     const nodes = await page.evaluate(() => SAMPLE.policy_graph.nodes.map(n => n.id));
     for (const tab of ['overview', 'architecture', 'engine']) {

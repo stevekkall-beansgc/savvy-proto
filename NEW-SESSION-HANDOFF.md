@@ -3,13 +3,13 @@
 ## Four-capability closure — current work
 
 The user explicitly reopened the four priorities: the shared invoice foundation
-was not full completion. `docs/FOUR-CAPABILITY-CLOSURE.md` is the acceptance contract.
+was not full completion. `docs/FOUR-CAPABILITY-CLOSURE.md` is the acceptance contract; `docs/FOUR-CAPABILITY-CLOSURE-VALIDATION.md` maps each case to implementation and proof.
 New services cover a signed claim ledger, independent cash/refund associations,
 versioned mock accounting packages/replacements, same-engine earnings and native
 payables, and a PostgreSQL leased ActiveJob queue. The architecture must reflect
 actual executed cases after acceptance. Campfire and CLM remain mocked.
 
-Migrations 006/007 add operational queue state, native payable metadata/guards and
+Migrations 006/007/008 add operational queue state, native payable metadata/guards and
 scoped lifecycle evidence. Never migrate the active retained database in place.
 Verify `.runtime/hosting/activation.json` for the actual active pair; development
 uses disposable 55439, while deployment must use a newly restored retained clone.

@@ -281,7 +281,7 @@ class BillingPlatform
   end
   def retry_work(input)
     w.guard!('operator'); m.reason!(input['reason'])
-    old=BillingWorkItem.find_by!(**w.scope,case_id:case_id,job_id:input.fetch('job_id'))
+    old=BillingWorkItem.find_by(**w.scope,case_id:case_id,job_id:id!(input.fetch('job_id'))) || error('NOT_FOUND')
     error('INVALID_JOB') unless %w[failed quarantined].include?(old.status) && BillingWorker::CLASSES.include?(old.job_class)
     args=copy(old.job_data['arguments']); args[-1]=input['source_id'] if input['source_id'] && old.job_class=='BillingNormalizeJob'
     error('INVALID_JOB') if input['source_id'] && old.job_class!='BillingNormalizeJob'

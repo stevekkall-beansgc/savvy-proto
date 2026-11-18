@@ -267,6 +267,61 @@ COMPONENTS['billing']['summary']='Invoices, credit notes and debit notes are nat
 for component in COMPONENTS.values():
     if component['title']=='Background jobs':component['implementation']='BillingNormalizeJob is an actual ActiveJob entry point. The preview executes it inline and records every execution. A durable queue/worker deployment remains future infrastructure.'
 
+add('queue','Durable scheduled work','PostgreSQL + ActiveJob + BillingWorker','Implemented',
+    'Queued work survives a worker restart. A lease and retained attempts make retries inspectable.',
+    'BillingWorker claims due billing_work_items with FOR UPDATE SKIP LOCKED, executes allowlisted ActiveJobs, records immutable work_attempt evidence and settles the lease. BillingNormalizeJob deduplicates records; BillingEvaluateJob reuses its job ID at the transactional command boundary. Quarantined input requires an explicit retry.',
+    ['One-shot run_at scheduling and scoped batch evaluation.','Bounded automatic retries; expired leases are recoverable.','Mutable operational queue state is separate from immutable financial history.'],
+    'Representative 200-group and crash/concurrency tests are synthetic proofs; no production throughput guarantee or live provider connector.',
+    [ref(SERVICE+'billing_worker.rb','def self.perform_one','Claim, lease, retry and retained attempts'),ref(API+'jobs/billing_evaluate_job.rb','class BillingEvaluateJob','Idempotent evaluation job'),ref('apps/api/script/billing_worker.rb','until stop','Actual worker process')])
+add('cash','Cash applications and refunds','BillingLifecycle + retained source evidence','Implemented',
+    'Confirmed cash, an operational application and a refund request are separate records.',
+    'BillingLifecycle verifies exact source identity/revision/hash, legal parties, currency, available cash and target version. Applications and reversals append history. Overpayments and excess credits remain visible; requested refunds require independently confirmed outbound cash. Canceling a request releases only its unapplied remainder.',
+    ['No transfer is initiated.','Source revisions require review; old associations remain preserved.','Native claims less active applications produce the displayed balance.'],
+    'Cash observations are synthetic; real payment execution stays outside this prototype.',
+    [ref(SERVICE+'billing_lifecycle.rb','def apply(','Confirmed source application'),ref(SERVICE+'billing_lifecycle.rb','def request_refund','Refund reservation and request'),ref(SERVICE+'billing_lifecycle.rb','def position','Claim-grain ledger projection')])
+add('recognition','Accounting packages and outcomes','BillingLifecycle + mock Campfire boundary','Mocked',
+    'Send a versioned billing evidence package; validate an independently supplied schedule and journal response.',
+    'The package pins native invoice/credit lines, service dates, policy references, cash position and an explicit fictional Finance treatment. Accepted responses bind the exact package/hash and reconcile supplied schedules and AR. Replacement requires the previous accepted source hash and a mock reversal journal reference.',
+    ['Recognition is never inferred from an invoice or a receipt.','Unknown outcomes remain unknown.','Billing/cash changes make an older acknowledgment stale.'],
+    'Campfire is mocked. No live journal is posted and no real accounting policy is selected by this prototype.',
+    [ref(SERVICE+'billing_lifecycle.rb','def package(','Package native evidence'),ref(SERVICE+'billing_lifecycle.rb','def accept_accounting','Validate supplied schedule, posting and replacement')])
+COMPONENTS['campfire']=dict(COMPONENTS['recognition'],id='campfire',title='Mock Campfire adapter')
+add('earnings','Earnings and native payables','BillingPolicy + BillingPayables','Implemented',
+    'The same engine composes issued fee share, salary, bonus and approved deductions. Approval and payment remain separate.',
+    'A purpose=earnings policy has its own dated schedule. Issued fee-share outputs enter a frozen manifest as derived evidence. Native BillingInstruction/items/obligations retain approved payables and recoupment corrections. Confirmed payout applications determine what remains owed; the original instruction is immutable.',
+    ['No second pricing engine.','Calculated estimate, approved entitlement and confirmed cash are distinct.','Independent Finance review precedes payable issue.'],
+    'No payroll or payment integration is live. Equity valuation and real loan servicing are not implied by approved monetary inputs.',
+    [ref(SERVICE+'billing_platform.rb','def billing_manifest','Issued fee-share derivation'),ref(SERVICE+'billing_payables.rb','def issue','Native payout issue and corrections'),ref(SERVICE+'billing_policy.rb','def compile','Shared policy compiler')])
+add('credit','Credits and correction history','BillingDocuments + BillingLifecycle','Implemented',
+    'A credit can exceed the bill. Keep a positive native credit note and an explicit remaining customer credit balance.',
+    'The engine separates nonnegative service charge from excess-credit obligation. Signed allocation deltas issue native credit/debit notes against the last issued target. Standalone credit notes can later be corrected to a debit. Source, version, posting period and review checks bind each issue.',
+    ['Original claims and native lines stay immutable.','Repeated corrections compare with the last issued target.','Refund requests, confirmations and reversals are independent evidence.'],
+    'All cases are synthetic; real legal credit/refund authority still requires the governing agreement.',
+    [ref(SERVICE+'billing_documents.rb','def propose','Exact correction proposal'),ref(SERVICE+'billing_documents.rb','def correct','Atomic credit/debit issue'),ref(SERVICE+'billing_lifecycle.rb','def cancel_refund','Cancel only unapplied request remainder')])
+add('proof','Executed product examples','Retained synthetic lifecycle export','Implemented',
+    'Both product examples run through the shared services and native records shown in the demo.',
+    'The read-only export opens retained native claims, applications, accounting acceptance and worker receipts. It does not run a price calculation or generate a made-up statement total.',
+    ['October: corrected bill, partial payment, current mock accounting package.','September: excess credit, refund request, partial independently confirmed refund.','Earnings: issued native payable and independently applied payout.'],
+    'A captured proof is a synthetic snapshot. The live demo may accumulate later reviewed changes.',
+    [ref('docs/architecture/lifecycle-run.json','billing-lifecycle-proof/v1','Executed proof snapshot'),ref('apps/api/script/export_billing_closure.rb','cases=%w','Read-only proof exporter'),ref(SERVICE+'billing_closure_seed.rb','def call','Explicit fixture setup through governed commands')])
+COMPONENTS['builder']['implementation']='BillingPolicy compiles API components or accepts a typed primitive graph. Supported components cover daily/average-daily/ending and prior-period valuations, progressive bands, dated/targeted rates, fixed, usage, time, approved events, caps/floors, customer credits and earnings. Every monetary operation remains a node in Economics::Engine.'
+COMPONENTS['builder']['refs'].append(ref(SERVICE+'disclosure_policy.rb','def self.build(','Retained minimal household graph builder'))
+COMPONENTS['billing']['summary']='Savvy owns native invoices, credit/debit notes, obligations and payout instructions; the displayed statement is a read projection.'
+COMPONENTS['billing']['refs'].append(ref(SERVICE+'billing_payables.rb','def persist','Native payable instruction and obligation persistence'))
+COMPONENTS['events']['implementation']='Original one-time charge, credit, bonus, expense, advance, loan-repayment and payout inputs enter BillingPipeline as source events. Finance reviews the exact normalized revision before the same engine can consume it. Category labels do not create a second calculator.'
+COMPONENTS['events']['refs']=[ref(SERVICE+'billing_platform.rb','def review_event','Exact source-bound Finance approval'),ref(SERVICE+'billing_pipeline.rb','def canonical!','Canonical event validation')]
+COMPONENTS['events']['limit']='Only approved source revisions enter calculations. Cash movements and recognition are separate evidence.'
+COMPONENTS['ui']['implementation']='BillingPlatformWorkspace and BillingLedger expose the shared client, Product and Finance paths. Grouped clients drill into accounts; statements open native documents; Finance opens cash/refund and mock recognition evidence; earnings separate calculated, approved and paid amounts. Reads do not price or seed.'
+COMPONENTS['ui']['refs']=[ref('apps/web/app/BillingPlatformWorkspace.tsx','export default function','Shared three-audience workspace'),ref('apps/web/app/BillingLedger.tsx','export default function','Cash, recognition and earnings explanation')]
+COMPONENTS['publication']['title']='Explicit issue boundary'
+COMPONENTS['publication']['implementation']='BillingPlatform retains internal engine calculations. Client billing and earnings come from explicitly issued native claims and payables. Source-fresh results and the required exact independent reviews gate issue; a page read cannot publish a new amount.'
+COMPONENTS['publication']['refs']=[ref(SERVICE+'billing_documents.rb','def issue(','Fresh native invoice issue'),ref(SERVICE+'billing_payables.rb','def issue','Reviewed payable issue')]
+COMPONENTS['publication']['limit']='Evaluation and issuance are separate commands. No issue action executes cash or posts a live journal.'
+COMPONENTS['normalize']['implementation']='BillingNormalizeJob calls BillingPipeline#normalize under the scoped transactional writer lock. It can run immediately or through the PostgreSQL queue. Versioned mappings preserve originals, exact conversions and source revisions; a failed row quarantines the delivery.'
+COMPONENTS['normalize']['refs']=[ref(API+'jobs/billing_normalize_job.rb','def perform','Actual normalization job'),ref(SERVICE+'billing_pipeline.rb','def normalize','Versioned normalization and quarantine')]
+COMPONENTS['reporting']['implementation']='dbt projects native invoices/lines, signed corrections, daily engine accruals, claim balances, cash lineage and mock accounting evidence at their explicit grains. These are read-only projections, not an additional pricing or recognition engine.'
+COMPONENTS['reporting']['refs']=[ref('analytics/models/marts/fct_shared_claim_balance.sql','with claims','Native claim and cash balance projection'),ref('analytics/models/marts/fct_shared_mock_accounting.sql','select tenant_id','Independent mock accounting outcomes')]
+
 def build(source_commit=None):
     sample_path = HERE / 'sample-run.json'
     sample = json.loads(sample_path.read_text())
@@ -283,7 +338,7 @@ def build(source_commit=None):
             if sha256(checked_blobs[code['path']]).hexdigest() != code['sha256']:
                 raise ValueError(f"Source differs from pinned commit: {code['path']}. Commit the source and pass --source-commit.")
             code['github'] = f"https://github.com/stevekkall-beansgc/savvy-proto/blob/{commit}/{code['path']}#L{code['line']}"
-    payload = dict(components=COMPONENTS, sample=sample, source_commit=commit,
+    payload = dict(components=COMPONENTS, sample=sample, lifecycle=json.loads((HERE/'lifecycle-run.json').read_text()), source_commit=commit,
                    repository='stevekkall-beansgc/savvy-proto', branch='codex/medallion-billing',
                    snapshot_date='18 November 2026')
     encoded = json.dumps(payload, separators=(',', ':')).replace('<', chr(92)+'u003c')
@@ -298,7 +353,7 @@ def build(source_commit=None):
     if re.search(r'\{\{[A-Z_]+\}\}', template):
         raise ValueError('Unresolved template token')
     (HERE/'index.html').write_text(template)
-    paths=sorted({r['path'] for c in COMPONENTS.values() for r in c['refs']} | {'docs/architecture/sample-run.json'})
+    paths=sorted({r['path'] for c in COMPONENTS.values() for r in c['refs']} | {'docs/architecture/sample-run.json','docs/architecture/lifecycle-run.json'})
     (HERE/'source-map.json').write_text(json.dumps({'paths':paths, 'source_commit':commit}, indent=2)+'\n')
     print(f'Built {len(COMPONENTS)} component explanations and {len(paths)} verified code targets.')
 

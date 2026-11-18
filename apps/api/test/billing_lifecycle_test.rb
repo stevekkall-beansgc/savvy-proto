@@ -86,6 +86,8 @@ class BillingLifecycleTest < BillingPlatformTest
     command('ACCEPT_ACCOUNTING',{'record_id'=>incoming.id.to_s,'expected_hash'=>incoming.payload_hash},'finance')
     evidence=lifecycle.evidence(root,internal:true)['accounting']; assert_equal true,evidence['current']; assert_equal 'mock-reversal-1',evidence['reversal_journal_id']
     assert_equal 2,@p.rows('accounting_acceptance').count
+    ingest([replacement.merge('revision'=>3)])
+    assert_equal false,lifecycle.evidence(root,internal:true).dig('accounting','current')
 
   end
   def test_database_queue_scheduling_quarantine_replay_and_retry_after_crash
@@ -158,10 +160,14 @@ class BillingLifecycleTest < BillingPlatformTest
     config={'version'=>'advance-v1','invoice_timing'=>'advance','allocation'=>'balance','components'=>[{'id'=>'asset','kind'=>'aum','basis'=>'ending_value','valuation'=>'prior_period_end','rate'=>'1/100','period_factor'=>'1/12'}]}
     reviewed(config,'group-one',a.iso8601,b.iso8601)
     run=command('EVALUATE',{'subject_id'=>'group-one','service_start'=>a.iso8601,'service_end_exclusive'=>b.iso8601}); assert_equal 166667,run['amount_minor']
-    root=root_for(issue(run)['document_id'])
+    root=root_for(issue(run)['document_id']); apply(root,cash(root,166667),166667)
     ingest(records.select { |r| r['type']=='account' }.map { |r| r.merge('revision'=>2,'active_to'=>(a+15).iso8601,'observed_at'=>Time.current.iso8601(6)) })
     revised=command('EVALUATE',{'subject_id'=>'group-one','service_start'=>a.iso8601,'service_end_exclusive'=>b.iso8601}); assert_equal 83333,revised['amount_minor']
     correct(root,revised); assert_equal 83333,lifecycle.position(root)['assessed_minor']
+    assert_equal 83334,lifecycle.position(root)['credit_balance_minor']
+    request=command('REQUEST_REFUND',{'target_id'=>root.external_id,'expected_ledger_hash'=>lifecycle.position(root)['ledger_hash'],'amount_minor'=>83334,'posting_period'=>Time.current.strftime('%Y-%m'),'reason'=>'Return the unearned portion of a prepaid fee'},'finance')
+    apply(root,cash(root,83334,direction:'outbound'),83334,{'request_id'=>request['request_id']})
+    assert_equal 0,lifecycle.position(root)['balance_minor']
     reviewed(config.merge('version'=>'arrears-v1','invoice_timing'=>'arrears'),'group-one',a.iso8601,b.iso8601)
     next_run=command('EVALUATE',{'subject_id'=>'group-one','service_start'=>a.iso8601,'service_end_exclusive'=>b.iso8601})
     assert_equal 'SERVICE_NOT_FINISHED',assert_raises(Economics::Error) { issue(next_run) }.code
@@ -222,6 +228,14 @@ class BillingLifecycleTest < BillingPlatformTest
     command('REQUEST_REFUND',{'target_id'=>root.external_id,'expected_ledger_hash'=>lifecycle.position(root)['ledger_hash'],'amount_minor'=>1500,'posting_period'=>Time.current.strftime('%Y-%m'),'reason'=>'Replace cancelled remainder'},'finance')
     command('CLOSE_PERIOD',{'posting_period'=>Time.current.strftime('%Y-%m'),'reason'=>'Close posting month'},'finance')
     assert_equal 'PERIOD_CLOSED',assert_raises(Economics::Error) { command('REQUEST_REFUND',{'target_id'=>root.external_id,'expected_ledger_hash'=>lifecycle.position(root)['ledger_hash'],'amount_minor'=>1,'posting_period'=>Time.current.strftime('%Y-%m'),'reason'=>'Attempt closed period'},'finance') }.code
+  end
+
+  def test_average_daily_and_daily_accrual_are_distinct_api_policy_choices
+    config={'version'=>'average-daily','allocation'=>'balance','components'=>[{'id'=>'asset','kind'=>'aum','basis'=>'average_daily','rate'=>'1/100','period_factor'=>'1/12'}]}
+    assign(publish(config)); assert_equal 166667,evaluate['amount_minor']
+    revised={'version'=>'daily-accrual','allocation'=>'balance','components'=>[{'id'=>'asset','kind'=>'aum','basis'=>'daily','rate'=>'1/100','day_basis'=>365}]}
+    assign(publish(revised)); assert_equal 10959,evaluate['amount_minor']
+    assert_equal 'INVALID_POLICY',assert_raises(Economics::Error) { command('SAVE_POLICY',{'policy'=>config.merge('components'=>[config['components'].first.merge('day_basis'=>365)]),'effective_from'=>'2026-09-01','effective_to'=>nil,'reason'=>'Reject an ignored day basis'}) }.code
   end
 
 end

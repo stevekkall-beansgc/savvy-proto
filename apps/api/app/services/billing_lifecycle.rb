@@ -48,7 +48,7 @@ class BillingLifecycle
     {'target_id'=>root.external_id,'kind'=>root.kind,'subject_id'=>root.payload['subject_id'],'assessed_minor'=>assessed,'applied_minor'=>applied,'balance_minor'=>balance,'outstanding_minor'=>[balance,0].max,'credit_balance_minor'=>[-balance,0].max,'ledger_hash'=>@p.hash({'claims'=>claims.map { |r,amount| [r.external_id,r.payload_hash,amount] },'applications'=>apps.map { |r| [r.external_id,r.payload_hash] },'current_cash_sources'=>source_states,'application_history'=>all_apps.map { |r| [r.external_id,r.payload_hash] },'reversals'=>reversals.map { |r| [r.external_id,r.payload_hash] }}),'documents'=>docs.map(&:external_id),'needs_source_review'=>source_states.any? { |state| !state.last }}
   end
   def source(input,type)
-    id=input.fetch('record_id').to_s
+    id=input.fetch('record_id').to_s; @p.id!(id)
     row=id.match?(/\A\d+\z/) ? @p.rows('normalized').find_by(id:id.to_i) : @p.rows('normalized').where(external_id:id).order(revision: :desc).first
     @p.error('NOT_FOUND') unless row
     @p.error('HASH_CHANGED','Review the current exact source revision') unless row.payload_hash==input.fetch('expected_hash') && BillingPipeline.new(@p).current.where(id:row.id).exists?
@@ -156,7 +156,7 @@ class BillingLifecycle
     state['refund_requests']=@p.rows('refund_request').where(parent_id:root.id).order(:id).map { |r| {'id'=>r.external_id,'hash'=>r.payload_hash,'cancelled'=>@p.rows('refund_request').where(parent_id:r.id,status:'rejected').exists?,**r.payload.slice('amount_minor','execution_status','reason'),'confirmed_minor'=>applications(root).where("payload->>'request_id'=?",r.external_id).sum(Arel.sql("(payload->>'amount_minor')::bigint")).to_i} }
     if internal
       ack=@p.rows('accounting_acceptance').where("payload->>'target_id'=?",root.external_id).order(:id).last
-      state['accounting']=ack && ack.payload.merge('id'=>ack.external_id,'current'=>ack.payload['ledger_hash']==state['ledger_hash'])
+      state['accounting']=ack && ack.payload.merge('id'=>ack.external_id,'current'=>ack.payload['ledger_hash']==state['ledger_hash'] && BillingPipeline.new(@p).current(types:['accounting']).where(id:ack.payload['record_id']).exists?)
       state['packages']=@p.rows('accounting_package').where(parent_id:root.id).order(id: :desc).limit(10).map { |r| {'id'=>r.external_id,'hash'=>r.payload_hash,'current'=>r.payload['ledger_hash']==state['ledger_hash'],**r.payload.slice('posting_period','treatment_ref')} }
       cash=BillingPipeline.new(@p).current(types:['cash']).where(subject_id:root.payload['subject_id']).where("payload->'record'->>'document_id' IN (?)",state['documents'])
       state['cash_observations']=cash.order(:id).limit(100).map { |r| {'id'=>r.id.to_s,'hash'=>r.payload_hash,**r.payload['record'].slice('amount_minor','status','direction','date','payer_id','payee_id')} }

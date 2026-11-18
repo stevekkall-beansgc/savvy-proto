@@ -299,7 +299,8 @@ CREATE TABLE public.billing_instructions (
     calculation_ref character varying,
     posting_period character varying,
     corrects_instruction_id bigint,
-    CONSTRAINT billing_instruction_values CHECK (((amount_minor > 0) AND (revision > 0)))
+    CONSTRAINT billing_instruction_values CHECK (((amount_minor > 0) AND (revision > 0))),
+    CONSTRAINT native_payable_required_metadata CHECK ((((external_id)::text !~~ 'bp-payable-%'::text) OR ((debtor_id IS NOT NULL) AND (creditor_id IS NOT NULL) AND ((debtor_id)::text <> (creditor_id)::text) AND (billing_case_id IS NOT NULL) AND (billing_subject_id IS NOT NULL) AND (currency IS NOT NULL) AND (calculation_ref IS NOT NULL) AND (posting_period IS NOT NULL))))
 );
 
 
@@ -1571,6 +1572,7 @@ ALTER TABLE ONLY public.medallion_evidence
 SET search_path TO "$user", public;
 
 INSERT INTO "schema_migrations" (version) VALUES
+('20261118000800'),
 ('20261118000700'),
 ('20261118000600'),
 ('20261118000500'),
