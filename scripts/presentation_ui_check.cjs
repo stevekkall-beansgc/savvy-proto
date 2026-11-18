@@ -8,6 +8,8 @@ assert(['http://127.0.0.1:3100','http://127.0.0.1:3104','http://127.0.0.1:3106']
  const browser=await chromium.launch({executablePath,headless:true});
  const page=await browser.newPage({viewport:{width:1440,height:1000}});
  const errors=[];page.on('pageerror',e=>errors.push(e.message));
+ const householdQueries=[];let householdMode=true;
+ page.on('request',req=>{if(householdMode&&req.url().endsWith('/api/graphql')){try{householdQueries.push(JSON.parse(req.postData()||'{}').query||'')}catch{}}});
  let checks=0;const check=(value,label)=>{assert(value,label);checks++};
  const text=()=>page.locator('main').innerText();
  const nav=async(name)=>{await page.getByRole('navigation',{name:'Workspace navigation'}).getByRole('button',{name,exact:true}).click()};
@@ -32,10 +34,13 @@ assert(['http://127.0.0.1:3100','http://127.0.0.1:3104','http://127.0.0.1:3106']
  check(await page.getByRole('link',{name:'Explore the technical architecture ↗'}).getAttribute('href')==='https://savvy.beanshop.top/','Product links public architecture');
  await nav('Work queue');await ready('Household terms requests');check(!(await text()).includes('Advisor business · Compensation'),'Queue contains household requests only');
  await identity('finance');await ready('Household billing: cash and recognition');t=await text();check(t.includes('$1,000.00')&&t.includes('$500.00')&&t.includes('$300.00')&&t.includes('$200.00'),'Finance separates invoice, credit, confirmed refund and balance');check(!t.includes('Quarterly service')&&!t.includes('Sep '),'Unrelated finance fixtures absent');check(t.includes('Original receipt')&&t.includes('Loan cash advance')&&t.includes('$12,000.00'),'Finance shows separately evidenced cash');
- await nav('Work queue');await ready('Household terms requests');t=await text();check(!t.includes('Approve as Legal')&&!t.includes('Publish reviewed policy')&&!t.includes('Assign a published policy'),'Finance queue has no Legal or operator actions');await nav('Finance');await ready('Household billing: cash and recognition');
+ await nav('Work queue');await ready('Household terms requests');t=await text();check(!t.includes('Approve as Legal')&&!t.includes('Publish reviewed policy')&&!t.includes('Assign a published policy'),'Finance queue has no Legal or operator actions');
+ if(await page.locator('.dw-change').filter({hasText:'Comparison ID:'}).count())check(await page.getByRole('button',{name:'Approve as Finance',exact:true}).count()>0,'Finance receives comparison review controls');
+ check(!householdQueries.some(q=>/audienceSummary|medallionWorkspace|productWorkspace/.test(q)),'Household screens make no unused baseline workspace reads');
+ await nav('Finance');await ready('Household billing: cash and recognition');
  await page.getByRole('button',{name:'View balance evidence →'}).click();await page.getByRole('dialog').waitFor();check((await page.getByRole('dialog').innerText()).includes('$200.00'),'Refund evidence opens');await page.keyboard.press('Escape');
  await identity('client');await ready('Your business at a glance.');
- await page.getByLabel('Billing example').selectOption('book');await ready('Your business at a glance.');check((await text()).includes('Sep '),'Historical business book remains accessible');check(!(await text()).includes('Household billing'),'Household not appended to book');
+ householdMode=false;await page.getByLabel('Billing example').selectOption('book');await ready('Your business at a glance.');check((await text()).includes('Sep '),'Historical business book remains accessible');check(!(await text()).includes('Household billing'),'Household not appended to book');
  await page.locator('.aud-account-label select').selectOption('ria');await ready('How your terms compare');check(!(await text()).includes('FEBRUARY 2027'),'RIA book does not mix periods');
  await page.getByLabel('Billing example').selectOption('household');await ready('Your business at a glance.');
  if(process.env.SAVVY_SCREENSHOT)await page.screenshot({path:process.env.SAVVY_SCREENSHOT.replace('.png','-desktop.png'),fullPage:true});

@@ -8,7 +8,7 @@ import urllib.request
 
 ROOT = Path(__file__).resolve().parent.parent
 API = os.environ.get('SAVVY_API_ORIGIN', 'http://127.0.0.1:3102') + '/graphql'
-if API not in {'http://127.0.0.1:3102/graphql', 'http://127.0.0.1:3108/graphql'}:
+if API not in {'http://127.0.0.1:3102/graphql', 'http://127.0.0.1:3108/graphql', 'http://127.0.0.1:3109/graphql'}:
     raise ValueError('Acceptance only targets isolated local APIs')
 PREVIEW = os.environ.get('SAVVY_PREVIEW_ORIGIN', 'http://127.0.0.1:3104')
 if PREVIEW not in {'http://127.0.0.1:3103', 'http://127.0.0.1:3104', 'http://127.0.0.1:3106'}:
@@ -79,7 +79,7 @@ def main():
     finance = view('finance', 'advisor', 'finance')
     cash = by_id(finance['sections']['lifecycle'] + finance['sections']['compensation'])
     for key, amount in [('disclosure-receipt', 100000), ('disclosure-refund', 30000), ('disclosure-loan-cash', 1200000)]:
-        check(cash[key]['amount_minor'] == amount and bool(cash[key].get('record_id')), f'{key} is separately evidenced Finance cash')
+        check(int(cash[key]['amount_minor']) == amount and bool(cash[key].get('record_id')), f'{key} is separately evidenced Finance cash')
     product_changes = by_id(product['sections']['changes'])
     finance_changes = by_id(finance['sections']['changes'])
     for key, change in finance_changes.items():
