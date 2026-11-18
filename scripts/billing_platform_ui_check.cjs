@@ -7,11 +7,12 @@ assert(['http://127.0.0.1:3100','http://127.0.0.1:3104','http://127.0.0.1:3106']
 (async()=>{
  const browser=await chromium.launch({executablePath:process.env.SAVVY_BROWSER_BINARY||(process.platform==='darwin'?'/Applications/Google Chrome.app/Contents/MacOS/Google Chrome':undefined),headless:true});
  const page=await browser.newPage({viewport:{width:1440,height:1000}}),errors=[],queries=[];let checks=0;
+ page.setDefaultTimeout(10000);
  page.on('pageerror',e=>errors.push(e.message));page.on('request',r=>{if(r.url().endsWith('/api/graphql'))queries.push(JSON.parse(r.postData()||'{}').query||'')});
  const check=(v,label)=>{assert(v,label);checks++};
  const nav=async name=>page.getByRole('navigation',{name:'Workspace navigation'}).getByRole('button',{name,exact:true}).click();
  const ready=async text=>page.getByRole('heading',{name:text,exact:true}).waitFor();
- const identity=async audience=>{const d=page.locator('.aud-presenter details');if(await d.getAttribute('open')===null)await d.locator('summary').click();await page.getByLabel('View as',{exact:true}).selectOption(audience)};
+ const identity=async audience=>{const d=page.locator('.aud-presenter details');if(await d.getAttribute('open')===null)await d.locator('summary').click();await page.getByLabel('View as').selectOption(audience)};
  try{
  await page.goto(base);await ready('Your business at a glance.');
  for(const business of ['advisor','ria']){
@@ -24,7 +25,7 @@ assert(['http://127.0.0.1:3100','http://127.0.0.1:3104','http://127.0.0.1:3106']
   await page.getByRole('button',{name:'View billing →'}).first().click();await page.getByRole('dialog').waitFor();
   check((await page.getByRole('dialog').innerText()).includes('Invoice'),'Client drilldown opens its billing documents');await page.keyboard.press('Escape');
   await nav('Statements');await ready('Statements & invoices.');await page.locator('.aud-list>button').first().click();await page.getByRole('dialog').waitFor();
-  let text=await page.getByRole('dialog').innerText();check(text.includes('Payer')&&text.includes('Due')&&text.includes('Calculation basis'),'Traditional invoices carry dates, parties and applied terms');
+  let text=await page.getByRole('dialog').innerText();check(text.includes('PAYER')&&text.includes('DUE')&&text.includes('Calculation basis'),'Traditional invoices carry dates, parties and applied terms');
   check(await page.getByRole('dialog').locator('tbody tr').count()>=2,'Native account allocations are visible');
   if(business==='ria'){check(text.includes('Source-reported · excluded from this bill')&&text.includes('$1,200.00'),'Custody income is separately evidenced, never netted into platform fees')}
   await page.keyboard.press('Escape');await nav('Agreements');await ready('Agreements & terms.');check((await page.locator('main').innerText()).includes('Signed agreement not yet provided'),'Agreement viewer stays honest');

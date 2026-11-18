@@ -39,7 +39,7 @@ class BillingPlatform
     [a,b]
   end
   def implementation_hash
-    paths=Dir[Rails.root.join('app/services/billing_*.rb')]+Dir[Rails.root.join('app/jobs/billing_*.rb')]+Dir[Rails.root.join('app/domains/economics/*.rb')]
+    paths=%w[billing_platform billing_policy billing_pipeline billing_documents].map { |name| Rails.root.join("app/services/#{name}.rb").to_s }+Dir[Rails.root.join('app/jobs/billing_*.rb')]+Dir[Rails.root.join('app/domains/economics/*.rb')]
     hash(paths.sort.to_h { |path| [File.basename(path),Digest::SHA256.file(path).hexdigest] })
   end
   def command(action,input,key)
