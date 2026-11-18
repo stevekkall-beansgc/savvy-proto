@@ -75,6 +75,7 @@ type Money {
 }
 
 type Mutation {
+  billingCommand(action: String!, caseId: ID!, idempotencyKey: String!, input: JSON!): Payload!
   disclosureCommand(action: String!, idempotencyKey: String!, input: JSON!): Payload!
   financeCommand(action: FinanceCommand!, idempotencyKey: String!, input: JSON!): Payload!
   medallionCommand(action: MedallionCommand!, idempotencyKey: String!, input: JSON!): Payload!
@@ -88,13 +89,14 @@ type Payload {
 }
 
 type Query {
-  disclosureWorkspace(audience: String!, caseId: ID!, limit: Int, offset: Int, pageChanges: Boolean): JSON!
   audienceClient(caseId: ID!, clientId: ID!, limit: Int, offset: Int): JSON!
   audienceClients(caseId: ID!, limit: Int, offset: Int, search: String): JSON!
   audienceStatement(caseId: ID!, limit: Int, offset: Int): JSON!
   audienceSummary(caseId: ID!): JSON!
+  billingWorkspace(audience: String!, caseId: ID!, limit: Int, offset: Int, recordId: ID, search: String, section: String, serviceEndExclusive: String, serviceStart: String, subjectId: ID): JSON!
   brokerBook(brokerId: ID!, runId: ID): BrokerBook
   collections(customerId: ID, knowledgeCutoff: String): JSON!
+  disclosureWorkspace(audience: String!, caseId: ID!, limit: Int, offset: Int, pageChanges: Boolean): JSON!
   entitlementLedger(brokerId: ID): JSON!
   financeWorkspace(caseId: ID!): JSON!
   lineageRecord(caseId: ID!, limit: Int, offset: Int, recordId: ID!): JSON!

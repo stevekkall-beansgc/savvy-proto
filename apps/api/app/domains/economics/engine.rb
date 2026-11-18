@@ -7,7 +7,7 @@ require_relative "program"
 module Economics
   # Pure USD example policy. Inputs are frozen values; this class does no IO.
   class Engine
-    VERSION = "economics-ruby/0.5.0"
+    VERSION = "economics-ruby/0.6.0"
     PROFILE = "demo-policy-profile-v1"
     DIMENSIONS = %w[customer_type product_type].freeze
     MAX_MINOR = 10**15
@@ -229,7 +229,7 @@ module Economics
         case node['op']
         when 'add','min','max','distribute' then node.fetch('inputs')
         when 'subtract','net','multiply','accrue' then [node.fetch('left'),node.fetch('right')]
-        when 'assess','allocate' then [node.fetch('input')]
+        when 'exact','assess','allocate' then [node.fetch('input')]
         when 'allocate_by' then [node.fetch('input')] + node.fetch('weights').values
         when 'bands' then [node.fetch('input')] + node.fetch('bands').map { |band| band.fetch('rate') }
         when 'select' then node.fetch('candidates').map { |candidate| candidate.fetch('value') }
@@ -306,7 +306,7 @@ module Economics
         case node['op']
         when 'add', 'min', 'max', 'distribute' then node.fetch('inputs')
         when 'subtract', 'net', 'multiply', 'accrue' then [node.fetch('left'),node.fetch('right')]
-        when 'assess', 'allocate' then [node.fetch('input')]
+        when 'exact', 'assess', 'allocate' then [node.fetch('input')]
         when 'allocate_by' then [node.fetch('input')] + node.fetch('weights').values
         when 'bands' then [node.fetch('input')] + node.fetch('bands').map { |band| band.fetch('rate') }
         when 'select' then node.fetch('candidates').map { |c| c.fetch('value') }
@@ -329,6 +329,7 @@ module Economics
         if node['op']=='select'
           keys << node['date_fact'] if node['date_fact']
           keys.concat(node.fetch('candidates').filter_map { |candidate| candidate['signup_fact'] })
+          keys.concat(node.fetch('candidates').flat_map { |candidate| candidate.fetch('matches',{}).keys })
         end
         keys.uniq.each do |key|
           fact = facts[key] || rates[key]
@@ -350,7 +351,7 @@ module Economics
         end
         d.merge('explanation'=>node['explanation'], 'output_class'=>node['output_class'], 'economic_key' => node['economic_key'] || d['id'], 'component' => node['component'] || d['id'], 'payer' => node['payer'], 'payee' => node['payee'], 'subject' => node['subject'], 'currency' => node['currency'] || (d['unit'].match?(/\A[A-Z]{3}_minor\z/) ? d['unit'][0,3] : nil), 'interval' => interval, 'netting_authority_ref'=>node['authority_fact'], 'dependency_refs'=>dependencies.call(node), 'binding_refs'=>result['bindings'].select { |binding| binding['node'] == d['id'] }.map { |binding| binding['node'] }, 'source_refs'=>source_refs.call(d['id'], []), 'exact_amount' => d['value'], 'assessed_minor' => d['basis'] == 'assessed' && exact.denominator == 1 ? exact.numerator : nil)
       end
-      { 'schema_version' => 'medallion-evaluation/v1', 'engine_language_version' => 'primitive-graph/0.4', 'status' => result['status'], 'context' => Canonical.copy(context), 'input_manifest_hash' => Canonical.hash(manifest), 'policy_manifest_hash' => Canonical.hash(bundle), 'bindings' => result['bindings'], 'details' => details, 'outputs' => details.select { |d| %w[terminal summary].include?(d['role']) }.map { |d| { 'id' => d['id'], 'detail_refs' => [d['id']] } }, 'coverage' => [], 'exceptions' => result['exceptions'] }
+      { 'schema_version' => 'medallion-evaluation/v1', 'engine_language_version' => 'primitive-graph/0.5', 'status' => result['status'], 'context' => Canonical.copy(context), 'input_manifest_hash' => Canonical.hash(manifest), 'policy_manifest_hash' => Canonical.hash(bundle), 'bindings' => result['bindings'], 'details' => details, 'outputs' => details.select { |d| %w[terminal summary].include?(d['role']) }.map { |d| { 'id' => d['id'], 'detail_refs' => [d['id']] } }, 'coverage' => [], 'exceptions' => result['exceptions'] }
     rescue KeyError, TypeError
       raise Error.new('INVALID_PROGRAM', 'Incomplete manifest interface')
     end

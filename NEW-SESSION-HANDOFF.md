@@ -1,5 +1,23 @@
 # Savvy execution handoff
 
+## Shared billing milestone — 18 November 2026
+
+Read `docs/FOUR-CAPABILITY-PLAN.md` and `docs/FOUR-CAPABILITY-VALIDATION.md`.
+The default workspace now uses shared source mappings, normalization jobs, policy
+composition/typed graphs, dated schedules, one engine and native invoices plus
+reviewed credit/debit corrections for both product cases. The earlier examples
+remain available under Demo identity. Campfire and CLM remain mocked.
+
+This milestone adds five migrations. Never run them on the currently served old
+database. Candidate database is `savvy-platform-preview-db` / volume
+`savvy-platform-preview-data`, loopback 55440, restored from the prior retained DB
+and verified against old-column fingerprints before/after explicit fixture install.
+Original DB `savvy-medallion-db-1` / 55438 is retained. Consult the actual activation
+receipt and API container PGHOST before assuming which database is serving.
+The intended new pair is candidate-b / API3109; actual success must be verified in
+`.runtime/hosting/activation.json`. Do not rebuild an active slot.
+
+
 ## Eight-issue corrective milestone — 18 November 2026
 
 Read `docs/EIGHT-ISSUE-FIX-PLAN.md` and `docs/EIGHT-ISSUE-VALIDATION.md` first.

@@ -60,6 +60,21 @@ module DemoGraph
     field :errors, [DomainError], null: false
   end
   class Query < GraphQL::Schema::Object
+    field :billing_workspace, GraphQL::Types::JSON, null: false do
+      argument :case_id, ID, required: true
+      argument :audience, String, required: true
+      argument :section, String, required: false
+      argument :subject_id, ID, required: false
+      argument :record_id, ID, required: false
+      argument :service_start, String, required: false
+      argument :service_end_exclusive, String, required: false
+      argument :search, String, required: false
+      argument :limit, Integer, required: false
+      argument :offset, Integer, required: false
+    end
+    def billing_workspace(case_id:,audience:,**options)
+      DemoGraph.present(BillingWorkspace.new(context.fetch(:workbench),case_id).view(audience:audience,**options))
+    end
     field :disclosure_workspace, GraphQL::Types::JSON, null: false do
       argument :case_id, ID, required: true
       argument :audience, String, required: true
@@ -177,6 +192,20 @@ module DemoGraph
     end
   end
   class Mutation < GraphQL::Schema::Object
+    field :billing_command, Payload, null: false do
+      argument :case_id, ID, required: true
+      argument :action, String, required: true
+      argument :input, GraphQL::Types::JSON, required: true
+      argument :idempotency_key, String, required: true
+    end
+    def billing_command(case_id:,action:,input:,idempotency_key:)
+      result=BillingPlatform.new(context.fetch(:workbench),case_id).command(action,DemoGraph.input_data(input),idempotency_key)
+      {data:DemoGraph.present(result),errors:[]}
+    rescue Economics::Error => e
+      {data:nil,errors:[e.to_h]}
+    rescue KeyError,ArgumentError,TypeError
+      {data:nil,errors:[{code:'VALIDATION_ERROR',message:'Invalid billing command',path:[]}]}
+    end
     field :disclosure_command, Payload, null: false do
       argument :action, String, required: true
       argument :input, GraphQL::Types::JSON, required: true

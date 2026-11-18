@@ -6,22 +6,28 @@ The functional Rails/PostgreSQL demo is distinct from the public architecture:
 - `http://127.0.0.1:3104/`: the same application on this device, loopback only.
 - `https://savvy.beanshop.top/`: public interactive architecture document.
 
-The default example is February 2027. Clients, Product and Finance all use the
-retained Alder household records: $1,000 invoice, $600/$400 account allocations,
-$500 credit, $300 confirmed refund and $200 still owed. Client billing and advisor
-salary/bonus entitlements are labelled separately. No amounts are recomputed by
-the interface. Product presents billable assets → terms → charge → allocation;
-its modals open retained evidence. Invoice, cash and accounting remain distinct.
+The default is **Billing workspace · Both products**. Use Business to switch
+between the advisor and independent RIA cases. Both have the same client
+experience: grouped clients, account drilldown, issued invoices and applied terms.
+The two service periods show real synthetic input flowing through the shared path.
+Advisor compensation and reported custody income are separate from billed fees.
 
-Expand **Demo identity** to switch audience or choose **Business book & operations**.
-The older book and cash/recognition examples remain available there. They are no
-longer appended to the default household screens. This selector simulates scope;
-it is not application authentication. Actual agreement documents remain absent;
-the real public disclosures retain view/download options.
+Internal Product opens source processing, terms, calculations and native documents
+through the four-step overview. Finance reviews exact billing corrections. Campfire
+and CLM remain mocked; supplied payment/accounting observations do not imply a live
+operation. Real disclosures retain view/download options; signed agreements remain
+absent. Earlier household/book examples remain under Demo identity.
 
-Fresh setup explicitly installs these fictional examples using
-`apps/api/script/seed_presentation.rb`; CI does the same in its disposable database.
-Page reads and preview activation never seed data.
+Fresh setup explicitly runs `script/seed_presentation.rb` and
+`script/seed_billing_platform.rb` after schema preparation and base seeds. Page reads
+and preview activation never seed. Read `FOUR-CAPABILITY-VALIDATION.md` for limits.
+
+The new schema is rehearsed on a restored database clone at 55440, container
+`savvy-platform-preview-db`, volume `savvy-platform-preview-data`. Before activation,
+verify all prior values and that the original retained database has not changed.
+The prior API3108/database55438 remain paired for immediate rollback. Once new
+writes occur after cutover, switching to the old database would omit those writes;
+use a forward fix or an explicit reconciliation before any later rollback.
 
 ## Updating the existing preview
 
@@ -36,7 +42,7 @@ source-frozen baseline rollback API.
    unknown slot, holds a shared build/activation lock and builds exact clean source.
 2. Build the API from a `git archive` of the same final commit, passing
    `SOURCE_REVISION`. Run it without source mounts, with a read-only filesystem,
-   temporary `/tmp`, `SAVVY_IMMUTABLE_PREVIEW=1`, and the retained DB connection.
+   temporary `/tmp`, `SAVVY_IMMUTABLE_PREVIEW=1`, and the prepared retained-clone DB connection.
    Do not run database preparation, migrations or seeds. Image labels and health
    metadata must identify the exact source and disabled reloading.
 3. Start the inactive frontend on 3106 with its slot and candidate API URL. Run

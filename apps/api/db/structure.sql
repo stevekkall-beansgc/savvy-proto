@@ -47,6 +47,56 @@ $$;
 
 
 --
+-- Name: native_billing_append_only(); Type: FUNCTION; Schema: public; Owner: -
+--
+
+CREATE FUNCTION public.native_billing_append_only() RETURNS trigger
+    LANGUAGE plpgsql
+    AS $$ BEGIN RAISE EXCEPTION 'Native billing documents and obligations are immutable'; END $$;
+
+
+--
+-- Name: validate_billing_document(); Type: FUNCTION; Schema: public; Owner: -
+--
+
+CREATE FUNCTION public.validate_billing_document() RETURNS trigger
+    LANGUAGE plpgsql
+    AS $_$
+DECLARE original billing_invoices%ROWTYPE;
+BEGIN
+  IF NEW.external_id LIKE 'bp-doc-%' THEN
+    IF NEW.billing_case_id IS NULL OR NEW.billing_case_id NOT IN ('advisor','ria') OR NEW.billing_subject_id IS NULL OR length(NEW.billing_subject_id)=0 OR NEW.calculation_ref IS NULL OR NEW.issued_on IS NULL OR NEW.posting_period IS NULL OR NEW.posting_period !~ '^[0-9]{4}-(0[1-9]|1[0-2])$' OR NEW.debtor_id=NEW.creditor_id OR (NEW.due_on IS NOT NULL AND NEW.due_on<NEW.issued_on) THEN RAISE EXCEPTION 'Invalid native document metadata'; END IF;
+    IF NEW.document_type<>'invoice' THEN
+      SELECT * INTO STRICT original FROM billing_invoices WHERE tenant_id=NEW.tenant_id AND entity_id=NEW.entity_id AND id=NEW.corrects_invoice_id;
+      IF original.document_type<>'invoice' OR original.currency<>NEW.currency OR original.billing_case_id IS DISTINCT FROM NEW.billing_case_id OR original.billing_subject_id IS DISTINCT FROM NEW.billing_subject_id THEN RAISE EXCEPTION 'Invalid correction scope'; END IF;
+      IF (NEW.document_type='credit_note' AND (NEW.debtor_id<>original.creditor_id OR NEW.creditor_id<>original.debtor_id)) OR (NEW.document_type='debit_note' AND (NEW.debtor_id<>original.debtor_id OR NEW.creditor_id<>original.creditor_id)) THEN RAISE EXCEPTION 'Invalid correction direction'; END IF;
+    ELSIF NEW.corrects_invoice_id IS NOT NULL THEN RAISE EXCEPTION 'An invoice cannot correct another invoice'; END IF;
+  END IF;
+  RETURN NEW;
+END $_$;
+
+
+--
+-- Name: validate_billing_line_correction(); Type: FUNCTION; Schema: public; Owner: -
+--
+
+CREATE FUNCTION public.validate_billing_line_correction() RETURNS trigger
+    LANGUAGE plpgsql
+    AS $$
+DECLARE document billing_invoices%ROWTYPE; previous billing_invoices%ROWTYPE; old_account text; new_account text;
+BEGIN
+  IF NEW.corrects_line_id IS NOT NULL THEN
+    SELECT * INTO STRICT document FROM billing_invoices WHERE tenant_id=NEW.tenant_id AND entity_id=NEW.entity_id AND id=NEW.billing_invoice_id;
+    SELECT h.* INTO STRICT previous FROM billing_invoice_lines l JOIN billing_invoices h ON h.tenant_id=l.tenant_id AND h.entity_id=l.entity_id AND h.id=l.billing_invoice_id WHERE l.tenant_id=NEW.tenant_id AND l.entity_id=NEW.entity_id AND l.id=NEW.corrects_line_id;
+    SELECT o.account_id INTO STRICT old_account FROM billing_invoice_lines l JOIN billing_obligations o ON o.tenant_id=l.tenant_id AND o.entity_id=l.entity_id AND o.id=l.billing_obligation_id WHERE l.tenant_id=NEW.tenant_id AND l.entity_id=NEW.entity_id AND l.id=NEW.corrects_line_id;
+    SELECT account_id INTO STRICT new_account FROM billing_obligations WHERE tenant_id=NEW.tenant_id AND entity_id=NEW.entity_id AND id=NEW.billing_obligation_id;
+    IF document.document_type='invoice' OR previous.document_type='credit_note' OR (previous.id IS DISTINCT FROM document.corrects_invoice_id AND previous.corrects_invoice_id IS DISTINCT FROM document.corrects_invoice_id) OR old_account<>new_account THEN RAISE EXCEPTION 'Correction line must reference its original claim and account'; END IF;
+  END IF;
+  RETURN NEW;
+END $$;
+
+
+--
 -- Name: validate_synthetic_billing_conservation(); Type: FUNCTION; Schema: public; Owner: -
 --
 
@@ -67,6 +117,59 @@ END $$;
 SET default_tablespace = '';
 
 SET default_table_access_method = heap;
+
+--
+-- Name: demo_records; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.demo_records (
+    id bigint NOT NULL,
+    tenant_id character varying NOT NULL,
+    entity_id character varying NOT NULL,
+    kind character varying NOT NULL,
+    external_id character varying NOT NULL,
+    revision integer NOT NULL,
+    synthetic boolean DEFAULT true NOT NULL,
+    payload_hash character varying NOT NULL,
+    payload jsonb NOT NULL,
+    recorded_at timestamp(6) without time zone NOT NULL,
+    CONSTRAINT synthetic_only_records CHECK (((synthetic = true) AND (revision > 0)))
+);
+
+
+--
+-- Name: medallion_evidence; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.medallion_evidence (
+    id bigint NOT NULL,
+    tenant_id character varying NOT NULL,
+    entity_id character varying NOT NULL,
+    case_id character varying NOT NULL,
+    kind character varying NOT NULL,
+    external_id character varying NOT NULL,
+    revision integer DEFAULT 1 NOT NULL,
+    status character varying NOT NULL,
+    subject_id character varying,
+    parent_id bigint,
+    payload_hash character varying NOT NULL,
+    payload jsonb DEFAULT '{}'::jsonb NOT NULL,
+    original_bytes bytea,
+    recorded_at timestamp(6) without time zone NOT NULL,
+    scenario_id character varying DEFAULT 'baseline'::character varying NOT NULL,
+    product_id character varying,
+    starts_on date,
+    ends_on date,
+    schedule_version integer DEFAULT 1 NOT NULL,
+    CONSTRAINT medallion_assignment_interval CHECK ((((kind)::text <> 'assignment'::text) OR ((subject_id IS NOT NULL) AND (product_id IS NOT NULL) AND (starts_on IS NOT NULL) AND ((ends_on IS NULL) OR (starts_on < ends_on))))),
+    CONSTRAINT medallion_evidence_kind CHECK ((((kind)::text = ANY (ARRAY[('artifact'::character varying)::text, ('delivery'::character varying)::text, ('fact'::character varying)::text, ('policy'::character varying)::text, ('assignment'::character varying)::text, ('comparison'::character varying)::text, ('review'::character varying)::text, ('publication'::character varying)::text, ('event'::character varying)::text, ('event_review'::character varying)::text, ('payment'::character varying)::text, ('application'::character varying)::text, ('application_reversal'::character varying)::text, ('run'::character varying)::text, ('statement'::character varying)::text, ('period_lock'::character varying)::text, ('funding'::character varying)::text, ('coverage_right'::character varying)::text, ('receipt'::character varying)::text, ('receipt_allocation'::character varying)::text, ('netting_authority'::character varying)::text, ('receipt_reversal'::character varying)::text, ('funding_reversal'::character varying)::text, ('adjustment_intent'::character varying)::text])) OR (((scenario_id)::text = 'billing_platform'::text) AND ((kind)::text = ANY (ARRAY[('source'::character varying)::text, ('normalized'::character varying)::text, ('normalization'::character varying)::text, ('policy_review'::character varying)::text, ('policy_publication'::character varying)::text, ('calculation'::character varying)::text, ('document'::character varying)::text, ('correction_proposal'::character varying)::text, ('correction_review'::character varying)::text, ('correction_issue'::character varying)::text, ('period_close'::character varying)::text]))) OR (((scenario_id)::text = 'billing_platform'::text) AND ((kind)::text = 'calculation_attempt'::text)))),
+    CONSTRAINT medallion_evidence_status CHECK ((((status)::text = ANY ((ARRAY['retained'::character varying, 'accepted'::character varying, 'draft'::character varying, 'approved'::character varying, 'rejected'::character varying, 'published'::character varying, 'confirmed'::character varying, 'pending'::character varying, 'reversed'::character varying, 'completed'::character varying, 'blocked'::character varying, 'sealed'::character varying, 'locked'::character varying])::text[])) OR (((scenario_id)::text = 'billing_platform'::text) AND ((status)::text = ANY ((ARRAY['active'::character varying, 'quarantined'::character varying, 'issued'::character varying, 'closed'::character varying, 'proposed'::character varying, 'unchanged'::character varying])::text[]))))),
+    CONSTRAINT medallion_original_bytes CHECK (((((kind)::text = 'artifact'::text) AND (original_bytes IS NOT NULL)) OR (((kind)::text <> 'artifact'::text) AND (original_bytes IS NULL)))),
+    CONSTRAINT medallion_scenario_body CHECK ((((scenario_id)::text ~ '^[a-zA-Z0-9_-]{1,100}$'::text) AND (jsonb_typeof(payload) = 'object'::text))),
+    CONSTRAINT medallion_schedule_version CHECK ((schedule_version > 0)),
+    CONSTRAINT medallion_scope_contract CHECK (((revision > 0) AND (length((payload_hash)::text) = 64) AND ((case_id)::text = ANY (ARRAY[('advisor'::character varying)::text, ('ria'::character varying)::text]))))
+);
+
 
 --
 -- Name: ar_internal_metadata; Type: TABLE; Schema: public; Owner: -
@@ -203,6 +306,7 @@ CREATE TABLE public.billing_invoice_lines (
     billing_invoice_id bigint NOT NULL,
     billing_obligation_id bigint NOT NULL,
     amount_minor bigint NOT NULL,
+    corrects_line_id bigint,
     CONSTRAINT billing_line_positive CHECK ((amount_minor > 0))
 );
 
@@ -240,7 +344,17 @@ CREATE TABLE public.billing_invoices (
     amount_minor bigint NOT NULL,
     currency character varying NOT NULL,
     status character varying NOT NULL,
-    legacy_invoice_id character varying NOT NULL,
+    legacy_invoice_id character varying,
+    document_type character varying DEFAULT 'invoice'::character varying NOT NULL,
+    corrects_invoice_id bigint,
+    creditor_id character varying DEFAULT 'firm-demo'::character varying NOT NULL,
+    billing_case_id character varying,
+    billing_subject_id character varying,
+    issued_on date,
+    due_on date,
+    posting_period character varying,
+    calculation_ref character varying,
+    CONSTRAINT billing_document_type CHECK (((document_type)::text = ANY ((ARRAY['invoice'::character varying, 'credit_note'::character varying, 'debit_note'::character varying])::text[]))),
     CONSTRAINT billing_invoice_values CHECK (((amount_minor > 0) AND ((currency)::text = 'USD'::text) AND (revision > 0)))
 );
 
@@ -282,7 +396,7 @@ CREATE TABLE public.billing_obligations (
     client_terms_ref character varying NOT NULL,
     source_id character varying NOT NULL,
     source_revision integer NOT NULL,
-    legacy_charge_id character varying NOT NULL,
+    legacy_charge_id character varying,
     route character varying NOT NULL,
     currency character varying NOT NULL,
     amount_minor bigint NOT NULL,
@@ -325,8 +439,8 @@ CREATE TABLE public.commercial_rates (
     component character varying NOT NULL,
     kind character varying NOT NULL,
     name character varying NOT NULL,
-    numerator integer NOT NULL,
-    denominator integer NOT NULL,
+    numerator bigint NOT NULL,
+    denominator bigint NOT NULL,
     starts_on date NOT NULL,
     ends_on date,
     selector jsonb DEFAULT '{}'::jsonb NOT NULL,
@@ -337,7 +451,7 @@ CREATE TABLE public.commercial_rates (
     payer_id character varying,
     payee_id character varying,
     commercial_group character varying,
-    CONSTRAINT valid_commercial_rate_v2 CHECK (((length((component)::text) > 0) AND ((kind)::text = ANY (ARRAY[('standard'::character varying)::text, ('promotion'::character varying)::text, ('targeted_promotion'::character varying)::text])) AND (numerator >= 0) AND ((denominator >= 1) AND (denominator <= 1000000)) AND (((unit)::text <> 'ratio'::text) OR (numerator <= denominator)) AND ((unit)::text = ANY (ARRAY[('ratio'::character varying)::text, ('USD_minor'::character varying)::text, ('unit_price'::character varying)::text])) AND ((ends_on IS NULL) OR (starts_on < ends_on)) AND ((signup_within_days IS NULL) OR ((signup_within_days >= 1) AND (signup_within_days <= 365))) AND (jsonb_typeof(selector) = 'object'::text)))
+    CONSTRAINT valid_commercial_rate_v2 CHECK (((length((component)::text) > 0) AND ((kind)::text = ANY ((ARRAY['standard'::character varying, 'promotion'::character varying, 'targeted_promotion'::character varying])::text[])) AND (numerator >= 0) AND (denominator >= 1) AND ((unit)::text = ANY ((ARRAY['ratio'::character varying, 'USD_minor'::character varying, 'unit_price'::character varying])::text[])) AND ((ends_on IS NULL) OR (starts_on < ends_on)) AND ((signup_within_days IS NULL) OR ((signup_within_days >= 1) AND (signup_within_days <= 365))) AND (jsonb_typeof(selector) = 'object'::text) AND ((((configuration_id)::text ~~ 'bp-policy-%'::text) AND (numerator <= '1000000000000000'::bigint) AND (denominator <= '1000000000000000'::bigint)) OR ((denominator <= 1000000) AND (((unit)::text <> 'ratio'::text) OR (numerator <= denominator))))))
 );
 
 
@@ -511,25 +625,6 @@ ALTER SEQUENCE public.demo_operations_id_seq OWNED BY public.demo_operations.id;
 
 
 --
--- Name: demo_records; Type: TABLE; Schema: public; Owner: -
---
-
-CREATE TABLE public.demo_records (
-    id bigint NOT NULL,
-    tenant_id character varying NOT NULL,
-    entity_id character varying NOT NULL,
-    kind character varying NOT NULL,
-    external_id character varying NOT NULL,
-    revision integer NOT NULL,
-    synthetic boolean DEFAULT true NOT NULL,
-    payload_hash character varying NOT NULL,
-    payload jsonb NOT NULL,
-    recorded_at timestamp(6) without time zone NOT NULL,
-    CONSTRAINT synthetic_only_records CHECK (((synthetic = true) AND (revision > 0)))
-);
-
-
---
 -- Name: demo_records_id_seq; Type: SEQUENCE; Schema: public; Owner: -
 --
 
@@ -578,40 +673,6 @@ CREATE SEQUENCE public.demo_scopes_id_seq
 --
 
 ALTER SEQUENCE public.demo_scopes_id_seq OWNED BY public.demo_scopes.id;
-
-
---
--- Name: medallion_evidence; Type: TABLE; Schema: public; Owner: -
---
-
-CREATE TABLE public.medallion_evidence (
-    id bigint NOT NULL,
-    tenant_id character varying NOT NULL,
-    entity_id character varying NOT NULL,
-    case_id character varying NOT NULL,
-    kind character varying NOT NULL,
-    external_id character varying NOT NULL,
-    revision integer DEFAULT 1 NOT NULL,
-    status character varying NOT NULL,
-    subject_id character varying,
-    parent_id bigint,
-    payload_hash character varying NOT NULL,
-    payload jsonb DEFAULT '{}'::jsonb NOT NULL,
-    original_bytes bytea,
-    recorded_at timestamp(6) without time zone NOT NULL,
-    scenario_id character varying DEFAULT 'baseline'::character varying NOT NULL,
-    product_id character varying,
-    starts_on date,
-    ends_on date,
-    schedule_version integer DEFAULT 1 NOT NULL,
-    CONSTRAINT medallion_assignment_interval CHECK ((((kind)::text <> 'assignment'::text) OR ((subject_id IS NOT NULL) AND (product_id IS NOT NULL) AND (starts_on IS NOT NULL) AND ((ends_on IS NULL) OR (starts_on < ends_on))))),
-    CONSTRAINT medallion_evidence_kind CHECK (((kind)::text = ANY (ARRAY[('artifact'::character varying)::text, ('delivery'::character varying)::text, ('fact'::character varying)::text, ('policy'::character varying)::text, ('assignment'::character varying)::text, ('comparison'::character varying)::text, ('review'::character varying)::text, ('publication'::character varying)::text, ('event'::character varying)::text, ('event_review'::character varying)::text, ('payment'::character varying)::text, ('application'::character varying)::text, ('application_reversal'::character varying)::text, ('run'::character varying)::text, ('statement'::character varying)::text, ('period_lock'::character varying)::text, ('funding'::character varying)::text, ('coverage_right'::character varying)::text, ('receipt'::character varying)::text, ('receipt_allocation'::character varying)::text, ('netting_authority'::character varying)::text, ('receipt_reversal'::character varying)::text, ('funding_reversal'::character varying)::text, ('adjustment_intent'::character varying)::text]))),
-    CONSTRAINT medallion_evidence_status CHECK (((status)::text = ANY (ARRAY[('retained'::character varying)::text, ('accepted'::character varying)::text, ('draft'::character varying)::text, ('approved'::character varying)::text, ('rejected'::character varying)::text, ('published'::character varying)::text, ('confirmed'::character varying)::text, ('pending'::character varying)::text, ('reversed'::character varying)::text, ('completed'::character varying)::text, ('blocked'::character varying)::text, ('sealed'::character varying)::text, ('locked'::character varying)::text]))),
-    CONSTRAINT medallion_original_bytes CHECK (((((kind)::text = 'artifact'::text) AND (original_bytes IS NOT NULL)) OR (((kind)::text <> 'artifact'::text) AND (original_bytes IS NULL)))),
-    CONSTRAINT medallion_scenario_body CHECK ((((scenario_id)::text ~ '^[a-zA-Z0-9_-]{1,100}$'::text) AND (jsonb_typeof(payload) = 'object'::text))),
-    CONSTRAINT medallion_schedule_version CHECK ((schedule_version > 0)),
-    CONSTRAINT medallion_scope_contract CHECK (((revision > 0) AND (length((payload_hash)::text) = 64) AND ((case_id)::text = ANY (ARRAY[('advisor'::character varying)::text, ('ria'::character varying)::text]))))
-);
 
 
 --
@@ -1089,6 +1150,13 @@ CREATE UNIQUE INDEX unique_synthetic_revision ON public.demo_records USING btree
 
 
 --
+-- Name: billing_invoices billing_document_metadata; Type: TRIGGER; Schema: public; Owner: -
+--
+
+CREATE TRIGGER billing_document_metadata BEFORE INSERT ON public.billing_invoices FOR EACH ROW EXECUTE FUNCTION public.validate_billing_document();
+
+
+--
 -- Name: billing_instruction_items billing_instruction_items_conservation; Type: TRIGGER; Schema: public; Owner: -
 --
 
@@ -1103,6 +1171,13 @@ CREATE CONSTRAINT TRIGGER billing_instructions_conservation AFTER INSERT OR DELE
 
 
 --
+-- Name: billing_invoice_lines billing_invoice_lines_append_only; Type: TRIGGER; Schema: public; Owner: -
+--
+
+CREATE TRIGGER billing_invoice_lines_append_only BEFORE DELETE OR UPDATE ON public.billing_invoice_lines FOR EACH ROW EXECUTE FUNCTION public.native_billing_append_only();
+
+
+--
 -- Name: billing_invoice_lines billing_invoice_lines_conservation; Type: TRIGGER; Schema: public; Owner: -
 --
 
@@ -1110,10 +1185,31 @@ CREATE CONSTRAINT TRIGGER billing_invoice_lines_conservation AFTER INSERT OR DEL
 
 
 --
+-- Name: billing_invoices billing_invoices_append_only; Type: TRIGGER; Schema: public; Owner: -
+--
+
+CREATE TRIGGER billing_invoices_append_only BEFORE DELETE OR UPDATE ON public.billing_invoices FOR EACH ROW EXECUTE FUNCTION public.native_billing_append_only();
+
+
+--
 -- Name: billing_invoices billing_invoices_conservation; Type: TRIGGER; Schema: public; Owner: -
 --
 
 CREATE CONSTRAINT TRIGGER billing_invoices_conservation AFTER INSERT OR DELETE OR UPDATE ON public.billing_invoices DEFERRABLE INITIALLY DEFERRED FOR EACH ROW EXECUTE FUNCTION public.validate_synthetic_billing_conservation();
+
+
+--
+-- Name: billing_invoice_lines billing_line_correction; Type: TRIGGER; Schema: public; Owner: -
+--
+
+CREATE TRIGGER billing_line_correction BEFORE INSERT ON public.billing_invoice_lines FOR EACH ROW EXECUTE FUNCTION public.validate_billing_line_correction();
+
+
+--
+-- Name: billing_obligations billing_obligations_append_only; Type: TRIGGER; Schema: public; Owner: -
+--
+
+CREATE TRIGGER billing_obligations_append_only BEFORE DELETE OR UPDATE ON public.billing_obligations FOR EACH ROW EXECUTE FUNCTION public.native_billing_append_only();
 
 
 --
@@ -1135,6 +1231,22 @@ CREATE TRIGGER commercial_rates_no_update_delete BEFORE DELETE OR UPDATE ON publ
 --
 
 CREATE TRIGGER medallion_no_update_delete BEFORE DELETE OR UPDATE ON public.medallion_evidence FOR EACH ROW EXECUTE FUNCTION public.medallion_append_only();
+
+
+--
+-- Name: billing_invoices billing_document_parent; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.billing_invoices
+    ADD CONSTRAINT billing_document_parent FOREIGN KEY (tenant_id, entity_id, corrects_invoice_id) REFERENCES public.billing_invoices(tenant_id, entity_id, id);
+
+
+--
+-- Name: billing_invoice_lines billing_line_parent; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.billing_invoice_lines
+    ADD CONSTRAINT billing_line_parent FOREIGN KEY (tenant_id, entity_id, corrects_line_id) REFERENCES public.billing_invoice_lines(tenant_id, entity_id, id);
 
 
 --
@@ -1320,6 +1432,11 @@ ALTER TABLE ONLY public.medallion_evidence
 SET search_path TO "$user", public;
 
 INSERT INTO "schema_migrations" (version) VALUES
+('20261118000500'),
+('20261118000400'),
+('20261118000300'),
+('20261118000200'),
+('20261118000100'),
 ('20261115000900'),
 ('20261115000800'),
 ('20261115000700'),

@@ -23,6 +23,8 @@ def enum(name): return re.search(r'enum '+name+r' \{(.*?)\n\}', SDL, re.S).group
 def code_link(path): return REPO + '/blob/' + SOURCE_COMMIT + '/' + path
 
 DESCRIPTIONS = {
+ 'billingWorkspace': ('Shared billing', 'Scoped client or internal billing view across both products. Reads issued native documents, exact calculation basis, source executions, policy schedules and correction reviews without running prices or jobs.'),
+ 'billingCommand': ('Shared billing', 'Shared source intake, policy lifecycle, evaluation, native invoice issue and reviewed correction commands for advisor and RIA cases. Campfire and CLM are mocked.'),
  'disclosureWorkspace': ('Household billing', 'Selected household invoice, account allocations, valuation, terms, credit/refund, compensation and cost evidence. Internal audiences also receive policy and recognition records. The RIA case reports a separately observed cost; it does not infer a platform fee.'),
  'audienceSummary': ('Client experience', 'Published business overview and dated terms for the scoped advisor or RIA.'),
  'audienceStatement': ('Client experience', 'Published statement lines, governing terms, calculation basis and pending items. This baseline book is a separate example from the February household.'),
@@ -67,7 +69,9 @@ def catalog():
             query=('query' if kind=='Query' else 'mutation')+' '+name[0].upper()+name[1:]+('('+declarations+')' if arguments else '')+' { '+name+('('+bindings+')' if arguments else '')+selection+' }'
             variables={a['name']:DEFAULTS.get(a['name']) for a in arguments if a['name'] in DEFAULTS}
             if name=='financeWorkspace':variables['caseId']='ria'
-            if kind=='Mutation':variables={'action': {'disclosureCommand':'SAVE_POLICY','medallionCommand':'SUBMIT_EVENT','financeCommand':'FINANCE_ASSOCIATE','workbenchCommand':'SAVE_TERMS_PROPOSAL'}[name], 'input':{},'idempotencyKey':'REPLACE_WITH_UNIQUE_KEY'}
+            if kind=='Mutation':variables={'action': {'billingCommand':'SAVE_POLICY','disclosureCommand':'SAVE_POLICY','medallionCommand':'SUBMIT_EVENT','financeCommand':'FINANCE_ASSOCIATE','workbenchCommand':'SAVE_TERMS_PROPOSAL'}[name], 'input':{},'idempotencyKey':'REPLACE_WITH_UNIQUE_KEY'}
+            if name=='billingCommand':variables['caseId']='advisor'
+            if name=='billingWorkspace':variables.pop('recordId',None)
             group,description=DESCRIPTIONS[name]
             output.append({'name':name,'kind':kind.lower(),'group':group,'description':description,'arguments':arguments,'returns':returns,'request':{'query':query, 'variables':variables},'example_note':'Replace identifiers with IDs returned by reads. Mutation input shown separately below; the empty catalog input is a shape template.' if kind=='Mutation' else 'Replace identifiers prefixed REPLACE_WITH using IDs from a preceding read.'})
     return output
@@ -103,7 +107,7 @@ schemas={
 
 def command_example(family,action,input_value):
     op=next(o for o in operations if o['name']==family)
-    return {'query':op['request']['query'],'variables':{'action':action,'input':input_value,'idempotencyKey':'docs-'+action.lower().replace('_','-')+'-001'}}
+    return {'query':op['request']['query'],'variables':{'action':action,'input':input_value,'idempotencyKey':'docs-'+action.lower().replace('_','-')+'-001',**({'caseId':'advisor'} if family=='billingCommand' else {})}}
 
 policy_value={'basis':'ending_value','cadence':'monthly','annual_rate':'33/2500','minimum_minor':None,'fixed_amount_minor':None,'optional_service':'none'}
 inputs={
@@ -122,6 +126,41 @@ command_details += [
  {'family':'financeCommand','action':'FINANCE_REVERSE','schema':'CashReversalInput','role':'finance','request':command_example('financeCommand','FINANCE_REVERSE',{'application_id':'REPLACE_WITH_APPLICATION_ID','posting_period':'2027-01','reason':'Reverse the local cash association'})},
 ]
 commands={'disclosureCommand':['BOOTSTRAP',*inputs.keys()], 'medallionCommand':enum('MedallionCommand'),'financeCommand':enum('FinanceCommand'),'workbenchCommand':enum('Command')}
+# The shared command contract mirrors BillingPlatform::INPUTS; examples bind returned IDs.
+shared_policy={'version':'service-v2','allocation':'equal','invoice_timing':'arrears','components':[{'id':'asset_fee','kind':'aum','basis':'daily','rate':'3/250','day_basis':365},{'id':'service','kind':'flat','amount_minor':5000,'proration':'service_days'},{'id':'one_time','kind':'events','direction':'charge'}],'compensation':{'share':'4/5'}}
+mapping={'format':'json','records_path':'records','fields':{'id':'id','revision':'revision','type':'type','observed_at':'observed_at','billing_subject_id':'billing_subject_id','customer_id':'customer_id','account_id':'account_id','date':'date','amount_minor':'amount_minor','currency':'currency'}}
+shared={
+ 'REGISTER_SOURCE':('operator',{'name':'custodian-feed','mapping':mapping}),
+ 'INGEST':('operator',{'source_id':'REPLACE_WITH_SOURCE_ID','delivery_key':'docs-delivery-001','raw':'{"records":[]}'}),
+ 'REPLAY':('operator',{'delivery_id':'REPLACE_WITH_DELIVERY_ID','source_id':'REPLACE_WITH_CURRENT_MAPPING_ID'}),
+ 'SAVE_POLICY':('operator',{'policy':shared_policy,'effective_from':'2026-10-01','effective_to':None,'reason':'Propose a composed service policy'}),
+ 'COMPARE_POLICY':('operator',{'policy_id':'REPLACE_WITH_POLICY_ID','subject_id':'REPLACE_WITH_SUBJECT_ID','service_start':'2026-10-01','service_end_exclusive':'2026-11-01'}),
+ 'REVIEW_POLICY':('legal or finance',{'comparison_id':'REPLACE_WITH_COMPARISON_ID','decision':'approved','reason':'Review the exact comparison','document_ref':{'system':'mock_clm','document_id':'terms-001','version':'v1'}}),
+ 'PUBLISH_POLICY':('operator',{'comparison_id':'REPLACE_WITH_COMPARISON_ID'}),
+ 'ASSIGN_POLICY':('operator',{'policy_id':'REPLACE_WITH_POLICY_ID','subject_id':'REPLACE_WITH_SUBJECT_ID','effective_from':'2026-10-01','effective_to':'2026-11-01','reason':'Assign reviewed terms','expected_schedule_hash':'REPLACE_WITH_SCHEDULE_HASH'}),
+ 'EVALUATE':('operator',{'subject_id':'REPLACE_WITH_SUBJECT_ID','service_start':'2026-10-01','service_end_exclusive':'2026-11-01'}),
+ 'ISSUE_INVOICE':('operator',{'run_id':'REPLACE_WITH_RUN_ID','posting_period':'2026-11','due_on':'2026-12-18'}),
+ 'PROPOSE_CORRECTION':('operator',{'document_id':'REPLACE_WITH_ORIGINAL_INVOICE_ID','run_id':'REPLACE_WITH_NEW_RUN_ID','posting_period':'2026-11','reason':'Correct newly received evidence'}),
+ 'REVIEW_CORRECTION':('finance',{'proposal_id':'REPLACE_WITH_PROPOSAL_ID','decision':'approved','reason':'Approve the exact per-account differences'}),
+ 'ISSUE_CORRECTION':('operator',{'proposal_id':'REPLACE_WITH_PROPOSAL_ID'}),
+ 'REVIEW_EVENT':('finance',{'record_id':'REPLACE_WITH_RECORD_ID','expected_hash':'REPLACE_WITH_HASH','decision':'approved','reason':'Review a one-time event'}),
+ 'CLOSE_PERIOD':('finance',{'posting_period':'2026-11','reason':'Close the posting month'}),
+}
+shared_fields={'REGISTER_SOURCE':['name','mapping'],'INGEST':['source_id','delivery_key','raw','raw_base64'],'REPLAY':['delivery_id','source_id'],'SAVE_POLICY':['policy','effective_from','effective_to','reason'],'COMPARE_POLICY':['policy_id','baseline_policy_id','subject_id','service_start','service_end_exclusive'],'REVIEW_POLICY':['comparison_id','decision','reason','document_ref'],'PUBLISH_POLICY':['comparison_id'],'ASSIGN_POLICY':['policy_id','subject_id','effective_from','effective_to','reason','expected_schedule_hash'],'EVALUATE':['subject_id','service_start','service_end_exclusive'],'ISSUE_INVOICE':['run_id','posting_period','due_on'],'PROPOSE_CORRECTION':['document_id','run_id','posting_period','reason'],'REVIEW_CORRECTION':['proposal_id','decision','reason'],'ISSUE_CORRECTION':['proposal_id'],'REVIEW_EVENT':['record_id','expected_hash','decision','reason'],'CLOSE_PERIOD':['posting_period','reason']}
+schemas['SharedPolicy']=obj({'version':text(),'allocation':{'enum':['equal','balance']},'invoice_timing':{'enum':['advance','arrears']},'components':{'type':'array','minItems':1,'items':obj({'id':text(),'kind':{'enum':['aum','flat','per_account','hourly','events','observation']}},['id','kind'],additionalProperties=True)},'graph':{'type':'object','description':'Validated typed primitive graph; mandatory assessed USD charge obligation and source requirements.'},'input_requirements':{'type':'object'},'minimum_minor':minor,'cap_minor':minor,'compensation':{'type':'object'}},['version'],additionalProperties=False,description='Use components OR graph. Kind-specific field validation is enforced by BillingPolicy. AUM supports annual rate, dated standard/promotion/targeted rates or progressive tiers. Observation outputs stay separate from invoices. Only approved typed operators execute; no source code is accepted.')
+schemas['SourceMapping']=obj({'format':{'enum':['json','ndjson']},'records_path':text(),'fields':{'type':'object','additionalProperties':text()},'constants':{'type':'object'},'coercions':{'type':'object','additionalProperties':{'enum':['integer','decimal_usd','rational_decimal','boolean','us_date','epoch_seconds','identifier','string']}}},['format','fields'],additionalProperties=False,description='Versioned canonical field mappings. Original bytes are retained before parsing; binary or invalid input is quarantined. Registering a new version requires replay before normalized records become current.')
+for action,(role,value) in shared.items():
+    props={k:text() for k in shared_fields[action]}
+    for field in ['effective_from','effective_to','service_start','service_end_exclusive','due_on']:
+        if field in props:props[field]=date
+    if action=='SAVE_POLICY':props.update(policy=ref('SharedPolicy'),effective_to={'anyOf':[date,{'type':'null'}]})
+    if action=='REGISTER_SOURCE':props['mapping']=ref('SourceMapping')
+    if 'decision' in props:props['decision']={'enum':['approved','rejected']}
+    if 'document_ref' in props:props['document_ref']=obj({'system':{'const':'mock_clm'},'document_id':text(),'version':text()},['system','document_id','version'],additionalProperties=False)
+    name='Shared'+''.join(x.title() for x in action.lower().split('_'))+'Input'
+    schemas[name]=obj(props,list(value),additionalProperties=False)
+    command_details.append({'family':'billingCommand','action':action,'schema':name,'role':role,'request':command_example('billingCommand',action,value)})
+commands['billingCommand']=list(shared)
 read_example=next(o['request'] for o in operations if o['name']=='disclosureWorkspace')
 read_example['variables']['limit']=100
 
@@ -136,11 +175,11 @@ post={'summary':'Execute GraphQL queries or commands','operationId':'executeGrap
  'x-hosted-access':'The existing Cloudflare Access gate can redirect an unauthenticated request to login or reject it before the application handles the request.',
  'x-limits':{'proxy_body_character_limit':1048576,'rails_body_utf8_byte_limit':1048576,'graphql_document_utf8_byte_limit':50000,'graphql_max_depth':10,'graphql_max_complexity':150}}
 local_post=json.loads(json.dumps(post));local_post['operationId']='executeLocalGraphQL';local_post['summary']='Execute GraphQL directly on the loopback Rails API';local_post['security']=[];local_post['responses'].pop('503');local_post['responses'].update({s:response(desc,'HttpError') for s,desc in {'400':'Malformed JSON or invalid GraphQL envelope.','415':'Content-Type must be application/json.','500':'Unhandled local service error.'}.items()})
-spec={'openapi':'3.1.1','info':{'title':'Savvy billing prototype API','version':'0.6.0','description':'Current synthetic Rails/GraphQL implementation. Savvy owns billing obligations, invoices/lines and custodial instructions. One Economics::Engine evaluates policy data. Campfire and CLM remain mocked. The public API reference is static documentation; hosted operations require the existing Cloudflare Access login. Simulated X-Demo-Role identities are not production authentication.'},
+spec={'openapi':'3.1.1','info':{'title':'Savvy billing prototype API','version':'0.7.0','description':'Current synthetic Rails/GraphQL implementation. Savvy owns billing obligations, invoices/lines and custodial instructions. One Economics::Engine evaluates policy data. Campfire and CLM remain mocked. The public API reference is static documentation; hosted operations require the existing Cloudflare Access login. Simulated X-Demo-Role identities are not production authentication.'},
  'servers':[{'url':'https://savvy-proto.beanshop.top','description':'Device-hosted full application; Cloudflare Access browser login required.'}],
  'externalDocs':{'description':'Authoritative GraphQL SDL in the repository','url':code_link('contracts/schema.graphql')},
  'tags':[{'name':'GraphQL transport'},{'name':'Local service'}],
- 'paths':{'/api/graphql':{'post':post},'/graphql':{'servers':[{'url':'http://127.0.0.1:3108','description':'Current candidate Rails API; loopback only.'},{'url':'http://127.0.0.1:3109','description':'Alternate inactive Rails API slot; loopback only.'}],'post':local_post},'/health':{'servers':[{'url':'http://127.0.0.1:3108','description':'Current candidate Rails health; loopback only.'},{'url':'http://127.0.0.1:3109','description':'Alternate inactive Rails health slot; loopback only.'}],'get':{'operationId':'localHealth','summary':'Inspect local synthetic service health','tags':['Local service'],'security':[],'responses':{'200':{'description':'Current local service metadata.','content':{'application/json':{'schema':obj({'status':{'const':'ok'},'synthetic':{'const':True},'connected':{'const':False},'contract_version':text(),'engine_version':text(),'source_revision':text(),'immutable_preview':{'type':'boolean'},'eager_load':{'type':'boolean'},'reloading_enabled':{'type':'boolean'}},['status','synthetic','connected','contract_version','engine_version'])}}}}}}},
+ 'paths':{'/api/graphql':{'post':post},'/graphql':{'servers':[{'url':'http://127.0.0.1:3108','description':'API slot A Rails API; loopback only.'},{'url':'http://127.0.0.1:3109','description':'API slot B Rails API slot; loopback only.'}],'post':local_post},'/health':{'servers':[{'url':'http://127.0.0.1:3108','description':'API slot A Rails health; loopback only.'},{'url':'http://127.0.0.1:3109','description':'API slot B Rails health slot; loopback only.'}],'get':{'operationId':'localHealth','summary':'Inspect local synthetic service health','tags':['Local service'],'security':[],'responses':{'200':{'description':'Current local service metadata.','content':{'application/json':{'schema':obj({'status':{'const':'ok'},'synthetic':{'const':True},'connected':{'const':False},'contract_version':text(),'engine_version':text(),'source_revision':text(),'immutable_preview':{'type':'boolean'},'eager_load':{'type':'boolean'},'reloading_enabled':{'type':'boolean'}},['status','synthetic','connected','contract_version','engine_version'])}}}}}}},
  'components':{'securitySchemes':{'CloudflareAccessSession':{'type':'apiKey','in':'cookie','name':'CF_Authorization','description':'Existing Cloudflare Access browser session. This documents the hosted gate; it is not OAuth for an MCP client. Do not put a session cookie in documentation or source.'}},'schemas':schemas},
  'x-graphql-operations':operations,'x-command-families':commands,'x-command-examples':command_details,
  'x-contract-sources':{'graphql_sdl':'contracts/schema.graphql','graphql_sdl_sha256':sha256(SDL.encode()).hexdigest(),'source_commit':SOURCE_COMMIT,'controller':'apps/api/app/controllers/graphql_controller.rb','proxy':'apps/web/app/api/graphql/route.ts'},

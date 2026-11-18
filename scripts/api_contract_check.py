@@ -56,6 +56,9 @@ def check(live=False):
     source=(ROOT/'apps/api/app/graphql/demo_graph.rb').read_text()
     mapping=re.search(r"methods=\{('BOOTSTRAP'=>:bootstrap,.*?)\}",source,re.S).group(1)
     assert set(spec['x-command-families']['disclosureCommand'])==set(re.findall(r"'([A-Z_]+)'=>",mapping))
+    platform=(ROOT/'apps/api/app/services/billing_platform.rb').read_text()
+    actions=re.search(r'ACTIONS = (.*?)\.freeze',platform,re.S).group(1)
+    assert set(spec['x-command-families']['billingCommand'])==set(re.findall(r"'([A-Z_]+)'=>",actions))
     controller=(ROOT/'apps/api/app/controllers/graphql_controller.rb').read_text()
     assert 'contract_version: "'+spec['info']['version']+'"' in controller
     assert spec['x-contract-sources']['graphql_sdl_sha256']==sha256(sdl.encode()).hexdigest()

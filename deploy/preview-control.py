@@ -124,6 +124,7 @@ def record(slot, endpoint, container):
             raise ValueError('Staged frontend/API pair mismatch')
         env = dict(os.environ, SAVVY_PREVIEW_ORIGIN='http://127.0.0.1:3106', SAVVY_API_ORIGIN=endpoint)
         subprocess.run(['node', 'scripts/presentation_ui_check.cjs'], cwd=ROOT, env=env, check=True)
+        subprocess.run(['node', 'scripts/billing_platform_ui_check.cjs'], cwd=ROOT, env=env, check=True)
         subprocess.run(['python3', 'scripts/product_http_check.py'], cwd=ROOT, env=env, check=True)
         if clean_sha() != sha: raise ValueError('Source changed during validation')
         if (path/'BUILD_ID').read_text().strip() != built['build_id'] or tree_hash(path) != built['asset_hash']:
@@ -133,7 +134,7 @@ def record(slot, endpoint, container):
         proof = {'commit': sha, 'slot': slot, 'build_id': built['build_id'],
                  'asset_hash': built['asset_hash'], 'api_image_id': image, 'api_endpoint': endpoint,
                  'api_container': container, 'frontend_endpoint': 'http://127.0.0.1:3106',
-                 'validation': ['presentation_ui_check', 'product_http_check']}
+                 'validation': ['presentation_ui_check', 'billing_platform_ui_check', 'product_http_check']}
         (RUNTIME/'candidate-build.json').write_text(json.dumps(proof, indent=2) + '\n')
         print(json.dumps(proof))
 

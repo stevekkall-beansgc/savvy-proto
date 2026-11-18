@@ -86,7 +86,7 @@ module Economics
         raise Error.new('INVALID_ROLE') unless ROLES.include?(n.fetch('role'))
         raise Error.new('INVALID_BASIS') unless BASES.include?(n.fetch('basis'))
         raise Error.new('INVALID_UNIT') unless n.fetch('unit').is_a?(String) && n['unit'].match?(/\A[A-Za-z][A-Za-z0-9_]*\z/)
-        raise Error.new('UNSUPPORTED_MECHANISM') unless %w[literal fact sum_facts add min max subtract net multiply accrue assess bands select allocate allocate_by distribute].include?(n.fetch('op'))
+        raise Error.new('UNSUPPORTED_MECHANISM') unless %w[literal fact sum_facts add min max subtract net multiply accrue exact assess bands select allocate allocate_by distribute].include?(n.fetch('op'))
         map[id] = n
       end
       edges = {}
@@ -98,7 +98,7 @@ module Economics
         when 'add', 'min', 'max'
           a=n.fetch('inputs'); raise Error.new('INVALID_PROGRAM') unless a.is_a?(Array) && a.size.between?(1,LIMIT); a
         when 'subtract', 'net', 'multiply', 'accrue' then [n.fetch('left'),n.fetch('right')]
-        when 'assess', 'allocate' then [n.fetch('input')]
+        when 'exact', 'assess', 'allocate' then [n.fetch('input')]
         when 'allocate_by'
           weights=n.fetch('weights')
           raise Error.new('INVALID_ALLOCATION') unless weights.is_a?(Hash) && weights.any?
@@ -115,7 +115,7 @@ module Economics
         end
         raise Error.new('INVALID_REFERENCE') unless refs.all? { |ref| ref.is_a?(String) && map.key?(ref) }
         common = %w[id op role unit basis economic_key component payer payee subject currency interval_fact output_class explanation]
-        params = { 'literal'=>%w[value], 'fact'=>%w[key requires], 'sum_facts'=>%w[collection selector allow_empty period], 'add'=>%w[inputs], 'min'=>%w[inputs], 'max'=>%w[inputs], 'subtract'=>%w[left right], 'net'=>%w[left right authority_fact], 'multiply'=>%w[left right], 'accrue'=>%w[left right], 'assess'=>%w[input rounding], 'bands'=>%w[input bands], 'select'=>%w[date date_fact candidates], 'allocate'=>%w[input weights recipient], 'allocate_by'=>%w[input weights recipient], 'distribute'=>%w[inputs recipient] }.fetch(n['op'])
+        params = { 'literal'=>%w[value], 'fact'=>%w[key requires], 'sum_facts'=>%w[collection selector allow_empty period], 'add'=>%w[inputs], 'min'=>%w[inputs], 'max'=>%w[inputs], 'subtract'=>%w[left right], 'net'=>%w[left right authority_fact], 'multiply'=>%w[left right], 'accrue'=>%w[left right], 'exact'=>%w[input], 'assess'=>%w[input rounding], 'bands'=>%w[input bands], 'select'=>%w[date date_fact candidates], 'allocate'=>%w[input weights recipient], 'allocate_by'=>%w[input weights recipient], 'distribute'=>%w[inputs recipient] }.fetch(n['op'])
         raise Error.new('UNSUPPORTED_MECHANISM', 'Unknown node fields') unless (n.keys - common - params).empty?
         values = refs.map { |id| map.fetch(id) }
         same = ->(v) { raise Error.new('UNIT_MISMATCH') unless v['unit'] == n['unit'] }
@@ -143,6 +143,9 @@ module Economics
           m=a['unit']=='scalar' ? b : a
           valid=n['op']=='accrue' ? m['basis']=='source_reported' && n['basis']=='exact_accrual' : m['basis']==n['basis']
           raise Error.new('BASIS_MISMATCH') unless valid
+        when 'exact'
+          same.call(values.first)
+          raise Error.new('INVALID_BASIS') unless values.first['basis']=='assessed' && n['basis']=='exact_accrual'
         when 'assess'
           same.call(values.first)
           raise Error.new('INVALID_BASIS') unless %w[exact_accrual source_reported].include?(values.first['basis']) && n['basis']=='assessed' && n.fetch('rounding')=='half_up'
@@ -337,6 +340,10 @@ module Economics
         valid_basis = n['op'] == 'accrue' ? monetary.basis == 'source_reported' && basis == 'exact_accrual' : monetary.basis == basis
         raise Error.new('BASIS_MISMATCH') unless valid_basis
         a.amount * b.amount
+      when 'exact'
+        value=ref.call('input'); same.call([value])
+        raise Error.new('INVALID_BASIS') unless value.basis=='assessed' && basis=='exact_accrual'
+        value.amount
       when 'distribute'
         ids = n.fetch('inputs'); values = ids.to_h { |ref_id| [ref_id, calculate(ref_id, visiting + [id])] }
         amounts = values.transform_values(&:amount)

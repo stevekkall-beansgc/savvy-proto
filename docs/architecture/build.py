@@ -240,6 +240,33 @@ add('lineage', 'Record and execution lineage', 'Rails read model + engine depend
     [ref(SERVICE+'audience_read_model.rb', 'def executed_input_refs', 'Executed binding proof'), ref(SERVICE+'audience_read_model.rb', 'def lineage_record(', 'Source-to-result lineage read')])
 
 
+# Current shared implementation; retained household traces below remain historical examples.
+updates={
+ 'raw':('Original source deliveries','BillingPipeline receives original JSON, NDJSON or base64 bytes. Fields are retained before mapping or validation. Source mappings and normalization executions are versioned. No live provider connector is connected.','billing_pipeline.rb','def ingest('),
+ 'ingest':('Source adapter','BillingPipeline#ingest retains a bytea artifact and arrival with SHA-256 before invoking BillingNormalizeJob. Versioned JSON path mappings and exact conversion rules are API configuration. Duplicate and contradictory deliveries retain distinct classifications.','billing_pipeline.rb','def ingest('),
+ 'normalize':('Normalizer','BillingNormalizeJob calls BillingPipeline#normalize inside the scoped writer transaction. Versioned field paths, constants and exact coercions produce canonical records. A malformed row quarantines the whole delivery; replay creates a new execution without rewriting originals.','billing_pipeline.rb','def normalize('),
+ 'silver':('Silver: typed records and assignments','BillingPipeline selects the latest known source revision before service-date filtering. Withdrawals and active mapping versions are enforced. BillingPlatform retains dated reviewed policy schedules; account membership and daily or ending balance completeness are checked before evaluation.','billing_pipeline.rb','def manifest('),
+ 'policy':('Policy API and review lifecycle','BillingPlatform commands save a composable specification or typed graph, compare frozen inputs, retain independent Legal and Finance mock CLM reviews, publish and assign dated schedules. Changed sources or implementation invalidate approvals. All supported commercial changes are API data.','billing_platform.rb','def save_policy('),
+ 'builder':('Policy graph construction','BillingPolicy compiles AUM, progressive bands, dated standard/promotion/targeted rates, fixed, usage, time, approved events, caps and floors into one typed graph. A validated primitive graph is also accepted. Components compose; no per-product pricing implementation executes money.','billing_policy.rb','def compile'),
+ 'manifest':('Frozen input manifest','BillingPipeline#manifest binds exact normalized database record IDs, source revisions, mapping hashes, dated memberships and typed facts. BillingPlatform splits assignment boundaries and calls the same engine for each segment and the rollup. Missing mandatory evidence blocks invoice issue.','billing_pipeline.rb','def manifest('),
+ 'billing':('Native invoices and corrections','BillingDocuments issues native invoice/line/obligation records from fresh engine outputs. Finance approves an exact correction proposal against the last issued target. Atomic credit/debit notes support reallocations and repeat corrections; database guards preserve original history.','billing_documents.rb','def propose('),
+ 'lineage':('Record and execution lineage','BillingWorkspace reads retained deliveries, execution receipts, exact normalized revisions, frozen manifests, policies, outputs and native documents. Opening an old input resolves its exact database record, rather than the newest revision. Reads never seed or calculate.','billing_workspace.rb','def detail('),
+}
+for key,(title,implementation,path,needle) in updates.items():
+    current=COMPONENTS[key]
+    current.update(title=title,implementation=implementation,status='Implemented',refs=[ref(SERVICE+path,needle,'Shared implementation')])
+    current['limit']='Synthetic local preview. Provider connectors, production identity and advisor hierarchy remain deferred; Campfire and CLM are mocked.'
+COMPONENTS['ingest']['technology']='BillingPipeline · Ruby on Rails'
+COMPONENTS['normalize']['technology']='BillingNormalizeJob · ActiveJob'
+COMPONENTS['builder']['technology']='BillingPolicy · typed JSON graph'
+COMPONENTS['billing']['technology']='BillingDocuments · PostgreSQL native tables'
+COMPONENTS['policy']['summary']='One policy lifecycle and one engine serve both products; product-specific behavior is configuration.'
+COMPONENTS['builder']['summary']='Compose supported commercial terms as API policy data or supply a validated typed graph.'
+COMPONENTS['normalize']['summary']='Versioned mappings convert source fields into exact typed records; errors quarantine and remain replayable.'
+COMPONENTS['billing']['summary']='Invoices, credit notes and debit notes are native Savvy records. Cash and accounting evidence remain separate.'
+for component in COMPONENTS.values():
+    if component['title']=='Background jobs':component['implementation']='BillingNormalizeJob is an actual ActiveJob entry point. The preview executes it inline and records every execution. A durable queue/worker deployment remains future infrastructure.'
+
 def build(source_commit=None):
     sample_path = HERE / 'sample-run.json'
     sample = json.loads(sample_path.read_text())
