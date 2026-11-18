@@ -172,6 +172,18 @@ class DisclosureEconomicCorrectionTest < Minitest::Test
     @result=Economics::Canonical.copy(@original.payload.fetch('result'))
     detail(@result,'line_b')['interval']['end_exclusive']='2027-02-28'; assert correction(@result)
   end
+  def test_save_policy_requires_valid_explicit_end_or_null
+    input={'case_id'=>'advisor','base_policy_id'=>'disclosure-policy-v1','policy'=>@service.fields,'effective_from'=>'2027-02-01','effective_to'=>'2027-03-01','reason'=>'Validate dates'}
+    assert_equal 'VALIDATION_ERROR',assert_raises(Economics::Error) { @service.save_policy(input.except('effective_to'),'save-missing-end') }.code
+    [false,true,'2027-02-30','not-a-date',0].each_with_index do |value,index|
+      assert_equal 'INVALID_DATE',assert_raises(Economics::Error) { @service.save_policy(input.merge('effective_to'=>value),"save-invalid-end-#{index}") }.code
+    end
+    assert_equal 'INVALID_INTERVAL',assert_raises(Economics::Error) { @service.save_policy(input.merge('effective_to'=>'2027-02-01'),'save-empty-window') }.code
+    assert_equal 'draft',@service.save_policy(input,'save-finite-end')['status']
+    assert_equal 'draft',@service.save_policy(input.merge('effective_to'=>nil),'save-open-end')['status']
+    policy=@service.get('policy','disclosure-policy-v1')
+    assert_equal 'INVALID_DATE',assert_raises(Economics::Error) { @service.policy_window!(policy,'2027-02-01',false) }.code
+  end
   def test_assign_and_historical_assignment_reject_outside_policy_window
     draft=@service.save_policy({'case_id'=>'advisor','base_policy_id'=>'disclosure-policy-v1','policy'=>@service.fields,'effective_from'=>'2027-02-02','effective_to'=>nil,'reason'=>'Future policy'},'bad-window-save')
     input={'case_id'=>'advisor','policy_id'=>draft['policy_id'],'subject_id'=>'disclosure-alder-household','effective_from'=>'2027-02-01','effective_to'=>'2027-03-01','reason'=>'Out of range','supersedes_assignment_id'=>'disclosure-assignment-v1'}

@@ -355,8 +355,42 @@ class MedallionPresenter
       'statements'=>rows('statement').map { |r| serialize(r) },
       'runs'=>runs.map { |r| { 'id'=>r.external_id, 'case_id'=>@case_id, 'scenario_id'=>@scenario, 'status'=>r.payload.dig('result', 'status') || r.status, 'knowledge_cutoff'=>r.payload['knowledge_cutoff'] } },
       'page'=>%w[assignment policy comparison review event payment application statement run].to_h { |kind| [kind, {'total'=>relation(kind).count, 'limit'=>@limit, 'offset'=>@offset}] },
+      'request_queue'=>request_queue,
       'pipeline'=>pipeline_view
     }
+  end
+
+  # Queue membership is selected before LIMIT; older pending requests cannot be
+  # displaced by unrelated published history. All linked reviews are scoped to
+  # the latest comparison for each visible policy.
+  def request_queue
+    publications=relation('publication').where("payload->>'policy_id' IS NOT NULL").select("payload->>'policy_id'").to_sql
+    drafts=relation('policy').where(status:'draft').where("external_id NOT IN (#{publications})").select(:id).to_sql
+    decisions=relation('event_review').where.not(parent_id:nil).select(:parent_id).to_sql
+    events=relation('event').where(status:'draft').where("id NOT IN (#{decisions})").select(:id).to_sql
+    union="SELECT id, 0 AS kind_order FROM (#{drafts}) policies UNION ALL SELECT id, 1 AS kind_order FROM (#{events}) events"
+    connection=ActiveRecord::Base.connection
+    total=connection.select_value("SELECT count(*) FROM (#{union}) queue").to_i
+    page=connection.exec_query("SELECT id, kind_order FROM (#{union}) queue ORDER BY id DESC LIMIT #{@limit} OFFSET #{@offset}").to_a
+    policy_ids=page.select { |row| row['kind_order']==0 }.map { |row| row['id'] }
+    event_ids=page.select { |row| row['kind_order']==1 }.map { |row| row['id'] }
+    policies=relation('policy').where(id:policy_ids).order(:id).to_a
+    base_ids=policies.filter_map { |policy| policy.payload['base_id'] }.uniq
+    bases=relation('policy').where(external_id:base_ids).select('DISTINCT ON (external_id) medallion_evidence.*').reorder(:external_id, id: :desc).to_a
+    pairs=policies.map { |policy| [policy.external_id,policy.payload['base_id']] }.select { |_,base| base.present? }
+    pair_filter=pairs.map { "(payload->>'proposed_policy_id' = ? AND payload->>'baseline_policy_id' = ?)" }.join(' OR ')
+    comparisons=(pairs.empty? ? relation('comparison').none : relation('comparison').where(pair_filter,*pairs.flatten))
+      .select("DISTINCT ON (payload->>'proposed_policy_id') medallion_evidence.*")
+      .reorder(Arel.sql("payload->>'proposed_policy_id', id DESC")).to_a
+    reviews=relation('review').where("payload->>'comparison_id' IN (?)",comparisons.map(&:external_id))
+      .select("DISTINCT ON (payload->>'comparison_id', payload->>'role') medallion_evidence.*")
+      .reorder(Arel.sql("payload->>'comparison_id', payload->>'role', id DESC")).to_a
+    present_policy=->(p) { serialize(p).merge('version'=>p.payload.dig('policy','version'),'status'=>@service.published?(p) ? 'published' : p.status) }
+    {'policies'=>policies.map(&present_policy), 'base_policies'=>bases.map(&present_policy),
+      'events'=>relation('event').where(id:event_ids).order(:id).map { |event| serialize(event) },
+      'comparisons'=>comparisons.map { |comparison| serialize(comparison) },
+      'reviews'=>reviews.map { |review| serialize(review) },
+      'total'=>total,'limit'=>@limit,'offset'=>@offset}
   end
 
   def party_name(id)

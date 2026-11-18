@@ -319,12 +319,12 @@ class DisclosureWorkbench
     error('SCOPE_MISMATCH') unless value==CASE
   end
   def interval!(from,to)
-    start=@m.date!(from); finish=to && @m.date!(to)
+    start=@m.date!(from); finish=to.nil? ? nil : @m.date!(to)
     error('INVALID_INTERVAL') if finish && start >= finish
   end
   def identifier(prefix) = "disclosure-#{prefix}-#{SecureRandom.uuid}"
   def policy_window!(policy, from, to)
-    start=@m.date!(from.to_s); finish=to && @m.date!(to.to_s)
+    start=@m.date!(from.to_s); finish=to.nil? ? nil : @m.date!(to.to_s)
     error('INVALID_INTERVAL','Assignment must be contained within the policy effective window') unless policy.starts_on && finish && policy.starts_on <= start && (policy.ends_on.nil? || finish <= policy.ends_on)
   end
   # Compare economic outputs with the retained native invoice and its bound lines.

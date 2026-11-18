@@ -1810,11 +1810,13 @@ export function PolicyApprovals({
   busy,
   command,
   requestPolicy,
+  financeOnly = false,
 }: {
   data: Data;
   busy: boolean;
   command: Command;
   requestPolicy?: Json;
+  financeOnly?: boolean;
 }) {
   const policies = (data.policies || []) as Json[],
     comparisons = (data.comparisons || []) as Json[],
@@ -1840,7 +1842,7 @@ export function PolicyApprovals({
       <section className="ws-panel ws-padded">
         <h2>{requestPolicy ? "Impact on the same activity" : "Compare policy versions"}</h2>
         {requestPolicy && <p>Baseline: {policies.find(p => p.id === base)?.version || "Published base"} · Proposed: {requestPolicy.version}</p>}
-        <div className="ws-form-grid">
+        {!financeOnly && <><div className="ws-form-grid">
           {!requestPolicy && <label>
             Baseline
             <select value={base} onChange={(e) => setBase(e.target.value)}>
@@ -1900,7 +1902,7 @@ export function PolicyApprovals({
           }
         >
           {requestPolicy ? "Calculate impact" : "Compare policies"}
-        </button>
+        </button></>}
       </section>
       {(requestPolicy ? comparisons.filter(c => c.proposed_policy_id === proposed && c.baseline_policy_id === base).slice(-1) : comparisons).map((c) => {
         const matching = reviews.filter(
@@ -1949,7 +1951,7 @@ export function PolicyApprovals({
               </label>
             </div>
             <div className="ws-review-actions">
-              {["legal", "finance"].map((role) => (
+              {(financeOnly ? ["finance"] : ["legal", "finance"]).map((role) => (
                 <div key={role}>
                   <strong>{label(role)}</strong>
                   <span>
@@ -1990,7 +1992,7 @@ export function PolicyApprovals({
                 </div>
               ))}
             </div>
-            <details className="aud-advanced"><summary>Publish reviewed terms</summary><p>Publication is an explicit step after both reviews. Assignment is separate.</p><button
+            {!financeOnly && <details className="aud-advanced"><summary>Publish reviewed terms</summary><p>Publication is an explicit step after both reviews. Assignment is separate.</p><button
               className="ws-primary"
               disabled={
                 busy ||
@@ -2013,14 +2015,14 @@ export function PolicyApprovals({
               }
             >
               Publish reviewed policy
-            </button></details>
+            </button></details>}
             <p className="ws-footnote">
               Mock review only. No document is signed or sent.
             </p>
           </section>
         );
       })}
-      <details className="aud-advanced"><summary>Assign published terms</summary><PolicyAssignment data={data} busy={busy} command={command} /></details>
+      {!financeOnly && <details className="aud-advanced"><summary>Assign published terms</summary><PolicyAssignment data={data} busy={busy} command={command} /></details>}
     </>
   );
 }

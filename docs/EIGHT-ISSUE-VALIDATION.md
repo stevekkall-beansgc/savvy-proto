@@ -13,13 +13,13 @@ reset or retained seed is required.
 | Editable hosted API | Source-only image from exact committed archive; no source mount or reloader; read-only filesystem, stdout logs and temporary space. Health exposes source identity. Candidate preflight verifies image/configuration. |
 | Missing Finance reviews | Finance receives the same comparison identity/amounts and Finance-only decisions. Changed implementation bindings are explicitly stale and blocked until Product compares again. |
 | Missing Finance cash | Original receipt, outbound refund and confirmed loan advance have separate evidence. Approved credit and confirmed/matching cash sources are required. Negative tests exclude pending receipts/refunds/credits and mismatched loan terms. Entitlements and supplied recognition stay separate. |
-| Optional end date drift | JSON contracts require the effective_to key. Saved policy can be open-ended; assignment requires a valid finite date. Negative contract checks cover omitted, null and malformed dates. |
-| Unused/unbounded reads | Household navigation skips baseline loads. Medallion histories and disclosure request pages are limited in SQL, selected/applied policy remains available, financial context stays stable across request pages. Independent presenter reads use repeatable-read without the entity write lock. |
+| Optional end date drift | JSON contracts require the effective_to key. Saved policy can be open-ended; assignment requires a valid finite date. Negative contract checks cover omitted, null, Boolean and malformed dates. |
+| Unused/unbounded reads | Household navigation skips baseline loads. Medallion histories and disclosure request pages are limited in SQL, selected/applied policy remains available, financial context stays stable across request pages. The Business book pending queue filters/counts before paging, retains linked baseline/comparison/reviews, and exposes reachable pages with exact totals. Independent presenter reads use repeatable-read without the entity write lock. |
 | Unsafe fixed build directory | Explicit inactive candidate slots, ownership guards, shared operation lock, exact source/asset/image proof and both exact-commit CI gates. Offline stress rejects tamper during validation, source drift, active slots and failed readiness; rollback restores the prior pair/receipt even if the remote rollback fails. |
 
 ## Observed local checks before candidate publication
 
-- Ruby/PostgreSQL regression: 208 tests, 12,294 assertions, zero failures/errors/skips.
+- Ruby/PostgreSQL regression: 210 tests, 12,322 assertions, zero failures/errors/skips.
 - Python reference and deployment tests: 63 pass.
 - Reporting: 23 models and 69 data tests; all 92 steps pass on disposable data.
 - TypeScript and Rails eager loading pass.
@@ -30,6 +30,8 @@ activation/publication receipts. Receipts, not this source document, establish
 which candidate is actually served. No tests send real provider writes.
 
 ## Review corrections and limits
+
+Astra final review additionally caught Boolean date bypass and older Business book requests hidden behind unrelated history. These have direct command/SQL stress coverage; Finance book controls also exclude publication and assignment.
 
 Cross-review caught stale mocks, a historical assignment fixture conflict,
 unconfirmed source evidence, request histories sliced after loading, and an

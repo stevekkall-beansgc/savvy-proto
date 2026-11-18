@@ -48,6 +48,7 @@ def check(live=False):
         assert not validator.is_valid(missing),schema_name+' accepts omitted effective_to'
         invalid=dict(example,effective_to='2027-02-30')
         assert not validator.is_valid(invalid),schema_name+' accepts malformed date'
+        assert not validator.is_valid(dict(example,effective_to=False)),schema_name+' accepts boolean effective_to'
         null_end=dict(example,effective_to=None)
         assert validator.is_valid(null_end)==(schema_name=='SavePolicyInput'),schema_name+' null effective_to drift'
     for field,enum in [('medallionCommand','MedallionCommand'),('financeCommand','FinanceCommand'),('workbenchCommand','Command')]:

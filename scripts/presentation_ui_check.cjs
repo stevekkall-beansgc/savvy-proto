@@ -41,6 +41,7 @@ assert(['http://127.0.0.1:3100','http://127.0.0.1:3104','http://127.0.0.1:3106']
  await page.getByRole('button',{name:'View balance evidence →'}).click();await page.getByRole('dialog').waitFor();check((await page.getByRole('dialog').innerText()).includes('$200.00'),'Refund evidence opens');await page.keyboard.press('Escape');
  await identity('client');await ready('Your business at a glance.');
  householdMode=false;await page.getByLabel('Billing example').selectOption('book');await ready('Your business at a glance.');check((await text()).includes('Sep '),'Historical business book remains accessible');check(!(await text()).includes('Household billing'),'Household not appended to book');
+ await identity('finance');await nav('Work queue');await ready('Work queue.');t=await text();check(!t.includes('Simulate Legal review')&&!t.includes('Publish reviewed policy')&&!t.includes('Assign published terms')&&!t.includes('Calculate impact'),'Book Finance queue does not offer Legal or operator decisions');await identity('client');await ready('Your business at a glance.');
  await page.locator('.aud-account-label select').selectOption('ria');await ready('How your terms compare');check(!(await text()).includes('FEBRUARY 2027'),'RIA book does not mix periods');
  await page.getByLabel('Billing example').selectOption('household');await ready('Your business at a glance.');
  if(process.env.SAVVY_SCREENSHOT)await page.screenshot({path:process.env.SAVVY_SCREENSHOT.replace('.png','-desktop.png'),fullPage:true});

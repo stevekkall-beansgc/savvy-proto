@@ -12,7 +12,7 @@ export default function ProductWorkspace({data,internal,busy,command,onQueue,onL
   const current=data.terms.find(t=>["current","applied"].includes(t.status));
   const run=data.run;
   const total=run?.summary.find(x=>x.output_id===(data.case_id==="advisor"?"compensation":"net"));
-  const requests=((internal?.policies || []) as RecordData[]).filter(p=>p.status==="draft").length;
+  const requests=Number((internal?.request_queue as RecordData | undefined)?.total || 0);
   const stages=[
     {title:"Activity",label:"Balances, accounts & events",kind:"document" as const},
     {title:"Agreement",label:"The terms that apply",kind:"terms" as const},

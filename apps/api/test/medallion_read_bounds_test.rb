@@ -26,6 +26,29 @@ class MedallionReadBoundsTest < Minitest::Test
     assert_empty(first['runs'].map { |r| r['id'] } & second['runs'].map { |r| r['id'] })
     assert_raises(Economics::Error) { @w.medallion.view(workspace:'internal',case_id:'advisor',limit:101) }
   end
+  def test_queue_filters_before_paging_and_loads_exact_linked_reviews
+    service=@w.medallion
+    base=service.source('advisor','baseline','policy').find_by!(external_id:'advisor-policy-v1')
+    payload=base.payload.merge('base_id'=>base.external_id,'base_hash'=>base.payload_hash,'reason'=>'Synthetic review')
+    oldest=service.store!('advisor','baseline','policy',id:'queue-oldest',status:'draft',payload:payload)
+    110.times { |i| service.store!('advisor','baseline','policy',id:"queue-draft-#{i}",status:'draft',payload:payload) }
+    110.times { |i| service.store!('advisor','baseline','policy',id:"queue-published-#{i}",status:'published',payload:payload) }
+    comparison=service.store!('advisor','baseline','comparison',id:'queue-comparison',status:'completed',parent:oldest,payload:{'proposed_policy_id'=>oldest.external_id,'baseline_policy_id'=>base.external_id})
+    %w[legal finance].each { |role| service.store!('advisor','baseline','review',id:"queue-review-#{role}",status:'approved',parent:oldest,payload:{'policy_id'=>oldest.external_id,'comparison_id'=>comparison.external_id,'role'=>role,'decision'=>'approved_for_demo'}) }
+    sql=[]
+    listener=ActiveSupport::Notifications.subscribe('sql.active_record') { |_name,_start,_finish,_id,payload| sql << payload[:sql] }
+    first=service.view(workspace:'internal',case_id:'advisor',limit:50,offset:0)['request_queue']
+    ActiveSupport::Notifications.unsubscribe(listener)
+    assert sql.any? { |query| query.match?(/FROM \(.*UNION ALL.*\) queue ORDER BY id DESC LIMIT 50 OFFSET 0/i) }, 'Pending queue is filtered and limited by SQL'
+    last=service.view(workspace:'internal',case_id:'advisor',limit:50,offset:100)['request_queue']
+    assert_operator first['total'],:>=,111
+    assert_operator first['policies'].size,:<=,50
+    assert last['policies'].any? { |row| row['id']=='queue-oldest' }
+    assert last['comparisons'].any? { |row| row['id']=='queue-comparison' }
+    assert_equal %w[finance legal],last['reviews'].select { |row| row['comparison_id']=='queue-comparison' }.map { |row| row['role'] }.sort
+    assert last['base_policies'].any? { |row| row['id']==base.external_id }
+    assert_empty first['policies'].map { |row| row['id'] } & last['policies'].map { |row| row['id'] }
+  end
   def test_history_queries_apply_sql_limit_before_loading
     sql=[]
     listener=ActiveSupport::Notifications.subscribe('sql.active_record') { |_name,_start,_finish,_id,payload| sql << payload[:sql] }
