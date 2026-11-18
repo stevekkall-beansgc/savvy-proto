@@ -18,7 +18,7 @@ specific hosted version. Earlier deployment descriptions below are historical.
 
 Acceptance: 29 read-only desktop/mobile browser checks, 102 disclosure HTTP
 checks, 50 audience checks, 66 disclosure/document checks, optimized build and
-49 reference tests plus two mocked deployment rollback/ownership tests pass. Browser acceptance now runs in Prototype checks.
+49 reference tests plus four mocked deployment rollback/ownership/restart tests pass. Browser acceptance now runs in Prototype checks.
 Synthetic fresh setup explicitly installs presentation examples; page reads and
 preview activation never seed. Campfire and CLM remain mocked, and the original
 deployment/data are retained for rollback.

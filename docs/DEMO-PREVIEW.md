@@ -46,6 +46,7 @@ Port 3106 is a temporary staging listener and is not publicly routed.
 
 The script checks the exact remote main and CI, refuses unowned services/routes,
 and restores the previous service and tunnel configuration on a failed activation.
+It retries macOS service-label release errors briefly before readiness checks.
 It never resets, migrates or seeds a database. Both retained volumes and the older
 port 3100 deployment stay intact. No new paid infrastructure is provisioned.
 This is a preview update; semver releases remain governed by the repository's

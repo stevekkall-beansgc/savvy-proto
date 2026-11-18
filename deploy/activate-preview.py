@@ -55,7 +55,15 @@ def restart(verify_hosted=True):
     loaded = subprocess.run(['launchctl', 'print', target], capture_output=True)
     if loaded.returncode == 0:
         subprocess.run(['launchctl', 'bootout', target], check=True, capture_output=True)
-    subprocess.run(['launchctl', 'bootstrap', f'gui/{os.getuid()}', str(PLIST)], check=True, capture_output=True)
+    # launchd can acknowledge bootout before it releases the service label.
+    for attempt in range(10):
+        try:
+            subprocess.run(['launchctl', 'bootstrap', f'gui/{os.getuid()}', str(PLIST)], check=True, capture_output=True)
+            break
+        except subprocess.CalledProcessError as error:
+            if error.returncode != 5 or attempt == 9:
+                raise
+            time.sleep(1)
     for _ in range(20):
         try:
             if verify_hosted:

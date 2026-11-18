@@ -3,6 +3,7 @@ import importlib.util
 import json
 from pathlib import Path
 import plistlib
+import subprocess
 import tempfile
 import unittest
 from unittest.mock import patch
@@ -76,3 +77,19 @@ class PreviewActivationTest(unittest.TestCase):
             with self.assertRaisesRegex(AssertionError, 'Unowned'): self.app.main(True)
             remote.assert_not_called()
         self.assertEqual(unowned, plistlib.loads(self.app.PLIST.read_bytes()))
+
+    def test_service_bootstrap_retries_transient_unload_error(self):
+        ok = subprocess.CompletedProcess([], 0)
+        transient = subprocess.CalledProcessError(5, ['launchctl', 'bootstrap'])
+        with patch.object(self.app.subprocess, 'run', side_effect=[ok, ok, transient, ok]) as run, patch.object(self.app, 'probe') as probe, patch.object(self.app.time, 'sleep') as sleep:
+            self.app.restart()
+        self.assertEqual(4, run.call_count)
+        sleep.assert_called_once_with(1)
+        probe.assert_called_once()
+
+    def test_service_bootstrap_does_not_retry_other_errors(self):
+        ok = subprocess.CompletedProcess([], 0)
+        fatal = subprocess.CalledProcessError(1, ['launchctl', 'bootstrap'])
+        with patch.object(self.app.subprocess, 'run', side_effect=[ok, ok, fatal]), patch.object(self.app.time, 'sleep') as sleep:
+            with self.assertRaises(subprocess.CalledProcessError): self.app.restart()
+        sleep.assert_not_called()
