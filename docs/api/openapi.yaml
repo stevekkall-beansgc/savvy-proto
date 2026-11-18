@@ -1,7 +1,7 @@
 openapi: 3.1.1
 info:
   title: Savvy billing prototype API
-  version: 0.6.0
+  version: 0.7.0
   description: Current synthetic Rails/GraphQL implementation. Savvy owns billing obligations, invoices/lines and
     custodial instructions. One Economics::Engine evaluates policy data. Campfire and CLM remain mocked. The public
     API reference is static documentation; hosted operations require the existing Cloudflare Access login. Simulated
@@ -11,7 +11,7 @@ servers:
   description: Device-hosted full application; Cloudflare Access browser login required.
 externalDocs:
   description: Authoritative GraphQL SDL in the repository
-  url: https://github.com/stevekkall-beansgc/savvy-proto/blob/83875cb3ef3c7e1dac3b3b92de8df140fbd2796e/contracts/schema.graphql
+  url: https://github.com/stevekkall-beansgc/savvy-proto/blob/d12499be1fae164d401adb6362bab2a66d3c7fd8/contracts/schema.graphql
 tags:
 - name: GraphQL transport
 - name: Local service
@@ -158,9 +158,9 @@ paths:
   /graphql:
     servers:
     - url: http://127.0.0.1:3108
-      description: Current candidate Rails API; loopback only.
+      description: API slot A Rails API; loopback only.
     - url: http://127.0.0.1:3109
-      description: Alternate inactive Rails API slot; loopback only.
+      description: API slot B Rails API slot; loopback only.
     post:
       summary: Execute GraphQL directly on the loopback Rails API
       operationId: executeLocalGraphQL
@@ -301,9 +301,9 @@ paths:
   /health:
     servers:
     - url: http://127.0.0.1:3108
-      description: Current candidate Rails health; loopback only.
+      description: API slot A Rails health; loopback only.
     - url: http://127.0.0.1:3109
-      description: Alternate inactive Rails health slot; loopback only.
+      description: API slot B Rails health slot; loopback only.
     get:
       operationId: localHealth
       summary: Inspect local synthetic service health
@@ -767,32 +767,317 @@ components:
       - reason
       - posting_period
       additionalProperties: false
+    SharedPolicy:
+      type: object
+      properties:
+        version:
+          type: string
+        allocation:
+          enum:
+          - equal
+          - balance
+        invoice_timing:
+          enum:
+          - advance
+          - arrears
+        components:
+          type: array
+          minItems: 1
+          items:
+            type: object
+            properties:
+              id:
+                type: string
+              kind:
+                enum:
+                - aum
+                - flat
+                - per_account
+                - hourly
+                - events
+                - observation
+            required:
+            - id
+            - kind
+            additionalProperties: true
+        graph:
+          type: object
+          description: Validated typed primitive graph; mandatory assessed USD charge obligation and source requirements.
+        input_requirements:
+          type: object
+        minimum_minor: *id001
+        cap_minor: *id001
+        compensation:
+          type: object
+      required:
+      - version
+      additionalProperties: false
+      description: Use components OR graph. Kind-specific field validation is enforced by BillingPolicy. AUM supports
+        annual rate, dated standard/promotion/targeted rates or progressive tiers. Observation outputs stay separate
+        from invoices. Only approved typed operators execute; no source code is accepted.
+    SourceMapping:
+      type: object
+      properties:
+        format:
+          enum:
+          - json
+          - ndjson
+        records_path:
+          type: string
+        fields:
+          type: object
+          additionalProperties:
+            type: string
+        constants:
+          type: object
+        coercions:
+          type: object
+          additionalProperties:
+            enum:
+            - integer
+            - decimal_usd
+            - rational_decimal
+            - boolean
+            - us_date
+            - epoch_seconds
+            - identifier
+            - string
+      required:
+      - format
+      - fields
+      additionalProperties: false
+      description: Versioned canonical field mappings. Original bytes are retained before parsing; binary or invalid
+        input is quarantined. Registering a new version requires replay before normalized records become current.
+    SharedRegisterSourceInput:
+      type: object
+      properties:
+        name:
+          type: string
+        mapping:
+          $ref: '#/components/schemas/SourceMapping'
+      required:
+      - name
+      - mapping
+      additionalProperties: false
+    SharedIngestInput:
+      type: object
+      properties:
+        source_id:
+          type: string
+        delivery_key:
+          type: string
+        raw:
+          type: string
+        raw_base64:
+          type: string
+      required:
+      - source_id
+      - delivery_key
+      - raw
+      additionalProperties: false
+    SharedReplayInput:
+      type: object
+      properties:
+        delivery_id:
+          type: string
+        source_id:
+          type: string
+      required:
+      - delivery_id
+      - source_id
+      additionalProperties: false
+    SharedSavePolicyInput:
+      type: object
+      properties:
+        policy:
+          $ref: '#/components/schemas/SharedPolicy'
+        effective_from: *id002
+        effective_to:
+          anyOf:
+          - *id002
+          - type: 'null'
+        reason:
+          type: string
+      required:
+      - policy
+      - effective_from
+      - effective_to
+      - reason
+      additionalProperties: false
+    SharedComparePolicyInput:
+      type: object
+      properties:
+        policy_id:
+          type: string
+        baseline_policy_id:
+          type: string
+        subject_id:
+          type: string
+        service_start: *id002
+        service_end_exclusive: *id002
+      required:
+      - policy_id
+      - subject_id
+      - service_start
+      - service_end_exclusive
+      additionalProperties: false
+    SharedReviewPolicyInput:
+      type: object
+      properties:
+        comparison_id:
+          type: string
+        decision:
+          enum:
+          - approved
+          - rejected
+        reason:
+          type: string
+        document_ref:
+          type: object
+          properties:
+            system:
+              const: mock_clm
+            document_id:
+              type: string
+            version:
+              type: string
+          required:
+          - system
+          - document_id
+          - version
+          additionalProperties: false
+      required:
+      - comparison_id
+      - decision
+      - reason
+      - document_ref
+      additionalProperties: false
+    SharedPublishPolicyInput:
+      type: object
+      properties:
+        comparison_id:
+          type: string
+      required:
+      - comparison_id
+      additionalProperties: false
+    SharedAssignPolicyInput:
+      type: object
+      properties:
+        policy_id:
+          type: string
+        subject_id:
+          type: string
+        effective_from: *id002
+        effective_to: *id002
+        reason:
+          type: string
+        expected_schedule_hash:
+          type: string
+      required:
+      - policy_id
+      - subject_id
+      - effective_from
+      - effective_to
+      - reason
+      - expected_schedule_hash
+      additionalProperties: false
+    SharedEvaluateInput:
+      type: object
+      properties:
+        subject_id:
+          type: string
+        service_start: *id002
+        service_end_exclusive: *id002
+      required:
+      - subject_id
+      - service_start
+      - service_end_exclusive
+      additionalProperties: false
+    SharedIssueInvoiceInput:
+      type: object
+      properties:
+        run_id:
+          type: string
+        posting_period:
+          type: string
+        due_on: *id002
+      required:
+      - run_id
+      - posting_period
+      - due_on
+      additionalProperties: false
+    SharedProposeCorrectionInput:
+      type: object
+      properties:
+        document_id:
+          type: string
+        run_id:
+          type: string
+        posting_period:
+          type: string
+        reason:
+          type: string
+      required:
+      - document_id
+      - run_id
+      - posting_period
+      - reason
+      additionalProperties: false
+    SharedReviewCorrectionInput:
+      type: object
+      properties:
+        proposal_id:
+          type: string
+        decision:
+          enum:
+          - approved
+          - rejected
+        reason:
+          type: string
+      required:
+      - proposal_id
+      - decision
+      - reason
+      additionalProperties: false
+    SharedIssueCorrectionInput:
+      type: object
+      properties:
+        proposal_id:
+          type: string
+      required:
+      - proposal_id
+      additionalProperties: false
+    SharedReviewEventInput:
+      type: object
+      properties:
+        record_id:
+          type: string
+        expected_hash:
+          type: string
+        decision:
+          enum:
+          - approved
+          - rejected
+        reason:
+          type: string
+      required:
+      - record_id
+      - expected_hash
+      - decision
+      - reason
+      additionalProperties: false
+    SharedClosePeriodInput:
+      type: object
+      properties:
+        posting_period:
+          type: string
+        reason:
+          type: string
+      required:
+      - posting_period
+      - reason
+      additionalProperties: false
 x-graphql-operations:
-- name: disclosureWorkspace
-  kind: query
-  group: Household billing
-  description: Selected household invoice, account allocations, valuation, terms, credit/refund, compensation and
-    cost evidence. Internal audiences also receive policy and recognition records. The RIA case reports a separately
-    observed cost; it does not infer a platform fee.
-  arguments:
-  - name: audience
-    type: String!
-    required: true
-  - name: caseId
-    type: ID!
-    required: true
-  - name: limit
-    type: Int
-    required: false
-  - name: offset
-    type: Int
-    required: false
-  - name: pageChanges
-    type: Boolean
-    required: false
-  returns: JSON!
-  request: *id005
-  example_note: Replace identifiers prefixed REPLACE_WITH using IDs from a preceding read.
 - name: audienceClient
   kind: query
   group: Client experience
@@ -885,6 +1170,55 @@ x-graphql-operations:
     variables:
       caseId: advisor
   example_note: Replace identifiers prefixed REPLACE_WITH using IDs from a preceding read.
+- name: billingWorkspace
+  kind: query
+  group: Shared billing
+  description: Scoped client or internal billing view across both products. Reads issued native documents, exact
+    calculation basis, source executions, policy schedules and correction reviews without running prices or jobs.
+  arguments:
+  - name: audience
+    type: String!
+    required: true
+  - name: caseId
+    type: ID!
+    required: true
+  - name: limit
+    type: Int
+    required: false
+  - name: offset
+    type: Int
+    required: false
+  - name: recordId
+    type: ID
+    required: false
+  - name: search
+    type: String
+    required: false
+  - name: section
+    type: String
+    required: false
+  - name: serviceEndExclusive
+    type: String
+    required: false
+  - name: serviceStart
+    type: String
+    required: false
+  - name: subjectId
+    type: ID
+    required: false
+  returns: JSON!
+  request:
+    query: 'query BillingWorkspace($audience: String!, $caseId: ID!, $limit: Int, $offset: Int, $recordId: ID, $search:
+      String, $section: String, $serviceEndExclusive: String, $serviceStart: String, $subjectId: ID) { billingWorkspace(audience:
+      $audience, caseId: $caseId, limit: $limit, offset: $offset, recordId: $recordId, search: $search, section:
+      $section, serviceEndExclusive: $serviceEndExclusive, serviceStart: $serviceStart, subjectId: $subjectId) }'
+    variables:
+      audience: client
+      caseId: advisor
+      limit: 20
+      offset: 0
+      search: null
+  example_note: Replace identifiers prefixed REPLACE_WITH using IDs from a preceding read.
 - name: brokerBook
   kind: query
   group: Earlier workspaces
@@ -923,6 +1257,31 @@ x-graphql-operations:
       knowledgeCutoff: $knowledgeCutoff) }'
     variables:
       knowledgeCutoff: '2026-10-02T23:00:00Z'
+  example_note: Replace identifiers prefixed REPLACE_WITH using IDs from a preceding read.
+- name: disclosureWorkspace
+  kind: query
+  group: Household billing
+  description: Selected household invoice, account allocations, valuation, terms, credit/refund, compensation and
+    cost evidence. Internal audiences also receive policy and recognition records. The RIA case reports a separately
+    observed cost; it does not infer a platform fee.
+  arguments:
+  - name: audience
+    type: String!
+    required: true
+  - name: caseId
+    type: ID!
+    required: true
+  - name: limit
+    type: Int
+    required: false
+  - name: offset
+    type: Int
+    required: false
+  - name: pageChanges
+    type: Boolean
+    required: false
+  returns: JSON!
+  request: *id005
   example_note: Replace identifiers prefixed REPLACE_WITH using IDs from a preceding read.
 - name: entitlementLedger
   kind: query
@@ -1131,6 +1490,36 @@ x-graphql-operations:
     query: query Workbench { workbench }
     variables: {}
   example_note: Replace identifiers prefixed REPLACE_WITH using IDs from a preceding read.
+- name: billingCommand
+  kind: mutation
+  group: Shared billing
+  description: Shared source intake, policy lifecycle, evaluation, native invoice issue and reviewed correction
+    commands for advisor and RIA cases. Campfire and CLM are mocked.
+  arguments:
+  - name: action
+    type: String!
+    required: true
+  - name: caseId
+    type: ID!
+    required: true
+  - name: idempotencyKey
+    type: String!
+    required: true
+  - name: input
+    type: JSON!
+    required: true
+  returns: Payload!
+  request:
+    query: 'mutation BillingCommand($action: String!, $caseId: ID!, $idempotencyKey: String!, $input: JSON!) { billingCommand(action:
+      $action, caseId: $caseId, idempotencyKey: $idempotencyKey, input: $input) { data errors { code message path
+      } } }'
+    variables:
+      action: SAVE_POLICY
+      input: {}
+      idempotencyKey: REPLACE_WITH_UNIQUE_KEY
+      caseId: advisor
+  example_note: Replace identifiers with IDs returned by reads. Mutation input shown separately below; the empty
+    catalog input is a shape template.
 - name: disclosureCommand
   kind: mutation
   group: Household policies
@@ -1284,6 +1673,22 @@ x-command-families:
   - SAVE_POLICY
   - SAVE_TERMS_PROPOSAL
   - SCHEDULE_TERMS_PROPOSAL
+  billingCommand:
+  - REGISTER_SOURCE
+  - INGEST
+  - REPLAY
+  - SAVE_POLICY
+  - COMPARE_POLICY
+  - REVIEW_POLICY
+  - PUBLISH_POLICY
+  - ASSIGN_POLICY
+  - EVALUATE
+  - ISSUE_INVOICE
+  - PROPOSE_CORRECTION
+  - REVIEW_CORRECTION
+  - ISSUE_CORRECTION
+  - REVIEW_EVENT
+  - CLOSE_PERIOD
 x-command-examples:
 - family: disclosureCommand
   action: SAVE_POLICY
@@ -1416,10 +1821,285 @@ x-command-examples:
         posting_period: 2027-01
         reason: Reverse the local cash association
       idempotencyKey: docs-finance-reverse-001
+- family: billingCommand
+  action: REGISTER_SOURCE
+  schema: SharedRegisterSourceInput
+  role: operator
+  request:
+    query: 'mutation BillingCommand($action: String!, $caseId: ID!, $idempotencyKey: String!, $input: JSON!) { billingCommand(action:
+      $action, caseId: $caseId, idempotencyKey: $idempotencyKey, input: $input) { data errors { code message path
+      } } }'
+    variables:
+      action: REGISTER_SOURCE
+      input:
+        name: custodian-feed
+        mapping:
+          format: json
+          records_path: records
+          fields:
+            id: id
+            revision: revision
+            type: type
+            observed_at: observed_at
+            billing_subject_id: billing_subject_id
+            customer_id: customer_id
+            account_id: account_id
+            date: date
+            amount_minor: amount_minor
+            currency: currency
+      idempotencyKey: docs-register-source-001
+      caseId: advisor
+- family: billingCommand
+  action: INGEST
+  schema: SharedIngestInput
+  role: operator
+  request:
+    query: 'mutation BillingCommand($action: String!, $caseId: ID!, $idempotencyKey: String!, $input: JSON!) { billingCommand(action:
+      $action, caseId: $caseId, idempotencyKey: $idempotencyKey, input: $input) { data errors { code message path
+      } } }'
+    variables:
+      action: INGEST
+      input:
+        source_id: REPLACE_WITH_SOURCE_ID
+        delivery_key: docs-delivery-001
+        raw: '{"records":[]}'
+      idempotencyKey: docs-ingest-001
+      caseId: advisor
+- family: billingCommand
+  action: REPLAY
+  schema: SharedReplayInput
+  role: operator
+  request:
+    query: 'mutation BillingCommand($action: String!, $caseId: ID!, $idempotencyKey: String!, $input: JSON!) { billingCommand(action:
+      $action, caseId: $caseId, idempotencyKey: $idempotencyKey, input: $input) { data errors { code message path
+      } } }'
+    variables:
+      action: REPLAY
+      input:
+        delivery_id: REPLACE_WITH_DELIVERY_ID
+        source_id: REPLACE_WITH_CURRENT_MAPPING_ID
+      idempotencyKey: docs-replay-001
+      caseId: advisor
+- family: billingCommand
+  action: SAVE_POLICY
+  schema: SharedSavePolicyInput
+  role: operator
+  request:
+    query: 'mutation BillingCommand($action: String!, $caseId: ID!, $idempotencyKey: String!, $input: JSON!) { billingCommand(action:
+      $action, caseId: $caseId, idempotencyKey: $idempotencyKey, input: $input) { data errors { code message path
+      } } }'
+    variables:
+      action: SAVE_POLICY
+      input:
+        policy:
+          version: service-v2
+          allocation: equal
+          invoice_timing: arrears
+          components:
+          - id: asset_fee
+            kind: aum
+            basis: daily
+            rate: 3/250
+            day_basis: 365
+          - id: service
+            kind: flat
+            amount_minor: 5000
+            proration: service_days
+          - id: one_time
+            kind: events
+            direction: charge
+          compensation:
+            share: 4/5
+        effective_from: '2026-10-01'
+        effective_to: null
+        reason: Propose a composed service policy
+      idempotencyKey: docs-save-policy-001
+      caseId: advisor
+- family: billingCommand
+  action: COMPARE_POLICY
+  schema: SharedComparePolicyInput
+  role: operator
+  request:
+    query: 'mutation BillingCommand($action: String!, $caseId: ID!, $idempotencyKey: String!, $input: JSON!) { billingCommand(action:
+      $action, caseId: $caseId, idempotencyKey: $idempotencyKey, input: $input) { data errors { code message path
+      } } }'
+    variables:
+      action: COMPARE_POLICY
+      input:
+        policy_id: REPLACE_WITH_POLICY_ID
+        subject_id: REPLACE_WITH_SUBJECT_ID
+        service_start: '2026-10-01'
+        service_end_exclusive: '2026-11-01'
+      idempotencyKey: docs-compare-policy-001
+      caseId: advisor
+- family: billingCommand
+  action: REVIEW_POLICY
+  schema: SharedReviewPolicyInput
+  role: legal or finance
+  request:
+    query: 'mutation BillingCommand($action: String!, $caseId: ID!, $idempotencyKey: String!, $input: JSON!) { billingCommand(action:
+      $action, caseId: $caseId, idempotencyKey: $idempotencyKey, input: $input) { data errors { code message path
+      } } }'
+    variables:
+      action: REVIEW_POLICY
+      input:
+        comparison_id: REPLACE_WITH_COMPARISON_ID
+        decision: approved
+        reason: Review the exact comparison
+        document_ref:
+          system: mock_clm
+          document_id: terms-001
+          version: v1
+      idempotencyKey: docs-review-policy-001
+      caseId: advisor
+- family: billingCommand
+  action: PUBLISH_POLICY
+  schema: SharedPublishPolicyInput
+  role: operator
+  request:
+    query: 'mutation BillingCommand($action: String!, $caseId: ID!, $idempotencyKey: String!, $input: JSON!) { billingCommand(action:
+      $action, caseId: $caseId, idempotencyKey: $idempotencyKey, input: $input) { data errors { code message path
+      } } }'
+    variables:
+      action: PUBLISH_POLICY
+      input:
+        comparison_id: REPLACE_WITH_COMPARISON_ID
+      idempotencyKey: docs-publish-policy-001
+      caseId: advisor
+- family: billingCommand
+  action: ASSIGN_POLICY
+  schema: SharedAssignPolicyInput
+  role: operator
+  request:
+    query: 'mutation BillingCommand($action: String!, $caseId: ID!, $idempotencyKey: String!, $input: JSON!) { billingCommand(action:
+      $action, caseId: $caseId, idempotencyKey: $idempotencyKey, input: $input) { data errors { code message path
+      } } }'
+    variables:
+      action: ASSIGN_POLICY
+      input:
+        policy_id: REPLACE_WITH_POLICY_ID
+        subject_id: REPLACE_WITH_SUBJECT_ID
+        effective_from: '2026-10-01'
+        effective_to: '2026-11-01'
+        reason: Assign reviewed terms
+        expected_schedule_hash: REPLACE_WITH_SCHEDULE_HASH
+      idempotencyKey: docs-assign-policy-001
+      caseId: advisor
+- family: billingCommand
+  action: EVALUATE
+  schema: SharedEvaluateInput
+  role: operator
+  request:
+    query: 'mutation BillingCommand($action: String!, $caseId: ID!, $idempotencyKey: String!, $input: JSON!) { billingCommand(action:
+      $action, caseId: $caseId, idempotencyKey: $idempotencyKey, input: $input) { data errors { code message path
+      } } }'
+    variables:
+      action: EVALUATE
+      input:
+        subject_id: REPLACE_WITH_SUBJECT_ID
+        service_start: '2026-10-01'
+        service_end_exclusive: '2026-11-01'
+      idempotencyKey: docs-evaluate-001
+      caseId: advisor
+- family: billingCommand
+  action: ISSUE_INVOICE
+  schema: SharedIssueInvoiceInput
+  role: operator
+  request:
+    query: 'mutation BillingCommand($action: String!, $caseId: ID!, $idempotencyKey: String!, $input: JSON!) { billingCommand(action:
+      $action, caseId: $caseId, idempotencyKey: $idempotencyKey, input: $input) { data errors { code message path
+      } } }'
+    variables:
+      action: ISSUE_INVOICE
+      input:
+        run_id: REPLACE_WITH_RUN_ID
+        posting_period: 2026-11
+        due_on: '2026-12-18'
+      idempotencyKey: docs-issue-invoice-001
+      caseId: advisor
+- family: billingCommand
+  action: PROPOSE_CORRECTION
+  schema: SharedProposeCorrectionInput
+  role: operator
+  request:
+    query: 'mutation BillingCommand($action: String!, $caseId: ID!, $idempotencyKey: String!, $input: JSON!) { billingCommand(action:
+      $action, caseId: $caseId, idempotencyKey: $idempotencyKey, input: $input) { data errors { code message path
+      } } }'
+    variables:
+      action: PROPOSE_CORRECTION
+      input:
+        document_id: REPLACE_WITH_ORIGINAL_INVOICE_ID
+        run_id: REPLACE_WITH_NEW_RUN_ID
+        posting_period: 2026-11
+        reason: Correct newly received evidence
+      idempotencyKey: docs-propose-correction-001
+      caseId: advisor
+- family: billingCommand
+  action: REVIEW_CORRECTION
+  schema: SharedReviewCorrectionInput
+  role: finance
+  request:
+    query: 'mutation BillingCommand($action: String!, $caseId: ID!, $idempotencyKey: String!, $input: JSON!) { billingCommand(action:
+      $action, caseId: $caseId, idempotencyKey: $idempotencyKey, input: $input) { data errors { code message path
+      } } }'
+    variables:
+      action: REVIEW_CORRECTION
+      input:
+        proposal_id: REPLACE_WITH_PROPOSAL_ID
+        decision: approved
+        reason: Approve the exact per-account differences
+      idempotencyKey: docs-review-correction-001
+      caseId: advisor
+- family: billingCommand
+  action: ISSUE_CORRECTION
+  schema: SharedIssueCorrectionInput
+  role: operator
+  request:
+    query: 'mutation BillingCommand($action: String!, $caseId: ID!, $idempotencyKey: String!, $input: JSON!) { billingCommand(action:
+      $action, caseId: $caseId, idempotencyKey: $idempotencyKey, input: $input) { data errors { code message path
+      } } }'
+    variables:
+      action: ISSUE_CORRECTION
+      input:
+        proposal_id: REPLACE_WITH_PROPOSAL_ID
+      idempotencyKey: docs-issue-correction-001
+      caseId: advisor
+- family: billingCommand
+  action: REVIEW_EVENT
+  schema: SharedReviewEventInput
+  role: finance
+  request:
+    query: 'mutation BillingCommand($action: String!, $caseId: ID!, $idempotencyKey: String!, $input: JSON!) { billingCommand(action:
+      $action, caseId: $caseId, idempotencyKey: $idempotencyKey, input: $input) { data errors { code message path
+      } } }'
+    variables:
+      action: REVIEW_EVENT
+      input:
+        record_id: REPLACE_WITH_RECORD_ID
+        expected_hash: REPLACE_WITH_HASH
+        decision: approved
+        reason: Review a one-time event
+      idempotencyKey: docs-review-event-001
+      caseId: advisor
+- family: billingCommand
+  action: CLOSE_PERIOD
+  schema: SharedClosePeriodInput
+  role: finance
+  request:
+    query: 'mutation BillingCommand($action: String!, $caseId: ID!, $idempotencyKey: String!, $input: JSON!) { billingCommand(action:
+      $action, caseId: $caseId, idempotencyKey: $idempotencyKey, input: $input) { data errors { code message path
+      } } }'
+    variables:
+      action: CLOSE_PERIOD
+      input:
+        posting_period: 2026-11
+        reason: Close the posting month
+      idempotencyKey: docs-close-period-001
+      caseId: advisor
 x-contract-sources:
   graphql_sdl: contracts/schema.graphql
-  graphql_sdl_sha256: 8a4a3a22a74060f17ef4aea2ce801c7ed771cf561f2b0cfd9b7700cf354dfdb1
-  source_commit: 83875cb3ef3c7e1dac3b3b92de8df140fbd2796e
+  graphql_sdl_sha256: 4849d0529f952e8d273572ad6988afe022a711a2c1f741a8a4ecdb28a348f3e7
+  source_commit: d12499be1fae164d401adb6362bab2a66d3c7fd8
   controller: apps/api/app/controllers/graphql_controller.rb
   proxy: apps/web/app/api/graphql/route.ts
 x-agent-interfaces:

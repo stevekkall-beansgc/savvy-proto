@@ -10,11 +10,13 @@
     "apps/api/app/graphql/workbench_schema.rb",
     "apps/api/app/models/medallion_evidence.rb",
     "apps/api/app/services/audience_read_model.rb",
-    "apps/api/app/services/billing_catalog.rb",
-    "apps/api/app/services/disclosure_alternatives.rb",
+    "apps/api/app/services/billing_documents.rb",
+    "apps/api/app/services/billing_pipeline.rb",
+    "apps/api/app/services/billing_platform.rb",
+    "apps/api/app/services/billing_policy.rb",
+    "apps/api/app/services/billing_workspace.rb",
     "apps/api/app/services/disclosure_policy.rb",
     "apps/api/app/services/disclosure_refunds.rb",
-    "apps/api/app/services/disclosure_sources.rb",
     "apps/api/app/services/disclosure_workbench.rb",
     "apps/api/app/services/finance_timing.rb",
     "apps/api/app/services/medallion_workbench.rb",
@@ -28,8 +30,7 @@
     "docs/DISCLOSURE-BACKEND-NOTES.md",
     "docs/MEDALLION-ENGINE-CONTRACT.md",
     "docs/TECHNICAL-SPECIFICATION.md",
-    "docs/architecture/sample-run.json",
-    "fixtures/disclosures/household.json"
+    "docs/architecture/sample-run.json"
   ],
-  "source_commit": "83875cb3ef3c7e1dac3b3b92de8df140fbd2796e"
+  "source_commit": "d12499be1fae164d401adb6362bab2a66d3c7fd8"
 }
