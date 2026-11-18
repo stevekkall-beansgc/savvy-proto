@@ -1,5 +1,27 @@
 # Savvy execution handoff
 
+## Public architecture publication — 18 November 2026
+
+User requested GitHub-only code links, a public static walkthrough on
+`https://savvy.beanshop.top/`, and public source. The GitHub repository is now
+PUBLIC under verified account `stevekkall-beansgc`. All four reachable commits
+(420 historical blobs) were screened for credentials and literal secrets; no
+matches or credential-file paths were found. Existing fixtures are synthetic.
+
+The engine view now leads with three inputs and four concrete steps: determine
+billable assets, apply the agreed rate, assess the charge, allocate the same
+charge. Invoice issuance, confirmed cash and recognition remain separate. The
+operator catalogue and all 33 retained policy nodes are expandable technical
+detail. All local-file/loopback links were removed from the HTML. Local acceptance
+passes 237 checks. No calculation or billing behavior changed.
+
+Static packaging publishes only the HTML, a 404 page, security headers, robots
+and build metadata. No server or source-viewing endpoint is deployed. Read
+`docs/PUBLIC-ARCHITECTURE.md` for exact-commit CI/deployment requirements and
+verify the live `/build-metadata.json` against GitHub main before claiming a
+specific version is published. Existing full app previews and the separate
+owner-authenticated `savvy-proto.beanshop.top` route are not this public document.
+
 ## Interactive architecture and source checkpoints — 18 November 2026
 
 Prototype source checkpoint `3ce278b` is committed and pushed to

@@ -31,10 +31,10 @@ self-contained document.
 
 Source links are pinned to prototype commit
 `3ce278bb727e333e30b2fcd4eed1be84337b2eeb`.
-The local source viewer is restricted to the files listed in `source-map.json`;
-it provides current local code with line anchors and SHA-256 hashes. GitHub links
-remain pinned to the committed source. Local source links require the preview
-server; explanations and captured excerpts remain usable offline.
+GitHub links open the exact committed source in the public repository. The
+walkthrough contains no local-file or loopback links. Source excerpts remain
+available in the downloaded HTML. The local source viewer is a development-only
+helper and is not included in the public static publication.
 
 ## Recorded sample
 
@@ -66,9 +66,16 @@ SAVVY_PLAYWRIGHT_MODULE=/path/to/playwright node scripts/architecture_ui_check.c
 preview nor the HTML requires Playwright. No new browser installation or change
 to the full application's runtime is required.
 
-18 November validation: **199 checks passed**, including 34 component modals,
+18 November public-document validation: **237 checks passed**, including 34 component modals,
 33 policy node details, all 30 current source targets, exact line anchors,
-keyboard focus and Escape, desktop and 390px layouts, HTML download, offline
+GitHub-only links, the four-step engine explanation, keyboard focus and Escape,
+desktop and 390px layouts, HTML download, offline
 operation, print visibility and read-only/source-path boundaries. No browser
 runtime or console errors. Local reports and screenshots are ignored under
 `.runtime/architecture/`; no retained database reset or provider write occurred.
+
+## Public static hosting
+
+The architecture document is published at `https://savvy.beanshop.top/` using
+Cloudflare Pages static assets. No login, application backend or database is
+exposed. See [publication operations](../PUBLIC-ARCHITECTURE.md).

@@ -1,0 +1,53 @@
+name: Architecture checks
+
+on:
+  push:
+    branches: [main, codex/medallion-billing]
+    paths:
+      - 'docs/architecture/**'
+      - 'scripts/architecture*'
+      - 'scripts/package_architecture.py'
+      - 'deploy/publish-architecture.py'
+      - '.github/workflows/architecture.yml'
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  architecture-compliance:
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1
+        with:
+          node-version: '22'
+          cache: npm
+          cache-dependency-path: docs/architecture/package-lock.json
+      - uses: actions/setup-python@6d4fd22b20465ccc0f7354476588e8df7c9ca0e0
+        with:
+          python-version: '3.12'
+      - name: Verify source-linked HTML and static publication bundle
+        run: |
+          python3 docs/architecture/build.py
+          python3 scripts/package_architecture.py
+          python3 -m py_compile docs/architecture/build.py scripts/architecture_preview.py scripts/package_architecture.py deploy/publish-architecture.py
+          git diff --exit-code -- docs/architecture/index.html docs/architecture/source-map.json
+      - name: Install browser acceptance tools
+        run: |
+          npm ci --prefix docs/architecture --no-audit --no-fund
+          node docs/architecture/node_modules/playwright/cli.js install --with-deps chromium
+      - name: Exercise all component modals and retained policy nodes
+        run: |
+          python3 scripts/architecture_preview.py > /tmp/savvy-architecture.log 2>&1 &
+          preview_pid=$!
+          trap 'kill "$preview_pid" 2>/dev/null || true' EXIT
+          for attempt in $(seq 1 20); do
+            if curl --fail --silent http://127.0.0.1:3105/health >/dev/null; then break; fi
+            sleep 1
+          done
+          SAVVY_PLAYWRIGHT_MODULE="$PWD/docs/architecture/node_modules/playwright" node scripts/architecture_ui_check.cjs

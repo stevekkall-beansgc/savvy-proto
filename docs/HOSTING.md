@@ -5,7 +5,9 @@ Live private app: **https://savvy-proto.beanshop.top/**
 The owner authorized the full application on this Mac, using existing
 Cloudflare/GCP infrastructure with no new spend. This is the current interactive
 Next.js → Rails → PostgreSQL application; Campfire and CLM remain mocked.
-Private source: https://github.com/stevekkall-beansgc/savvy-proto.
+Public source: https://github.com/stevekkall-beansgc/savvy-proto.
+The separate public architecture document is `https://savvy.beanshop.top/`;
+see `PUBLIC-ARCHITECTURE.md`. The full application hostname above remains separate.
 
 ## Traffic and access
 

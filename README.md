@@ -72,7 +72,9 @@ Nothing moves real cash.
 
 ## Interactive architecture walkthrough
 
-Open the source-linked [architecture walkthrough](docs/architecture/README.md):
+Public walkthrough: **https://savvy.beanshop.top/** (no login).
+
+Open the source-linked [architecture walkthrough](docs/architecture/README.md) locally:
 `python3 scripts/architecture_preview.py`, then `http://127.0.0.1:3105/`.
 The three views cover the mental model, complete technical architecture and
 shared policy engine. Component modals link to exact GitHub source lines;

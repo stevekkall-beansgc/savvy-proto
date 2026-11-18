@@ -6,7 +6,8 @@ const { chromium } = require(process.env.SAVVY_PLAYWRIGHT_MODULE || 'playwright'
 const root = path.resolve(__dirname, '..');
 const artifacts = path.join(root, '.runtime/architecture');
 fs.mkdirSync(artifacts, { recursive: true });
-const origin = 'http://127.0.0.1:3105';
+const origin = process.env.ARCHITECTURE_ORIGIN || 'http://127.0.0.1:3105';
+const localPreview = ['127.0.0.1', 'localhost'].includes(new URL(origin).hostname);
 const checks = [];
 function check(value, name) { assert.ok(value, name); checks.push(name); }
 
@@ -39,6 +40,7 @@ function check(value, name) { assert.ok(value, name); checks.push(name); }
       check((await page.locator('#detail-title').innerText()).length > 0, `${id} has a component explanation`);
       check(await page.locator('#detail .source-item').count() > 0, `${id} has actual source references`);
       check(await page.locator('#detail a[href*="github.com/"]').count() > 0, `${id} has pinned GitHub links`);
+      check(await page.locator('#detail a[href^="file:"],#detail a[href*="127.0.0.1"],#detail a[href*="localhost"]').count() === 0, `${id} has no local-file or loopback links`);
       await page.keyboard.press('Escape');
       await page.locator('#detail[open]').waitFor({ state: 'hidden' });
     }
@@ -46,7 +48,7 @@ function check(value, name) { assert.ok(value, name); checks.push(name); }
     for (const id of nodes) {
       await page.evaluate(id => { location.hash = `engine/node/${id}`; }, id);
       await page.locator('#detail[open]').waitFor();
-      check(await page.locator('#detail-title').innerText() === id, `${id} opens its exact stored policy node`);
+      check(await page.locator('#detail').getAttribute('data-node-id') === id, `${id} opens its exact stored policy node`);
       await page.keyboard.press('Escape');
       await page.locator('#detail[open]').waitFor({ state: 'hidden' });
     }
@@ -65,6 +67,7 @@ function check(value, name) { assert.ok(value, name); checks.push(name); }
     await page.keyboard.press('ArrowRight');
     await page.waitForFunction(() => document.getElementById('architecture').hidden === false);
     check(await page.locator('#tab-architecture').evaluate(el => el === document.activeElement), 'Keyboard arrow selects and focuses next tab');
+    if (localPreview) {
     const source = await browser.newPage();
     const sourceMap = JSON.parse(fs.readFileSync(path.join(root, 'docs/architecture/source-map.json'), 'utf8'));
     for (const name of sourceMap.paths) {
@@ -82,8 +85,14 @@ function check(value, name) { assert.ok(value, name); checks.push(name); }
     check(hostDenied.status() === 403, 'Unexpected host header is rejected');
     const writeDenied = await page.request.post(`${origin}/`, { data: 'test' });
     check(writeDenied.status() === 501, 'Preview has no write endpoint');
-    const download = await page.request.get(`${origin}/download`);
-    check(download.status() === 200 && download.headers()['content-disposition'].includes('attachment'), 'Standalone HTML is downloadable');
+    }
+    const download = await page.request.get(`${origin}/index.html`);
+    check(download.status() === 200 && (await download.text()).includes('architecture-data'), 'Standalone HTML is downloadable');
+    check(await page.locator('#download').getAttribute('download') === 'savvy-billing-architecture.html', 'Download control exports the standalone HTML');
+    await page.locator('[data-tab="engine"]').click();
+    check(await page.locator('.calculation-step').count() === 4, 'Engine explanation leads with four concrete calculation steps');
+    check(await page.locator('#engine-implementation').getAttribute('open') === null, 'Implementation details are collapsed initially');
+    check((await page.locator('#charge-output').innerText()).includes('$1,000.00'), 'Primary engine output shows the retained charge');
     await page.setViewportSize({ width: 390, height: 844 });
     for (const tab of ['overview', 'architecture', 'engine']) {
       await page.locator(`[data-tab="${tab}"]`).click();
@@ -91,7 +100,7 @@ function check(value, name) { assert.ok(value, name); checks.push(name); }
       check(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth), `${tab} at 390px has no horizontal overflow`);
       await page.screenshot({ path: path.join(artifacts, `${tab}-mobile.png`), fullPage: true });
     }
-    await page.locator('#graph-nodes [data-node="charge"]').click();
+    await page.locator('.calculation-step[data-node="charge"]').click();
     check(await page.locator('#detail').evaluate(el => el.scrollWidth <= el.clientWidth), 'Node modal fits mobile width');
     await page.screenshot({ path: path.join(artifacts, 'node-mobile.png') });
     await page.keyboard.press('Escape');
