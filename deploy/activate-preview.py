@@ -50,7 +50,7 @@ def probe():
         raise RuntimeError('Foreign origin was accepted')
 
 
-def restart():
+def restart(verify_hosted=True):
     target = f'gui/{os.getuid()}/{LABEL}'
     loaded = subprocess.run(['launchctl', 'print', target], capture_output=True)
     if loaded.returncode == 0:
@@ -58,7 +58,11 @@ def restart():
     subprocess.run(['launchctl', 'bootstrap', f'gui/{os.getuid()}', str(PLIST)], check=True, capture_output=True)
     for _ in range(20):
         try:
-            probe()
+            if verify_hosted:
+                probe()
+            else:
+                with urllib.request.urlopen(ORIGIN, timeout=10) as response:
+                    assert response.status == 200
             return
         except (OSError, AssertionError, ValueError, KeyError, StopIteration):
             time.sleep(1)
@@ -128,11 +132,14 @@ def main(apply):
         (RUNTIME / 'activation.json').write_text(json.dumps(receipt, indent=2) + '\n')
         print('Preview activated; hosted route verified; Access retained.')
     except Exception:
-        if tunnel_attempted:
-            restored = request(endpoint, {'config': original}, auth, 'PUT')
-            assert restored['success'], 'Tunnel rollback failed'
-        PLIST.write_bytes(previous_bytes)
-        restart()
+        try:
+            if tunnel_attempted:
+                restored = request(endpoint, {'config': original}, auth, 'PUT')
+                assert restored['success'], 'Tunnel rollback failed'
+        finally:
+            # Local rollback must still run if the remote API is unavailable.
+            PLIST.write_bytes(previous_bytes)
+            restart(verify_hosted=False)
         raise
 
 
