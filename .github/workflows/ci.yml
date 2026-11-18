@@ -52,6 +52,7 @@ jobs:
           node docs/architecture/node_modules/playwright/cli.js install --with-deps chromium
           SAVVY_PLAYWRIGHT_MODULE="$PWD/docs/architecture/node_modules/playwright" SAVVY_PREVIEW_ORIGIN=http://127.0.0.1:3100 node scripts/presentation_ui_check.cjs
           SAVVY_PLAYWRIGHT_MODULE="$PWD/docs/architecture/node_modules/playwright" SAVVY_PREVIEW_ORIGIN=http://127.0.0.1:3100 node scripts/billing_platform_ui_check.cjs
+          SAVVY_PLAYWRIGHT_MODULE="$PWD/docs/architecture/node_modules/playwright" SAVVY_PREVIEW_ORIGIN=http://127.0.0.1:3100 node scripts/billing_lifecycle_ui_check.cjs
       - name: Reporting checks
         env:
           DBT_SEND_ANONYMOUS_USAGE_STATS: 'false'

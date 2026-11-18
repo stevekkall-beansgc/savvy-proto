@@ -30,7 +30,7 @@ class PreviewActivationTest(unittest.TestCase):
         (root / 'apps/web/.next-candidate-a').mkdir(parents=True)
         (root / 'apps/web/.next-candidate-a/BUILD_ID').write_text('synthetic-build')
         self.sha = 'a' * 40
-        (self.app.RUNTIME / 'candidate-build.json').write_text(json.dumps({'commit': self.sha, 'build_id': 'synthetic-build', 'slot': 'candidate-a', 'asset_hash': 'hash', 'api_endpoint': 'http://127.0.0.1:3108', 'api_container': 'candidate', 'api_image_id': 'image', 'validation': ['presentation_ui_check', 'billing_platform_ui_check', 'product_http_check']}))
+        (self.app.RUNTIME / 'candidate-build.json').write_text(json.dumps({'commit': self.sha, 'build_id': 'synthetic-build', 'slot': 'candidate-a', 'asset_hash': 'hash', 'api_endpoint': 'http://127.0.0.1:3108', 'api_container': 'candidate', 'api_image_id': 'image', 'validation': ['presentation_ui_check', 'billing_platform_ui_check', 'billing_lifecycle_ui_check', 'product_http_check']}))
         self.control = SimpleNamespace(inactive=lambda slot: root / 'apps/web/.next-candidate-a', tree_hash=lambda path: 'hash', image_identity=lambda *args: 'image')
         stage = json.dumps({'api': 'http://127.0.0.1:3108', 'slot': 'candidate-a', 'health': {'source_revision': self.sha}}).encode()
         self.stage = lambda *args, **kwargs: BytesIO(stage)

@@ -24,17 +24,17 @@ assert(['http://127.0.0.1:3100','http://127.0.0.1:3104','http://127.0.0.1:3106']
   await page.getByRole('button',{name:'View billing →'}).first().waitFor();check(await page.getByRole('button',{name:'View billing →'}).count()===2,'Accounts are behind a client drilldown');
   await page.getByRole('button',{name:'View billing →'}).first().click();await page.getByRole('dialog').waitFor();
   check((await page.getByRole('dialog').innerText()).includes('Invoice'),'Client drilldown opens its billing documents');await page.keyboard.press('Escape');
-  await nav('Statements');await ready('Statements & invoices.');await page.locator('.aud-list>button').first().click();await page.getByRole('dialog').waitFor();
+  await nav('Statements');await ready('Statements & invoices.');await page.locator('.aud-list>button').filter({hasText:'Invoice ·'}).first().click();await page.getByRole('dialog').waitFor();
   let text=await page.getByRole('dialog').innerText();check(text.includes('PAYER')&&text.includes('DUE')&&text.includes('Calculation basis'),'Traditional invoices carry dates, parties and applied terms');
   check(await page.getByRole('dialog').locator('tbody tr').count()>=2,'Native account allocations are visible');
   if(business==='ria'){check(text.includes('Source-reported · excluded from this bill')&&text.includes('$1,200.00'),'Custody income is separately evidenced, never netted into platform fees')}
   await page.keyboard.press('Escape');await nav('Agreements');await ready('Agreements & terms.');check((await page.locator('main').innerText()).includes('Signed agreement not yet provided'),'Agreement viewer stays honest');
   await identity('product');await ready('From source records to a client statement.');
   await page.getByRole('button',{name:'Change commercial terms →'}).click();await page.getByRole('dialog').waitFor();check(await page.getByRole('button',{name:'Save and compare',exact:true}).count()===1,'Product edits reviewed API policy components');await page.keyboard.press('Escape');
-  await nav('Data lineage');await ready('Data lineage.');check((await page.locator('main').innerText()).includes('BillingNormalizeJob runs inline'),'Pipeline explains its actual worker');
+  await nav('Data lineage');await ready('Data lineage.');check((await page.locator('main').innerText()).includes('PostgreSQL work queue'),'Pipeline explains its actual worker');
   await page.getByRole('button',{name:'View execution →'}).first().click();await page.getByRole('dialog').waitFor();check((await page.getByRole('dialog').innerText()).includes('BillingNormalizeJob'),'Execution opens retained evidence');await page.keyboard.press('Escape');
-  await nav('Work queue');await ready('Billing requests.');check((await page.locator('main').innerText()).includes('Billing correction'),'Both products have reviewed correction work');
-  await identity('finance');await ready('Billing requests.');check(await page.getByRole('button',{name:'Issue correction documents'}).count()===0,'Finance reviews; Product issues');check(await page.getByRole('button',{name:'Approve as Finance'}).count()>0,'Finance has an exact approval action');
+  await nav('Work queue');await ready('Billing requests.');check(!(await page.locator('main').innerText()).includes('INTERNAL_ERROR'),'Review queue opens without requiring pending fixture work');
+  await identity('finance');await ready('Billing, cash & recognition.');await page.locator('.aud-list>button').first().waitFor();check(await page.getByRole('button',{name:'Issue correction documents'}).count()===0,'Finance reviews; Product issues');await page.locator('.aud-list>button').first().click();await page.getByRole('dialog').waitFor();check((await page.getByRole('dialog').innerText()).includes('Recognition evidence'),'Finance connects native claims, cash and recognition');await page.keyboard.press('Escape');
   await identity('client');await ready('Your business at a glance.');
  }
  fs.mkdirSync('.runtime/four-capabilities/results',{recursive:true});await page.screenshot({path:'.runtime/four-capabilities/results/billing-desktop.png'});
