@@ -1,7 +1,7 @@
 openapi: 3.1.1
 info:
   title: Savvy billing prototype API
-  version: 0.7.0
+  version: 0.8.0
   description: Current synthetic Rails/GraphQL implementation. Savvy owns billing obligations, invoices/lines and
     custodial instructions. One Economics::Engine evaluates policy data. Campfire and CLM remain mocked. The public
     API reference is static documentation; hosted operations require the existing Cloudflare Access login. Simulated
@@ -11,7 +11,7 @@ servers:
   description: Device-hosted full application; Cloudflare Access browser login required.
 externalDocs:
   description: Authoritative GraphQL SDL in the repository
-  url: https://github.com/stevekkall-beansgc/savvy-proto/blob/c2828ac56a48182bd5b3b50012f927a7e792767a/contracts/schema.graphql
+  url: https://github.com/stevekkall-beansgc/savvy-proto/blob/19c0e03479b619d5cf2c2ff37d3e59f4797d4b22/contracts/schema.graphql
 tags:
 - name: GraphQL transport
 - name: Local service
@@ -776,6 +776,10 @@ components:
           enum:
           - equal
           - balance
+        purpose:
+          enum:
+          - billing
+          - earnings
         invoice_timing:
           enum:
           - advance
@@ -796,6 +800,7 @@ components:
                 - hourly
                 - events
                 - observation
+                - earned_share
             required:
             - id
             - kind
@@ -870,6 +875,11 @@ components:
           type: string
         raw_base64:
           type: string
+        defer:
+          type: boolean
+        run_at:
+          type: string
+          format: date-time
       required:
       - source_id
       - delivery_key
@@ -988,6 +998,10 @@ components:
           type: string
         service_start: *id002
         service_end_exclusive: *id002
+        purpose:
+          enum:
+          - billing
+          - earnings
       required:
       - subject_id
       - service_start
@@ -1075,6 +1089,207 @@ components:
           type: string
       required:
       - posting_period
+      - reason
+      additionalProperties: false
+    SharedApplyCashInput:
+      type: object
+      properties:
+        target_id:
+          type: string
+        record_id:
+          type: string
+        expected_hash:
+          type: string
+        expected_ledger_hash:
+          type: string
+        amount_minor: *id004
+        posting_period:
+          type: string
+        reason:
+          type: string
+        request_id:
+          type: string
+      required:
+      - target_id
+      - record_id
+      - expected_hash
+      - expected_ledger_hash
+      - amount_minor
+      - posting_period
+      - reason
+      additionalProperties: false
+    SharedReverseCashInput:
+      type: object
+      properties:
+        application_id:
+          type: string
+        expected_hash:
+          type: string
+        posting_period:
+          type: string
+        reason:
+          type: string
+      required:
+      - application_id
+      - expected_hash
+      - posting_period
+      - reason
+      additionalProperties: false
+    SharedRequestRefundInput:
+      type: object
+      properties:
+        target_id:
+          type: string
+        expected_ledger_hash:
+          type: string
+        amount_minor: *id004
+        posting_period:
+          type: string
+        reason:
+          type: string
+      required:
+      - target_id
+      - expected_ledger_hash
+      - amount_minor
+      - posting_period
+      - reason
+      additionalProperties: false
+    SharedCancelRefundInput:
+      type: object
+      properties:
+        request_id:
+          type: string
+        expected_hash:
+          type: string
+        posting_period:
+          type: string
+        reason:
+          type: string
+      required:
+      - request_id
+      - expected_hash
+      - posting_period
+      - reason
+      additionalProperties: false
+    SharedPackageAccountingInput:
+      type: object
+      properties:
+        target_id:
+          type: string
+        expected_ledger_hash:
+          type: string
+        treatment_ref:
+          type: object
+          properties:
+            system:
+              const: mock_campfire
+            id:
+              type: string
+            version:
+              type: string
+          required:
+          - system
+          - id
+          - version
+          additionalProperties: false
+        posting_period:
+          type: string
+        reason:
+          type: string
+      required:
+      - target_id
+      - expected_ledger_hash
+      - treatment_ref
+      - posting_period
+      - reason
+      additionalProperties: false
+    SharedAcceptAccountingInput:
+      type: object
+      properties:
+        record_id:
+          type: string
+        expected_hash:
+          type: string
+      required:
+      - record_id
+      - expected_hash
+      additionalProperties: false
+    SharedProposePayableInput:
+      type: object
+      properties:
+        run_id:
+          type: string
+        posting_period:
+          type: string
+        reason:
+          type: string
+      required:
+      - run_id
+      - posting_period
+      - reason
+      additionalProperties: false
+    SharedReviewPayableInput:
+      type: object
+      properties:
+        proposal_id:
+          type: string
+        decision:
+          enum:
+          - approved
+          - rejected
+        reason:
+          type: string
+      required:
+      - proposal_id
+      - decision
+      - reason
+      additionalProperties: false
+    SharedIssuePayableInput:
+      type: object
+      properties:
+        proposal_id:
+          type: string
+      required:
+      - proposal_id
+      additionalProperties: false
+    SharedQueueBatchInput:
+      type: object
+      properties:
+        subjects:
+          type: array
+          minItems: 1
+          maxItems: 1000
+          uniqueItems: true
+          items:
+            type: string
+        service_start: *id002
+        service_end_exclusive: *id002
+        reason:
+          type: string
+        run_at:
+          type: string
+          format: date-time
+        purpose:
+          enum:
+          - billing
+          - earnings
+      required:
+      - subjects
+      - service_start
+      - service_end_exclusive
+      - reason
+      additionalProperties: false
+    SharedRetryWorkInput:
+      type: object
+      properties:
+        job_id:
+          type: string
+        reason:
+          type: string
+        source_id:
+          type: string
+      required:
+      - job_id
       - reason
       additionalProperties: false
 x-graphql-operations:
@@ -1188,6 +1403,9 @@ x-graphql-operations:
   - name: offset
     type: Int
     required: false
+  - name: purpose
+    type: String
+    required: false
   - name: recordId
     type: ID
     required: false
@@ -1208,10 +1426,11 @@ x-graphql-operations:
     required: false
   returns: JSON!
   request:
-    query: 'query BillingWorkspace($audience: String!, $caseId: ID!, $limit: Int, $offset: Int, $recordId: ID, $search:
-      String, $section: String, $serviceEndExclusive: String, $serviceStart: String, $subjectId: ID) { billingWorkspace(audience:
-      $audience, caseId: $caseId, limit: $limit, offset: $offset, recordId: $recordId, search: $search, section:
-      $section, serviceEndExclusive: $serviceEndExclusive, serviceStart: $serviceStart, subjectId: $subjectId) }'
+    query: 'query BillingWorkspace($audience: String!, $caseId: ID!, $limit: Int, $offset: Int, $purpose: String,
+      $recordId: ID, $search: String, $section: String, $serviceEndExclusive: String, $serviceStart: String, $subjectId:
+      ID) { billingWorkspace(audience: $audience, caseId: $caseId, limit: $limit, offset: $offset, purpose: $purpose,
+      recordId: $recordId, search: $search, section: $section, serviceEndExclusive: $serviceEndExclusive, serviceStart:
+      $serviceStart, subjectId: $subjectId) }'
     variables:
       audience: client
       caseId: advisor
@@ -1689,6 +1908,17 @@ x-command-families:
   - ISSUE_CORRECTION
   - REVIEW_EVENT
   - CLOSE_PERIOD
+  - APPLY_CASH
+  - REVERSE_CASH
+  - REQUEST_REFUND
+  - CANCEL_REFUND
+  - PACKAGE_ACCOUNTING
+  - ACCEPT_ACCOUNTING
+  - PROPOSE_PAYABLE
+  - REVIEW_PAYABLE
+  - ISSUE_PAYABLE
+  - QUEUE_BATCH
+  - RETRY_WORK
 x-command-examples:
 - family: disclosureCommand
   action: SAVE_POLICY
@@ -2096,10 +2326,197 @@ x-command-examples:
         reason: Close the posting month
       idempotencyKey: docs-close-period-001
       caseId: advisor
+- family: billingCommand
+  action: APPLY_CASH
+  schema: SharedApplyCashInput
+  role: finance
+  request:
+    query: 'mutation BillingCommand($action: String!, $caseId: ID!, $idempotencyKey: String!, $input: JSON!) { billingCommand(action:
+      $action, caseId: $caseId, idempotencyKey: $idempotencyKey, input: $input) { data errors { code message path
+      } } }'
+    variables:
+      action: APPLY_CASH
+      input:
+        target_id: REPLACE_WITH_ROOT_ID
+        record_id: REPLACE_WITH_SOURCE_RECORD_ID
+        expected_hash: REPLACE_WITH_SOURCE_HASH
+        expected_ledger_hash: REPLACE_WITH_LEDGER_HASH
+        amount_minor: '10000'
+        posting_period: 2026-11
+        reason: Associate independently confirmed cash
+      idempotencyKey: docs-apply-cash-001
+      caseId: advisor
+- family: billingCommand
+  action: REVERSE_CASH
+  schema: SharedReverseCashInput
+  role: finance
+  request:
+    query: 'mutation BillingCommand($action: String!, $caseId: ID!, $idempotencyKey: String!, $input: JSON!) { billingCommand(action:
+      $action, caseId: $caseId, idempotencyKey: $idempotencyKey, input: $input) { data errors { code message path
+      } } }'
+    variables:
+      action: REVERSE_CASH
+      input:
+        application_id: REPLACE_WITH_APPLICATION_ID
+        expected_hash: REPLACE_WITH_APPLICATION_HASH
+        posting_period: 2026-11
+        reason: Reverse an operational association
+      idempotencyKey: docs-reverse-cash-001
+      caseId: advisor
+- family: billingCommand
+  action: REQUEST_REFUND
+  schema: SharedRequestRefundInput
+  role: finance
+  request:
+    query: 'mutation BillingCommand($action: String!, $caseId: ID!, $idempotencyKey: String!, $input: JSON!) { billingCommand(action:
+      $action, caseId: $caseId, idempotencyKey: $idempotencyKey, input: $input) { data errors { code message path
+      } } }'
+    variables:
+      action: REQUEST_REFUND
+      input:
+        target_id: REPLACE_WITH_ROOT_ID
+        expected_ledger_hash: REPLACE_WITH_LEDGER_HASH
+        amount_minor: '10000'
+        posting_period: 2026-11
+        reason: Request an available customer credit
+      idempotencyKey: docs-request-refund-001
+      caseId: advisor
+- family: billingCommand
+  action: CANCEL_REFUND
+  schema: SharedCancelRefundInput
+  role: finance
+  request:
+    query: 'mutation BillingCommand($action: String!, $caseId: ID!, $idempotencyKey: String!, $input: JSON!) { billingCommand(action:
+      $action, caseId: $caseId, idempotencyKey: $idempotencyKey, input: $input) { data errors { code message path
+      } } }'
+    variables:
+      action: CANCEL_REFUND
+      input:
+        request_id: REPLACE_WITH_REQUEST_ID
+        expected_hash: REPLACE_WITH_REQUEST_HASH
+        posting_period: 2026-11
+        reason: Cancel the unapplied remainder
+      idempotencyKey: docs-cancel-refund-001
+      caseId: advisor
+- family: billingCommand
+  action: PACKAGE_ACCOUNTING
+  schema: SharedPackageAccountingInput
+  role: finance
+  request:
+    query: 'mutation BillingCommand($action: String!, $caseId: ID!, $idempotencyKey: String!, $input: JSON!) { billingCommand(action:
+      $action, caseId: $caseId, idempotencyKey: $idempotencyKey, input: $input) { data errors { code message path
+      } } }'
+    variables:
+      action: PACKAGE_ACCOUNTING
+      input:
+        target_id: REPLACE_WITH_ROOT_ID
+        expected_ledger_hash: REPLACE_WITH_LEDGER_HASH
+        treatment_ref:
+          system: mock_campfire
+          id: fictional-finance-treatment
+          version: v1
+        posting_period: 2026-11
+        reason: Prepare a versioned mock accounting package
+      idempotencyKey: docs-package-accounting-001
+      caseId: advisor
+- family: billingCommand
+  action: ACCEPT_ACCOUNTING
+  schema: SharedAcceptAccountingInput
+  role: finance
+  request:
+    query: 'mutation BillingCommand($action: String!, $caseId: ID!, $idempotencyKey: String!, $input: JSON!) { billingCommand(action:
+      $action, caseId: $caseId, idempotencyKey: $idempotencyKey, input: $input) { data errors { code message path
+      } } }'
+    variables:
+      action: ACCEPT_ACCOUNTING
+      input:
+        record_id: REPLACE_WITH_SOURCE_RECORD_ID
+        expected_hash: REPLACE_WITH_SOURCE_HASH
+      idempotencyKey: docs-accept-accounting-001
+      caseId: advisor
+- family: billingCommand
+  action: PROPOSE_PAYABLE
+  schema: SharedProposePayableInput
+  role: operator
+  request:
+    query: 'mutation BillingCommand($action: String!, $caseId: ID!, $idempotencyKey: String!, $input: JSON!) { billingCommand(action:
+      $action, caseId: $caseId, idempotencyKey: $idempotencyKey, input: $input) { data errors { code message path
+      } } }'
+    variables:
+      action: PROPOSE_PAYABLE
+      input:
+        run_id: REPLACE_WITH_EARNINGS_RUN_ID
+        posting_period: 2026-11
+        reason: Prepare native earnings payable
+      idempotencyKey: docs-propose-payable-001
+      caseId: advisor
+- family: billingCommand
+  action: REVIEW_PAYABLE
+  schema: SharedReviewPayableInput
+  role: finance
+  request:
+    query: 'mutation BillingCommand($action: String!, $caseId: ID!, $idempotencyKey: String!, $input: JSON!) { billingCommand(action:
+      $action, caseId: $caseId, idempotencyKey: $idempotencyKey, input: $input) { data errors { code message path
+      } } }'
+    variables:
+      action: REVIEW_PAYABLE
+      input:
+        proposal_id: REPLACE_WITH_PROPOSAL_ID
+        decision: approved
+        reason: Review exact earnings calculation
+      idempotencyKey: docs-review-payable-001
+      caseId: advisor
+- family: billingCommand
+  action: ISSUE_PAYABLE
+  schema: SharedIssuePayableInput
+  role: operator
+  request:
+    query: 'mutation BillingCommand($action: String!, $caseId: ID!, $idempotencyKey: String!, $input: JSON!) { billingCommand(action:
+      $action, caseId: $caseId, idempotencyKey: $idempotencyKey, input: $input) { data errors { code message path
+      } } }'
+    variables:
+      action: ISSUE_PAYABLE
+      input:
+        proposal_id: REPLACE_WITH_PROPOSAL_ID
+      idempotencyKey: docs-issue-payable-001
+      caseId: advisor
+- family: billingCommand
+  action: QUEUE_BATCH
+  schema: SharedQueueBatchInput
+  role: operator
+  request:
+    query: 'mutation BillingCommand($action: String!, $caseId: ID!, $idempotencyKey: String!, $input: JSON!) { billingCommand(action:
+      $action, caseId: $caseId, idempotencyKey: $idempotencyKey, input: $input) { data errors { code message path
+      } } }'
+    variables:
+      action: QUEUE_BATCH
+      input:
+        subjects:
+        - REPLACE_WITH_SUBJECT_ID
+        service_start: '2026-10-01'
+        service_end_exclusive: '2026-11-01'
+        reason: Queue retained period evaluation
+      idempotencyKey: docs-queue-batch-001
+      caseId: advisor
+- family: billingCommand
+  action: RETRY_WORK
+  schema: SharedRetryWorkInput
+  role: operator
+  request:
+    query: 'mutation BillingCommand($action: String!, $caseId: ID!, $idempotencyKey: String!, $input: JSON!) { billingCommand(action:
+      $action, caseId: $caseId, idempotencyKey: $idempotencyKey, input: $input) { data errors { code message path
+      } } }'
+    variables:
+      action: RETRY_WORK
+      input:
+        job_id: REPLACE_WITH_JOB_ID
+        reason: Retry retained failed or quarantined work
+      idempotencyKey: docs-retry-work-001
+      caseId: advisor
 x-contract-sources:
   graphql_sdl: contracts/schema.graphql
-  graphql_sdl_sha256: 4849d0529f952e8d273572ad6988afe022a711a2c1f741a8a4ecdb28a348f3e7
-  source_commit: c2828ac56a48182bd5b3b50012f927a7e792767a
+  graphql_sdl_sha256: f1e9a2b681eb8e8fc84da88e6d5d5835fdafa43e0e59b3767b8d08ca2c26a74b
+  source_commit: 19c0e03479b619d5cf2c2ff37d3e59f4797d4b22
   controller: apps/api/app/controllers/graphql_controller.rb
   proxy: apps/web/app/api/graphql/route.ts
 x-agent-interfaces:

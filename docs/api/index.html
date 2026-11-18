@@ -42,8 +42,8 @@
     &quot;caseId&quot;: &quot;advisor&quot;
   }
 }</pre></div></details>
-<details class="operation" id="billingWorkspace" data-group="Shared billing"><summary><span class="badge query">QUERY</span><strong>billingWorkspace</strong><span class="group">Shared billing</span></summary><div class="operation-body"><p>Scoped client or internal billing view across both products. Reads issued native documents, exact calculation basis, source executions, policy schedules and correction reviews without running prices or jobs.</p><p class="meta">Returns <code>JSON!</code></p><div class="scroll"><table><thead><tr><th>Argument</th><th>Type</th><th>Presence</th></tr></thead><tbody><tr><td><code>audience</code></td><td><code>String!</code></td><td>Required</td></tr><tr><td><code>caseId</code></td><td><code>ID!</code></td><td>Required</td></tr><tr><td><code>limit</code></td><td><code>Int</code></td><td>Optional</td></tr><tr><td><code>offset</code></td><td><code>Int</code></td><td>Optional</td></tr><tr><td><code>recordId</code></td><td><code>ID</code></td><td>Optional</td></tr><tr><td><code>search</code></td><td><code>String</code></td><td>Optional</td></tr><tr><td><code>section</code></td><td><code>String</code></td><td>Optional</td></tr><tr><td><code>serviceEndExclusive</code></td><td><code>String</code></td><td>Optional</td></tr><tr><td><code>serviceStart</code></td><td><code>String</code></td><td>Optional</td></tr><tr><td><code>subjectId</code></td><td><code>ID</code></td><td>Optional</td></tr></tbody></table></div><p class="meta">Replace identifiers prefixed REPLACE_WITH using IDs from a preceding read.</p><pre>{
-  &quot;query&quot;: &quot;query BillingWorkspace($audience: String!, $caseId: ID!, $limit: Int, $offset: Int, $recordId: ID, $search: String, $section: String, $serviceEndExclusive: String, $serviceStart: String, $subjectId: ID) { billingWorkspace(audience: $audience, caseId: $caseId, limit: $limit, offset: $offset, recordId: $recordId, search: $search, section: $section, serviceEndExclusive: $serviceEndExclusive, serviceStart: $serviceStart, subjectId: $subjectId) }&quot;,
+<details class="operation" id="billingWorkspace" data-group="Shared billing"><summary><span class="badge query">QUERY</span><strong>billingWorkspace</strong><span class="group">Shared billing</span></summary><div class="operation-body"><p>Scoped client or internal billing view across both products. Reads issued native documents, exact calculation basis, source executions, policy schedules and correction reviews without running prices or jobs.</p><p class="meta">Returns <code>JSON!</code></p><div class="scroll"><table><thead><tr><th>Argument</th><th>Type</th><th>Presence</th></tr></thead><tbody><tr><td><code>audience</code></td><td><code>String!</code></td><td>Required</td></tr><tr><td><code>caseId</code></td><td><code>ID!</code></td><td>Required</td></tr><tr><td><code>limit</code></td><td><code>Int</code></td><td>Optional</td></tr><tr><td><code>offset</code></td><td><code>Int</code></td><td>Optional</td></tr><tr><td><code>purpose</code></td><td><code>String</code></td><td>Optional</td></tr><tr><td><code>recordId</code></td><td><code>ID</code></td><td>Optional</td></tr><tr><td><code>search</code></td><td><code>String</code></td><td>Optional</td></tr><tr><td><code>section</code></td><td><code>String</code></td><td>Optional</td></tr><tr><td><code>serviceEndExclusive</code></td><td><code>String</code></td><td>Optional</td></tr><tr><td><code>serviceStart</code></td><td><code>String</code></td><td>Optional</td></tr><tr><td><code>subjectId</code></td><td><code>ID</code></td><td>Optional</td></tr></tbody></table></div><p class="meta">Replace identifiers prefixed REPLACE_WITH using IDs from a preceding read.</p><pre>{
+  &quot;query&quot;: &quot;query BillingWorkspace($audience: String!, $caseId: ID!, $limit: Int, $offset: Int, $purpose: String, $recordId: ID, $search: String, $section: String, $serviceEndExclusive: String, $serviceStart: String, $subjectId: ID) { billingWorkspace(audience: $audience, caseId: $caseId, limit: $limit, offset: $offset, purpose: $purpose, recordId: $recordId, search: $search, section: $section, serviceEndExclusive: $serviceEndExclusive, serviceStart: $serviceStart, subjectId: $subjectId) }&quot;,
   &quot;variables&quot;: {
     &quot;audience&quot;: &quot;client&quot;,
     &quot;caseId&quot;: &quot;advisor&quot;,
@@ -155,7 +155,7 @@
     &quot;idempotencyKey&quot;: &quot;REPLACE_WITH_UNIQUE_KEY&quot;,
     &quot;caseId&quot;: &quot;advisor&quot;
   }
-}</pre><h3>Supported actions</h3><div class="action-list"><code>REGISTER_SOURCE</code><code>INGEST</code><code>REPLAY</code><code>SAVE_POLICY</code><code>COMPARE_POLICY</code><code>REVIEW_POLICY</code><code>PUBLISH_POLICY</code><code>ASSIGN_POLICY</code><code>EVALUATE</code><code>ISSUE_INVOICE</code><code>PROPOSE_CORRECTION</code><code>REVIEW_CORRECTION</code><code>ISSUE_CORRECTION</code><code>REVIEW_EVENT</code><code>CLOSE_PERIOD</code></div></div></details>
+}</pre><h3>Supported actions</h3><div class="action-list"><code>REGISTER_SOURCE</code><code>INGEST</code><code>REPLAY</code><code>SAVE_POLICY</code><code>COMPARE_POLICY</code><code>REVIEW_POLICY</code><code>PUBLISH_POLICY</code><code>ASSIGN_POLICY</code><code>EVALUATE</code><code>ISSUE_INVOICE</code><code>PROPOSE_CORRECTION</code><code>REVIEW_CORRECTION</code><code>ISSUE_CORRECTION</code><code>REVIEW_EVENT</code><code>CLOSE_PERIOD</code><code>APPLY_CASH</code><code>REVERSE_CASH</code><code>REQUEST_REFUND</code><code>CANCEL_REFUND</code><code>PACKAGE_ACCOUNTING</code><code>ACCEPT_ACCOUNTING</code><code>PROPOSE_PAYABLE</code><code>REVIEW_PAYABLE</code><code>ISSUE_PAYABLE</code><code>QUEUE_BATCH</code><code>RETRY_WORK</code></div></div></details>
 <details class="operation" id="disclosureCommand" data-group="Household policies"><summary><span class="badge mutation">MUTATION</span><strong>disclosureCommand</strong><span class="group">Household policies</span></summary><div class="operation-body"><p>Save draft → compare → independent Legal/Finance reviews → publish → assign → evaluate. Original invoices remain retained; a changed billed result requires correction.</p><p class="meta">Returns <code>Payload!</code></p><div class="scroll"><table><thead><tr><th>Argument</th><th>Type</th><th>Presence</th></tr></thead><tbody><tr><td><code>action</code></td><td><code>String!</code></td><td>Required</td></tr><tr><td><code>idempotencyKey</code></td><td><code>String!</code></td><td>Required</td></tr><tr><td><code>input</code></td><td><code>JSON!</code></td><td>Required</td></tr></tbody></table></div><p class="meta">Replace identifiers with IDs returned by reads. Mutation input shown separately below; the empty catalog input is a shape template.</p><pre>{
   &quot;query&quot;: &quot;mutation DisclosureCommand($action: String!, $idempotencyKey: String!, $input: JSON!) { disclosureCommand(action: $action, idempotencyKey: $idempotencyKey, input: $input) { data errors { code message path } } }&quot;,
   &quot;variables&quot;: {
@@ -682,6 +682,13 @@
     },
     &quot;raw_base64&quot;: {
       &quot;type&quot;: &quot;string&quot;
+    },
+    &quot;defer&quot;: {
+      &quot;type&quot;: &quot;boolean&quot;
+    },
+    &quot;run_at&quot;: {
+      &quot;type&quot;: &quot;string&quot;,
+      &quot;format&quot;: &quot;date-time&quot;
     }
   },
   &quot;required&quot;: [
@@ -998,6 +1005,12 @@
       &quot;type&quot;: &quot;string&quot;,
       &quot;description&quot;: &quot;API end dates are exclusive; UI last-day dates are inclusive.&quot;,
       &quot;format&quot;: &quot;date&quot;
+    },
+    &quot;purpose&quot;: {
+      &quot;enum&quot;: [
+        &quot;billing&quot;,
+        &quot;earnings&quot;
+      ]
     }
   },
   &quot;required&quot;: [
@@ -1201,6 +1214,449 @@
     &quot;reason&quot;
   ],
   &quot;additionalProperties&quot;: false
+}</pre></div></details>
+<details class="operation"><summary><span class="badge mutation">COMMAND</span><strong>APPLY_CASH</strong><span class="group">finance</span></summary><div class="operation-body"><p><code>billingCommand</code> · Input schema: <code>SharedApplyCashInput</code></p><p class="meta">Replace returned IDs and choose a unique idempotencyKey for each intent. Examples are shown only; this page has no request execution controls.</p><pre>{
+  &quot;query&quot;: &quot;mutation BillingCommand($action: String!, $caseId: ID!, $idempotencyKey: String!, $input: JSON!) { billingCommand(action: $action, caseId: $caseId, idempotencyKey: $idempotencyKey, input: $input) { data errors { code message path } } }&quot;,
+  &quot;variables&quot;: {
+    &quot;action&quot;: &quot;APPLY_CASH&quot;,
+    &quot;input&quot;: {
+      &quot;target_id&quot;: &quot;REPLACE_WITH_ROOT_ID&quot;,
+      &quot;record_id&quot;: &quot;REPLACE_WITH_SOURCE_RECORD_ID&quot;,
+      &quot;expected_hash&quot;: &quot;REPLACE_WITH_SOURCE_HASH&quot;,
+      &quot;expected_ledger_hash&quot;: &quot;REPLACE_WITH_LEDGER_HASH&quot;,
+      &quot;amount_minor&quot;: &quot;10000&quot;,
+      &quot;posting_period&quot;: &quot;2026-11&quot;,
+      &quot;reason&quot;: &quot;Associate independently confirmed cash&quot;
+    },
+    &quot;idempotencyKey&quot;: &quot;docs-apply-cash-001&quot;,
+    &quot;caseId&quot;: &quot;advisor&quot;
+  }
+}</pre><h3>Input schema</h3><pre>{
+  &quot;type&quot;: &quot;object&quot;,
+  &quot;properties&quot;: {
+    &quot;target_id&quot;: {
+      &quot;type&quot;: &quot;string&quot;
+    },
+    &quot;record_id&quot;: {
+      &quot;type&quot;: &quot;string&quot;
+    },
+    &quot;expected_hash&quot;: {
+      &quot;type&quot;: &quot;string&quot;
+    },
+    &quot;expected_ledger_hash&quot;: {
+      &quot;type&quot;: &quot;string&quot;
+    },
+    &quot;amount_minor&quot;: {
+      &quot;type&quot;: &quot;string&quot;,
+      &quot;description&quot;: &quot;Exact minor units as a decimal integer string; unknown amounts are null, not zero.&quot;,
+      &quot;pattern&quot;: &quot;^[1-9][0-9]*$&quot;
+    },
+    &quot;posting_period&quot;: {
+      &quot;type&quot;: &quot;string&quot;
+    },
+    &quot;reason&quot;: {
+      &quot;type&quot;: &quot;string&quot;
+    },
+    &quot;request_id&quot;: {
+      &quot;type&quot;: &quot;string&quot;
+    }
+  },
+  &quot;required&quot;: [
+    &quot;target_id&quot;,
+    &quot;record_id&quot;,
+    &quot;expected_hash&quot;,
+    &quot;expected_ledger_hash&quot;,
+    &quot;amount_minor&quot;,
+    &quot;posting_period&quot;,
+    &quot;reason&quot;
+  ],
+  &quot;additionalProperties&quot;: false
+}</pre></div></details>
+<details class="operation"><summary><span class="badge mutation">COMMAND</span><strong>REVERSE_CASH</strong><span class="group">finance</span></summary><div class="operation-body"><p><code>billingCommand</code> · Input schema: <code>SharedReverseCashInput</code></p><p class="meta">Replace returned IDs and choose a unique idempotencyKey for each intent. Examples are shown only; this page has no request execution controls.</p><pre>{
+  &quot;query&quot;: &quot;mutation BillingCommand($action: String!, $caseId: ID!, $idempotencyKey: String!, $input: JSON!) { billingCommand(action: $action, caseId: $caseId, idempotencyKey: $idempotencyKey, input: $input) { data errors { code message path } } }&quot;,
+  &quot;variables&quot;: {
+    &quot;action&quot;: &quot;REVERSE_CASH&quot;,
+    &quot;input&quot;: {
+      &quot;application_id&quot;: &quot;REPLACE_WITH_APPLICATION_ID&quot;,
+      &quot;expected_hash&quot;: &quot;REPLACE_WITH_APPLICATION_HASH&quot;,
+      &quot;posting_period&quot;: &quot;2026-11&quot;,
+      &quot;reason&quot;: &quot;Reverse an operational association&quot;
+    },
+    &quot;idempotencyKey&quot;: &quot;docs-reverse-cash-001&quot;,
+    &quot;caseId&quot;: &quot;advisor&quot;
+  }
+}</pre><h3>Input schema</h3><pre>{
+  &quot;type&quot;: &quot;object&quot;,
+  &quot;properties&quot;: {
+    &quot;application_id&quot;: {
+      &quot;type&quot;: &quot;string&quot;
+    },
+    &quot;expected_hash&quot;: {
+      &quot;type&quot;: &quot;string&quot;
+    },
+    &quot;posting_period&quot;: {
+      &quot;type&quot;: &quot;string&quot;
+    },
+    &quot;reason&quot;: {
+      &quot;type&quot;: &quot;string&quot;
+    }
+  },
+  &quot;required&quot;: [
+    &quot;application_id&quot;,
+    &quot;expected_hash&quot;,
+    &quot;posting_period&quot;,
+    &quot;reason&quot;
+  ],
+  &quot;additionalProperties&quot;: false
+}</pre></div></details>
+<details class="operation"><summary><span class="badge mutation">COMMAND</span><strong>REQUEST_REFUND</strong><span class="group">finance</span></summary><div class="operation-body"><p><code>billingCommand</code> · Input schema: <code>SharedRequestRefundInput</code></p><p class="meta">Replace returned IDs and choose a unique idempotencyKey for each intent. Examples are shown only; this page has no request execution controls.</p><pre>{
+  &quot;query&quot;: &quot;mutation BillingCommand($action: String!, $caseId: ID!, $idempotencyKey: String!, $input: JSON!) { billingCommand(action: $action, caseId: $caseId, idempotencyKey: $idempotencyKey, input: $input) { data errors { code message path } } }&quot;,
+  &quot;variables&quot;: {
+    &quot;action&quot;: &quot;REQUEST_REFUND&quot;,
+    &quot;input&quot;: {
+      &quot;target_id&quot;: &quot;REPLACE_WITH_ROOT_ID&quot;,
+      &quot;expected_ledger_hash&quot;: &quot;REPLACE_WITH_LEDGER_HASH&quot;,
+      &quot;amount_minor&quot;: &quot;10000&quot;,
+      &quot;posting_period&quot;: &quot;2026-11&quot;,
+      &quot;reason&quot;: &quot;Request an available customer credit&quot;
+    },
+    &quot;idempotencyKey&quot;: &quot;docs-request-refund-001&quot;,
+    &quot;caseId&quot;: &quot;advisor&quot;
+  }
+}</pre><h3>Input schema</h3><pre>{
+  &quot;type&quot;: &quot;object&quot;,
+  &quot;properties&quot;: {
+    &quot;target_id&quot;: {
+      &quot;type&quot;: &quot;string&quot;
+    },
+    &quot;expected_ledger_hash&quot;: {
+      &quot;type&quot;: &quot;string&quot;
+    },
+    &quot;amount_minor&quot;: {
+      &quot;type&quot;: &quot;string&quot;,
+      &quot;description&quot;: &quot;Exact minor units as a decimal integer string; unknown amounts are null, not zero.&quot;,
+      &quot;pattern&quot;: &quot;^[1-9][0-9]*$&quot;
+    },
+    &quot;posting_period&quot;: {
+      &quot;type&quot;: &quot;string&quot;
+    },
+    &quot;reason&quot;: {
+      &quot;type&quot;: &quot;string&quot;
+    }
+  },
+  &quot;required&quot;: [
+    &quot;target_id&quot;,
+    &quot;expected_ledger_hash&quot;,
+    &quot;amount_minor&quot;,
+    &quot;posting_period&quot;,
+    &quot;reason&quot;
+  ],
+  &quot;additionalProperties&quot;: false
+}</pre></div></details>
+<details class="operation"><summary><span class="badge mutation">COMMAND</span><strong>CANCEL_REFUND</strong><span class="group">finance</span></summary><div class="operation-body"><p><code>billingCommand</code> · Input schema: <code>SharedCancelRefundInput</code></p><p class="meta">Replace returned IDs and choose a unique idempotencyKey for each intent. Examples are shown only; this page has no request execution controls.</p><pre>{
+  &quot;query&quot;: &quot;mutation BillingCommand($action: String!, $caseId: ID!, $idempotencyKey: String!, $input: JSON!) { billingCommand(action: $action, caseId: $caseId, idempotencyKey: $idempotencyKey, input: $input) { data errors { code message path } } }&quot;,
+  &quot;variables&quot;: {
+    &quot;action&quot;: &quot;CANCEL_REFUND&quot;,
+    &quot;input&quot;: {
+      &quot;request_id&quot;: &quot;REPLACE_WITH_REQUEST_ID&quot;,
+      &quot;expected_hash&quot;: &quot;REPLACE_WITH_REQUEST_HASH&quot;,
+      &quot;posting_period&quot;: &quot;2026-11&quot;,
+      &quot;reason&quot;: &quot;Cancel the unapplied remainder&quot;
+    },
+    &quot;idempotencyKey&quot;: &quot;docs-cancel-refund-001&quot;,
+    &quot;caseId&quot;: &quot;advisor&quot;
+  }
+}</pre><h3>Input schema</h3><pre>{
+  &quot;type&quot;: &quot;object&quot;,
+  &quot;properties&quot;: {
+    &quot;request_id&quot;: {
+      &quot;type&quot;: &quot;string&quot;
+    },
+    &quot;expected_hash&quot;: {
+      &quot;type&quot;: &quot;string&quot;
+    },
+    &quot;posting_period&quot;: {
+      &quot;type&quot;: &quot;string&quot;
+    },
+    &quot;reason&quot;: {
+      &quot;type&quot;: &quot;string&quot;
+    }
+  },
+  &quot;required&quot;: [
+    &quot;request_id&quot;,
+    &quot;expected_hash&quot;,
+    &quot;posting_period&quot;,
+    &quot;reason&quot;
+  ],
+  &quot;additionalProperties&quot;: false
+}</pre></div></details>
+<details class="operation"><summary><span class="badge mutation">COMMAND</span><strong>PACKAGE_ACCOUNTING</strong><span class="group">finance</span></summary><div class="operation-body"><p><code>billingCommand</code> · Input schema: <code>SharedPackageAccountingInput</code></p><p class="meta">Replace returned IDs and choose a unique idempotencyKey for each intent. Examples are shown only; this page has no request execution controls.</p><pre>{
+  &quot;query&quot;: &quot;mutation BillingCommand($action: String!, $caseId: ID!, $idempotencyKey: String!, $input: JSON!) { billingCommand(action: $action, caseId: $caseId, idempotencyKey: $idempotencyKey, input: $input) { data errors { code message path } } }&quot;,
+  &quot;variables&quot;: {
+    &quot;action&quot;: &quot;PACKAGE_ACCOUNTING&quot;,
+    &quot;input&quot;: {
+      &quot;target_id&quot;: &quot;REPLACE_WITH_ROOT_ID&quot;,
+      &quot;expected_ledger_hash&quot;: &quot;REPLACE_WITH_LEDGER_HASH&quot;,
+      &quot;treatment_ref&quot;: {
+        &quot;system&quot;: &quot;mock_campfire&quot;,
+        &quot;id&quot;: &quot;fictional-finance-treatment&quot;,
+        &quot;version&quot;: &quot;v1&quot;
+      },
+      &quot;posting_period&quot;: &quot;2026-11&quot;,
+      &quot;reason&quot;: &quot;Prepare a versioned mock accounting package&quot;
+    },
+    &quot;idempotencyKey&quot;: &quot;docs-package-accounting-001&quot;,
+    &quot;caseId&quot;: &quot;advisor&quot;
+  }
+}</pre><h3>Input schema</h3><pre>{
+  &quot;type&quot;: &quot;object&quot;,
+  &quot;properties&quot;: {
+    &quot;target_id&quot;: {
+      &quot;type&quot;: &quot;string&quot;
+    },
+    &quot;expected_ledger_hash&quot;: {
+      &quot;type&quot;: &quot;string&quot;
+    },
+    &quot;treatment_ref&quot;: {
+      &quot;type&quot;: &quot;object&quot;,
+      &quot;properties&quot;: {
+        &quot;system&quot;: {
+          &quot;const&quot;: &quot;mock_campfire&quot;
+        },
+        &quot;id&quot;: {
+          &quot;type&quot;: &quot;string&quot;
+        },
+        &quot;version&quot;: {
+          &quot;type&quot;: &quot;string&quot;
+        }
+      },
+      &quot;required&quot;: [
+        &quot;system&quot;,
+        &quot;id&quot;,
+        &quot;version&quot;
+      ],
+      &quot;additionalProperties&quot;: false
+    },
+    &quot;posting_period&quot;: {
+      &quot;type&quot;: &quot;string&quot;
+    },
+    &quot;reason&quot;: {
+      &quot;type&quot;: &quot;string&quot;
+    }
+  },
+  &quot;required&quot;: [
+    &quot;target_id&quot;,
+    &quot;expected_ledger_hash&quot;,
+    &quot;treatment_ref&quot;,
+    &quot;posting_period&quot;,
+    &quot;reason&quot;
+  ],
+  &quot;additionalProperties&quot;: false
+}</pre></div></details>
+<details class="operation"><summary><span class="badge mutation">COMMAND</span><strong>ACCEPT_ACCOUNTING</strong><span class="group">finance</span></summary><div class="operation-body"><p><code>billingCommand</code> · Input schema: <code>SharedAcceptAccountingInput</code></p><p class="meta">Replace returned IDs and choose a unique idempotencyKey for each intent. Examples are shown only; this page has no request execution controls.</p><pre>{
+  &quot;query&quot;: &quot;mutation BillingCommand($action: String!, $caseId: ID!, $idempotencyKey: String!, $input: JSON!) { billingCommand(action: $action, caseId: $caseId, idempotencyKey: $idempotencyKey, input: $input) { data errors { code message path } } }&quot;,
+  &quot;variables&quot;: {
+    &quot;action&quot;: &quot;ACCEPT_ACCOUNTING&quot;,
+    &quot;input&quot;: {
+      &quot;record_id&quot;: &quot;REPLACE_WITH_SOURCE_RECORD_ID&quot;,
+      &quot;expected_hash&quot;: &quot;REPLACE_WITH_SOURCE_HASH&quot;
+    },
+    &quot;idempotencyKey&quot;: &quot;docs-accept-accounting-001&quot;,
+    &quot;caseId&quot;: &quot;advisor&quot;
+  }
+}</pre><h3>Input schema</h3><pre>{
+  &quot;type&quot;: &quot;object&quot;,
+  &quot;properties&quot;: {
+    &quot;record_id&quot;: {
+      &quot;type&quot;: &quot;string&quot;
+    },
+    &quot;expected_hash&quot;: {
+      &quot;type&quot;: &quot;string&quot;
+    }
+  },
+  &quot;required&quot;: [
+    &quot;record_id&quot;,
+    &quot;expected_hash&quot;
+  ],
+  &quot;additionalProperties&quot;: false
+}</pre></div></details>
+<details class="operation"><summary><span class="badge mutation">COMMAND</span><strong>PROPOSE_PAYABLE</strong><span class="group">operator</span></summary><div class="operation-body"><p><code>billingCommand</code> · Input schema: <code>SharedProposePayableInput</code></p><p class="meta">Replace returned IDs and choose a unique idempotencyKey for each intent. Examples are shown only; this page has no request execution controls.</p><pre>{
+  &quot;query&quot;: &quot;mutation BillingCommand($action: String!, $caseId: ID!, $idempotencyKey: String!, $input: JSON!) { billingCommand(action: $action, caseId: $caseId, idempotencyKey: $idempotencyKey, input: $input) { data errors { code message path } } }&quot;,
+  &quot;variables&quot;: {
+    &quot;action&quot;: &quot;PROPOSE_PAYABLE&quot;,
+    &quot;input&quot;: {
+      &quot;run_id&quot;: &quot;REPLACE_WITH_EARNINGS_RUN_ID&quot;,
+      &quot;posting_period&quot;: &quot;2026-11&quot;,
+      &quot;reason&quot;: &quot;Prepare native earnings payable&quot;
+    },
+    &quot;idempotencyKey&quot;: &quot;docs-propose-payable-001&quot;,
+    &quot;caseId&quot;: &quot;advisor&quot;
+  }
+}</pre><h3>Input schema</h3><pre>{
+  &quot;type&quot;: &quot;object&quot;,
+  &quot;properties&quot;: {
+    &quot;run_id&quot;: {
+      &quot;type&quot;: &quot;string&quot;
+    },
+    &quot;posting_period&quot;: {
+      &quot;type&quot;: &quot;string&quot;
+    },
+    &quot;reason&quot;: {
+      &quot;type&quot;: &quot;string&quot;
+    }
+  },
+  &quot;required&quot;: [
+    &quot;run_id&quot;,
+    &quot;posting_period&quot;,
+    &quot;reason&quot;
+  ],
+  &quot;additionalProperties&quot;: false
+}</pre></div></details>
+<details class="operation"><summary><span class="badge mutation">COMMAND</span><strong>REVIEW_PAYABLE</strong><span class="group">finance</span></summary><div class="operation-body"><p><code>billingCommand</code> · Input schema: <code>SharedReviewPayableInput</code></p><p class="meta">Replace returned IDs and choose a unique idempotencyKey for each intent. Examples are shown only; this page has no request execution controls.</p><pre>{
+  &quot;query&quot;: &quot;mutation BillingCommand($action: String!, $caseId: ID!, $idempotencyKey: String!, $input: JSON!) { billingCommand(action: $action, caseId: $caseId, idempotencyKey: $idempotencyKey, input: $input) { data errors { code message path } } }&quot;,
+  &quot;variables&quot;: {
+    &quot;action&quot;: &quot;REVIEW_PAYABLE&quot;,
+    &quot;input&quot;: {
+      &quot;proposal_id&quot;: &quot;REPLACE_WITH_PROPOSAL_ID&quot;,
+      &quot;decision&quot;: &quot;approved&quot;,
+      &quot;reason&quot;: &quot;Review exact earnings calculation&quot;
+    },
+    &quot;idempotencyKey&quot;: &quot;docs-review-payable-001&quot;,
+    &quot;caseId&quot;: &quot;advisor&quot;
+  }
+}</pre><h3>Input schema</h3><pre>{
+  &quot;type&quot;: &quot;object&quot;,
+  &quot;properties&quot;: {
+    &quot;proposal_id&quot;: {
+      &quot;type&quot;: &quot;string&quot;
+    },
+    &quot;decision&quot;: {
+      &quot;enum&quot;: [
+        &quot;approved&quot;,
+        &quot;rejected&quot;
+      ]
+    },
+    &quot;reason&quot;: {
+      &quot;type&quot;: &quot;string&quot;
+    }
+  },
+  &quot;required&quot;: [
+    &quot;proposal_id&quot;,
+    &quot;decision&quot;,
+    &quot;reason&quot;
+  ],
+  &quot;additionalProperties&quot;: false
+}</pre></div></details>
+<details class="operation"><summary><span class="badge mutation">COMMAND</span><strong>ISSUE_PAYABLE</strong><span class="group">operator</span></summary><div class="operation-body"><p><code>billingCommand</code> · Input schema: <code>SharedIssuePayableInput</code></p><p class="meta">Replace returned IDs and choose a unique idempotencyKey for each intent. Examples are shown only; this page has no request execution controls.</p><pre>{
+  &quot;query&quot;: &quot;mutation BillingCommand($action: String!, $caseId: ID!, $idempotencyKey: String!, $input: JSON!) { billingCommand(action: $action, caseId: $caseId, idempotencyKey: $idempotencyKey, input: $input) { data errors { code message path } } }&quot;,
+  &quot;variables&quot;: {
+    &quot;action&quot;: &quot;ISSUE_PAYABLE&quot;,
+    &quot;input&quot;: {
+      &quot;proposal_id&quot;: &quot;REPLACE_WITH_PROPOSAL_ID&quot;
+    },
+    &quot;idempotencyKey&quot;: &quot;docs-issue-payable-001&quot;,
+    &quot;caseId&quot;: &quot;advisor&quot;
+  }
+}</pre><h3>Input schema</h3><pre>{
+  &quot;type&quot;: &quot;object&quot;,
+  &quot;properties&quot;: {
+    &quot;proposal_id&quot;: {
+      &quot;type&quot;: &quot;string&quot;
+    }
+  },
+  &quot;required&quot;: [
+    &quot;proposal_id&quot;
+  ],
+  &quot;additionalProperties&quot;: false
+}</pre></div></details>
+<details class="operation"><summary><span class="badge mutation">COMMAND</span><strong>QUEUE_BATCH</strong><span class="group">operator</span></summary><div class="operation-body"><p><code>billingCommand</code> · Input schema: <code>SharedQueueBatchInput</code></p><p class="meta">Replace returned IDs and choose a unique idempotencyKey for each intent. Examples are shown only; this page has no request execution controls.</p><pre>{
+  &quot;query&quot;: &quot;mutation BillingCommand($action: String!, $caseId: ID!, $idempotencyKey: String!, $input: JSON!) { billingCommand(action: $action, caseId: $caseId, idempotencyKey: $idempotencyKey, input: $input) { data errors { code message path } } }&quot;,
+  &quot;variables&quot;: {
+    &quot;action&quot;: &quot;QUEUE_BATCH&quot;,
+    &quot;input&quot;: {
+      &quot;subjects&quot;: [
+        &quot;REPLACE_WITH_SUBJECT_ID&quot;
+      ],
+      &quot;service_start&quot;: &quot;2026-10-01&quot;,
+      &quot;service_end_exclusive&quot;: &quot;2026-11-01&quot;,
+      &quot;reason&quot;: &quot;Queue retained period evaluation&quot;
+    },
+    &quot;idempotencyKey&quot;: &quot;docs-queue-batch-001&quot;,
+    &quot;caseId&quot;: &quot;advisor&quot;
+  }
+}</pre><h3>Input schema</h3><pre>{
+  &quot;type&quot;: &quot;object&quot;,
+  &quot;properties&quot;: {
+    &quot;subjects&quot;: {
+      &quot;type&quot;: &quot;array&quot;,
+      &quot;minItems&quot;: 1,
+      &quot;maxItems&quot;: 1000,
+      &quot;uniqueItems&quot;: true,
+      &quot;items&quot;: {
+        &quot;type&quot;: &quot;string&quot;
+      }
+    },
+    &quot;service_start&quot;: {
+      &quot;type&quot;: &quot;string&quot;,
+      &quot;description&quot;: &quot;API end dates are exclusive; UI last-day dates are inclusive.&quot;,
+      &quot;format&quot;: &quot;date&quot;
+    },
+    &quot;service_end_exclusive&quot;: {
+      &quot;type&quot;: &quot;string&quot;,
+      &quot;description&quot;: &quot;API end dates are exclusive; UI last-day dates are inclusive.&quot;,
+      &quot;format&quot;: &quot;date&quot;
+    },
+    &quot;reason&quot;: {
+      &quot;type&quot;: &quot;string&quot;
+    },
+    &quot;run_at&quot;: {
+      &quot;type&quot;: &quot;string&quot;,
+      &quot;format&quot;: &quot;date-time&quot;
+    },
+    &quot;purpose&quot;: {
+      &quot;enum&quot;: [
+        &quot;billing&quot;,
+        &quot;earnings&quot;
+      ]
+    }
+  },
+  &quot;required&quot;: [
+    &quot;subjects&quot;,
+    &quot;service_start&quot;,
+    &quot;service_end_exclusive&quot;,
+    &quot;reason&quot;
+  ],
+  &quot;additionalProperties&quot;: false
+}</pre></div></details>
+<details class="operation"><summary><span class="badge mutation">COMMAND</span><strong>RETRY_WORK</strong><span class="group">operator</span></summary><div class="operation-body"><p><code>billingCommand</code> · Input schema: <code>SharedRetryWorkInput</code></p><p class="meta">Replace returned IDs and choose a unique idempotencyKey for each intent. Examples are shown only; this page has no request execution controls.</p><pre>{
+  &quot;query&quot;: &quot;mutation BillingCommand($action: String!, $caseId: ID!, $idempotencyKey: String!, $input: JSON!) { billingCommand(action: $action, caseId: $caseId, idempotencyKey: $idempotencyKey, input: $input) { data errors { code message path } } }&quot;,
+  &quot;variables&quot;: {
+    &quot;action&quot;: &quot;RETRY_WORK&quot;,
+    &quot;input&quot;: {
+      &quot;job_id&quot;: &quot;REPLACE_WITH_JOB_ID&quot;,
+      &quot;reason&quot;: &quot;Retry retained failed or quarantined work&quot;
+    },
+    &quot;idempotencyKey&quot;: &quot;docs-retry-work-001&quot;,
+    &quot;caseId&quot;: &quot;advisor&quot;
+  }
+}</pre><h3>Input schema</h3><pre>{
+  &quot;type&quot;: &quot;object&quot;,
+  &quot;properties&quot;: {
+    &quot;job_id&quot;: {
+      &quot;type&quot;: &quot;string&quot;
+    },
+    &quot;reason&quot;: {
+      &quot;type&quot;: &quot;string&quot;
+    },
+    &quot;source_id&quot;: {
+      &quot;type&quot;: &quot;string&quot;
+    }
+  },
+  &quot;required&quot;: [
+    &quot;job_id&quot;,
+    &quot;reason&quot;
+  ],
+  &quot;additionalProperties&quot;: false
 }</pre></div></details></section>
 <section id="conventions"><h2>Data, retries and errors</h2><ul><li>Money is an exact decimal integer string in minor units with a currency. Rates use exact rational strings. Unknown values remain <code>null</code>.</li><li>Service end dates are exclusive in storage/API fields. The UI displays the inclusive last day.</li><li>Pagination uses <code>limit</code> and <code>offset</code>. Household workspace pages are a deterministic slice across its section lists, default 20 and maximum 100.</li><li>Each write takes <code>idempotencyKey</code>: 1–100 letters, digits, underscores or hyphens. The same actor/operation/key and input replays its result; changed input yields <code>IDEMPOTENCY_CONFLICT</code>.</li><li>Check HTTP status, top-level <code>errors</code> and <code>data.&lt;command&gt;.errors</code>. HTTP 200 can contain a rejected command.</li><li>Use the returned identity, revision and hash for later reviews or replacements. An approval bound to stale evidence cannot authorize a changed request.</li></ul><pre>{
   "data": {
@@ -1215,7 +1671,7 @@
   }
 }</pre><p>Validation, scope, review, stale evidence, period locks and source conflicts are distinct failures. A command response does not establish payment execution, a signed agreement or live accounting posting.</p></section>
 <section id="agents"><h2>MCP / WebMCP</h2><p>This API is the application foundation for future agent tools. An MCP server and browser WebMCP registration are not implemented yet. Those additions need explicit tool schemas, real authenticated identity and account scopes, protocol/client compatibility tests and the same existing review boundaries.</p><p>Both adapters would call the existing Rails services. The billing engine, API-driven policies and Savvy-owned billing records remain shared.</p></section>
-<footer>Source contract: <a href="https://github.com/stevekkall-beansgc/savvy-proto/blob/c2828ac56a48182bd5b3b50012f927a7e792767a/contracts/schema.graphql" target="_blank" rel="noopener noreferrer">GraphQL SDL at c2828ac ↗</a> · <a href="openapi.yaml" download>OpenAPI YAML</a><p>Independent synthetic prototype. No real client data, live payment execution, Campfire posting or CLM signature integration.</p></footer>
+<footer>Source contract: <a href="https://github.com/stevekkall-beansgc/savvy-proto/blob/19c0e03479b619d5cf2c2ff37d3e59f4797d4b22/contracts/schema.graphql" target="_blank" rel="noopener noreferrer">GraphQL SDL at 19c0e03 ↗</a> · <a href="openapi.yaml" download>OpenAPI YAML</a><p>Independent synthetic prototype. No real client data, live payment execution, Campfire posting or CLM signature integration.</p></footer>
 </main></div>
 <script>
 const search=document.getElementById('operation-search'),group=document.getElementById('operation-group'),operations=[...document.querySelectorAll('#operation-list .operation')];
