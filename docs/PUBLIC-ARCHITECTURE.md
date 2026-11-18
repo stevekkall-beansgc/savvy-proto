@@ -24,6 +24,10 @@ links to the exact source commit on GitHub. There are no local-file links.
 The CSP allows only the exact embedded script hashes, embedded fonts/images and
 inline styling; network connections and framing are disallowed. The document is
 publicly reachable but marked noindex as an independent prototype.
+`Cache-Control: public, max-age=0, must-revalidate, no-transform` preserves the
+published HTML bytes and prevents zone-level analytics injection from conflicting
+with the script hashes. This affects this document only; no shared analytics
+configuration is changed.
 
 `.github/workflows/architecture.yml` runs the reproducible builder, source-pin
 checks, static packager and browser acceptance against the exact commit. It does

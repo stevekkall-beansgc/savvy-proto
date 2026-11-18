@@ -31,7 +31,7 @@ def package(output):
     (output / 'index.html').write_text(html)
     (output / '404.html').write_text('<!doctype html><html lang="en"><meta charset="utf-8"><title>Page not found</title><h1>Page not found</h1><a href="/">Open the architecture walkthrough</a></html>')
     (output / 'robots.txt').write_text('User-agent: *\nDisallow: /\n')
-    (output / '_headers').write_text('/*\n  X-Content-Type-Options: nosniff\n  Referrer-Policy: strict-origin-when-cross-origin\n  X-Robots-Tag: noindex\n  Content-Security-Policy: '+csp+'\n')
+    (output / '_headers').write_text('/*\n  Cache-Control: public, max-age=0, must-revalidate, no-transform\n  X-Content-Type-Options: nosniff\n  Referrer-Policy: strict-origin-when-cross-origin\n  X-Robots-Tag: noindex\n  Content-Security-Policy: '+csp+'\n')
     commit = subprocess.check_output(['git','rev-parse','HEAD'],cwd=ROOT,text=True).strip()
     data = json.loads(re.search(r'<script id="architecture-data" type="application/json">(.*?)</script>',html,re.S).group(1))
     metadata = {'document_commit':commit,'engine_source_commit':data['source_commit'],'html_sha256':sha256(html.encode()).hexdigest(),'static_only':True,'authentication_required':False}
