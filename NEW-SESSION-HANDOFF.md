@@ -1,5 +1,23 @@
 # Savvy execution handoff
 
+## OpenAPI and GraphQL reference — 18 November 2026
+
+Public API reference: `https://savvy.beanshop.top/api/`; YAML at
+`/api/openapi.yaml`; authoritative SDL download at `/api/schema.graphql`.
+The architecture header links to the reference. This is documentation for the
+implemented GraphQL transport, all 21 fields and command families, with 10 typed
+command examples. It does not add REST endpoints, MCP/WebMCP, production identity
+or live execution controls. Billing behavior and retained app state are unchanged.
+
+`docs/api/build.py` builds the YAML/page from SDL and verified source metadata.
+Install `docs/api/requirements.txt`, then run `scripts/api_contract_check.py`
+(`--live` sends only three reads to loopback). Architecture CI checks generation,
+OpenAPI, GraphQL query/variable validity, command examples and action drift; its
+browser suite covers filtering, expansion, downloads, mobile and read-only scope.
+Publication includes only the API HTML/YAML/SDL alongside architecture assets.
+Check `.runtime/publication/deployment.json` and public build metadata for the
+actual published commit.
+
 ## Functional demo alignment — 18 November 2026
 
 The February 2027 household is now the default example across Client, Product and

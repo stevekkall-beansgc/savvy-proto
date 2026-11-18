@@ -11,13 +11,16 @@ device-hosted app at `savvy-proto.beanshop.top` remains a separate route.
 ## Build and verification
 
 ```sh
+python -m pip install -r docs/api/requirements.txt
+python3 docs/api/build.py
+python3 scripts/api_contract_check.py
 python3 docs/architecture/build.py
 python3 scripts/package_architecture.py
 ```
 
 The allowlisted publication directory is `.runtime/publication/site/` and
-contains only `index.html`, `404.html`, `_headers`, `robots.txt` and
-`build-metadata.json`. Credentials, repository source files and local service
+contains only `index.html`, `404.html`, `_headers`, `robots.txt`,
+`build-metadata.json`, `api/index.html`, `api/openapi.yaml` and `api/schema.graphql`. Credentials, repository source files and local service
 scripts are not copied into it. The HTML retains selected source excerpts and
 links to the exact source commit on GitHub. There are no local-file links.
 
@@ -32,6 +35,21 @@ configuration is changed.
 `.github/workflows/architecture.yml` runs the reproducible builder, source-pin
 checks, static packager and browser acceptance against the exact commit. It does
 not access Cloudflare credentials or deploy automatically.
+
+## API reference
+
+The public header links to `https://savvy.beanshop.top/api/`, with OpenAPI YAML
+and authoritative GraphQL SDL downloads. The reference documents the implemented
+GraphQL transport, all 21 query/mutation fields, command enums and 10 detailed
+household policy/event/cash-association request examples. It has no live request
+execution or credential entry. MCP/WebMCP interfaces are explicitly future work.
+
+`docs/api/build.py` generates the YAML and self-contained page from the SDL and
+source-pinned metadata. `scripts/api_contract_check.py` validates OpenAPI 3.1.1,
+GraphQL documents/variables, action enums, typed command examples and source
+drift. `--live` performs only three loopback reads; it sends no mutations.
+The architecture workflow checks generation, validation and desktop/mobile
+reference navigation, filtering and downloads.
 
 ## Publish
 

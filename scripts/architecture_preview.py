@@ -41,6 +41,11 @@ class Handler(BaseHTTPRequestHandler):
         if path in {'/', '/index.html', '/architecture.html', '/download'}:
             self.send(200, (DOCS / 'index.html').read_bytes())
             return
+        api_files = {'/api/': (ROOT/'docs/api/index.html', 'text/html; charset=utf-8'), '/api/index.html': (ROOT/'docs/api/index.html', 'text/html; charset=utf-8'), '/api/openapi.yaml': (ROOT/'docs/api/openapi.yaml', 'application/yaml; charset=utf-8'), '/api/schema.graphql': (ROOT/'contracts/schema.graphql', 'text/plain; charset=utf-8')}
+        if path in api_files:
+            target, content_type = api_files[path]
+            self.send(200, target.read_bytes(), content_type)
+            return
         if path == '/health':
             self.send(200, json.dumps({'status': 'ok', 'read_only': True}), 'application/json')
             return

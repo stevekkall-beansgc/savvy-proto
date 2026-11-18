@@ -1,0 +1,1406 @@
+openapi: 3.1.1
+info:
+  title: Savvy billing prototype API
+  version: 0.6.0
+  description: Current synthetic Rails/GraphQL implementation. Savvy owns billing obligations, invoices/lines and
+    custodial instructions. One Economics::Engine evaluates policy data. Campfire and CLM remain mocked. The public
+    API reference is static documentation; hosted operations require the existing Cloudflare Access login. Simulated
+    X-Demo-Role identities are not production authentication.
+servers:
+- url: https://savvy-proto.beanshop.top
+  description: Device-hosted full application; Cloudflare Access browser login required.
+externalDocs:
+  description: Authoritative GraphQL SDL in the repository
+  url: https://github.com/stevekkall-beansgc/savvy-proto/blob/56b9d90349b2d839f041320239aab6872c3f5eb1/contracts/schema.graphql
+tags:
+- name: GraphQL transport
+- name: Local service
+paths:
+  /api/graphql:
+    post:
+      summary: Execute GraphQL queries or commands
+      operationId: executeGraphQL
+      tags:
+      - GraphQL transport
+      description: GraphQL POST envelope. Query and Mutation fields are enumerated in x-graphql-operations and in
+        the downloadable authoritative SDL. No REST resources, MCP endpoint or WebMCP registration are implemented
+        by this document. All fixtures are synthetic; integrations remain mocked. This reference does not send live
+        requests.
+      parameters:
+      - name: X-Demo-Role
+        in: header
+        required: false
+        description: Simulated local identity only, not an authentication credential. Omission currently defaults
+          to operator. Real identity/account authorization is required before a production or agent integration.
+        schema:
+          type: string
+          enum:
+          - advisor
+          - ria
+          - operator
+          - finance
+          - legal
+          - auditor
+          default: operator
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/GraphQLRequest'
+            examples:
+              householdRead:
+                summary: Read February household billing
+                value: &id005
+                  query: 'query DisclosureWorkspace($audience: String!, $caseId: ID!, $limit: Int, $offset: Int)
+                    { disclosureWorkspace(audience: $audience, caseId: $caseId, limit: $limit, offset: $offset)
+                    }'
+                  variables:
+                    audience: client
+                    caseId: advisor
+                    limit: 100
+                    offset: 0
+              saveDraftPolicy:
+                summary: Save a draft; does not activate or bill
+                value: &id006
+                  query: 'mutation DisclosureCommand($action: String!, $idempotencyKey: String!, $input: JSON!)
+                    { disclosureCommand(action: $action, idempotencyKey: $idempotencyKey, input: $input) { data
+                    errors { code message path } } }'
+                  variables:
+                    action: SAVE_POLICY
+                    input:
+                      case_id: advisor
+                      base_policy_id: disclosure-policy-v1
+                      policy:
+                        basis: ending_value
+                        cadence: monthly
+                        annual_rate: 33/2500
+                        minimum_minor: null
+                        fixed_amount_minor: null
+                        optional_service: none
+                      effective_from: '2027-02-01'
+                      effective_to: '2027-03-01'
+                      reason: Compare a proposed annual rate
+                    idempotencyKey: docs-save-policy-001
+              submitPayoutRequest:
+                summary: Draft September payout request; does not execute payment
+                value: &id007
+                  query: 'mutation MedallionCommand($action: MedallionCommand!, $idempotencyKey: String!, $input:
+                    JSON!) { medallionCommand(action: $action, idempotencyKey: $idempotencyKey, input: $input) {
+                    data errors { code message path } } }'
+                  variables:
+                    action: SUBMIT_EVENT
+                    input:
+                      case_id: advisor
+                      scenario_id: baseline
+                      event:
+                        id: docs-payout-request-001
+                        revision: 1
+                        kind: payout_request
+                        amount_minor: '25000'
+                        currency: USD
+                        debtor_id: firm-demo
+                        creditor_id: advisor-demo
+                        subject_id: advisor-demo
+                        reason: Request a one-time advisor payout
+                        economic_date: '2026-09-15'
+                        posting_period: 2026-09
+                        policy_id: advisor-policy-v1
+                    idempotencyKey: docs-submit-event-001
+      responses:
+        '200':
+          description: GraphQL result, possibly containing top-level or nested domain errors.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GraphQLResponse'
+        '400':
+          description: Malformed JSON or invalid GraphQL envelope forwarded by Rails.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HttpError'
+        '403':
+          description: Origin or simulated identity rejected.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HttpError'
+        '500':
+          description: Rails service error or invalid local API proxy configuration.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HttpError'
+        '413':
+          description: Request body exceeds the transport limit.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HttpError'
+        '503':
+          description: Next proxy cannot reach its loopback Rails API or the request times out.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HttpError'
+      security:
+      - CloudflareAccessSession: []
+      x-hosted-access: The existing Cloudflare Access gate can redirect an unauthenticated request to login or reject
+        it before the application handles the request.
+      x-limits:
+        proxy_body_character_limit: 1048576
+        rails_body_utf8_byte_limit: 1048576
+        graphql_document_utf8_byte_limit: 50000
+        graphql_max_depth: 10
+        graphql_max_complexity: 150
+  /graphql:
+    servers:
+    - url: http://127.0.0.1:3102
+      description: Loopback Rails API only; this path is not exposed on the hosted frontend.
+    post:
+      summary: Execute GraphQL directly on the loopback Rails API
+      operationId: executeLocalGraphQL
+      tags:
+      - GraphQL transport
+      description: GraphQL POST envelope. Query and Mutation fields are enumerated in x-graphql-operations and in
+        the downloadable authoritative SDL. No REST resources, MCP endpoint or WebMCP registration are implemented
+        by this document. All fixtures are synthetic; integrations remain mocked. This reference does not send live
+        requests.
+      parameters:
+      - name: X-Demo-Role
+        in: header
+        required: false
+        description: Simulated local identity only, not an authentication credential. Omission currently defaults
+          to operator. Real identity/account authorization is required before a production or agent integration.
+        schema:
+          type: string
+          enum:
+          - advisor
+          - ria
+          - operator
+          - finance
+          - legal
+          - auditor
+          default: operator
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/GraphQLRequest'
+            examples:
+              householdRead:
+                summary: Read February household billing
+                value:
+                  query: 'query DisclosureWorkspace($audience: String!, $caseId: ID!, $limit: Int, $offset: Int)
+                    { disclosureWorkspace(audience: $audience, caseId: $caseId, limit: $limit, offset: $offset)
+                    }'
+                  variables:
+                    audience: client
+                    caseId: advisor
+                    limit: 100
+                    offset: 0
+              saveDraftPolicy:
+                summary: Save a draft; does not activate or bill
+                value:
+                  query: 'mutation DisclosureCommand($action: String!, $idempotencyKey: String!, $input: JSON!)
+                    { disclosureCommand(action: $action, idempotencyKey: $idempotencyKey, input: $input) { data
+                    errors { code message path } } }'
+                  variables:
+                    action: SAVE_POLICY
+                    input:
+                      case_id: advisor
+                      base_policy_id: disclosure-policy-v1
+                      policy:
+                        basis: ending_value
+                        cadence: monthly
+                        annual_rate: 33/2500
+                        minimum_minor: null
+                        fixed_amount_minor: null
+                        optional_service: none
+                      effective_from: '2027-02-01'
+                      effective_to: '2027-03-01'
+                      reason: Compare a proposed annual rate
+                    idempotencyKey: docs-save-policy-001
+              submitPayoutRequest:
+                summary: Draft September payout request; does not execute payment
+                value:
+                  query: 'mutation MedallionCommand($action: MedallionCommand!, $idempotencyKey: String!, $input:
+                    JSON!) { medallionCommand(action: $action, idempotencyKey: $idempotencyKey, input: $input) {
+                    data errors { code message path } } }'
+                  variables:
+                    action: SUBMIT_EVENT
+                    input:
+                      case_id: advisor
+                      scenario_id: baseline
+                      event:
+                        id: docs-payout-request-001
+                        revision: 1
+                        kind: payout_request
+                        amount_minor: '25000'
+                        currency: USD
+                        debtor_id: firm-demo
+                        creditor_id: advisor-demo
+                        subject_id: advisor-demo
+                        reason: Request a one-time advisor payout
+                        economic_date: '2026-09-15'
+                        posting_period: 2026-09
+                        policy_id: advisor-policy-v1
+                    idempotencyKey: docs-submit-event-001
+      responses:
+        '200':
+          description: GraphQL result, possibly containing top-level or nested domain errors.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GraphQLResponse'
+        '400':
+          description: Malformed JSON or invalid GraphQL envelope.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HttpError'
+        '403':
+          description: Origin or simulated identity rejected.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HttpError'
+        '500':
+          description: Unhandled local service error.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HttpError'
+        '413':
+          description: Request body exceeds the transport limit.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HttpError'
+        '415':
+          description: Content-Type must be application/json.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HttpError'
+      security: []
+      x-hosted-access: The existing Cloudflare Access gate can redirect an unauthenticated request to login or reject
+        it before the application handles the request.
+      x-limits:
+        proxy_body_character_limit: 1048576
+        rails_body_utf8_byte_limit: 1048576
+        graphql_document_utf8_byte_limit: 50000
+        graphql_max_depth: 10
+        graphql_max_complexity: 150
+  /health:
+    servers:
+    - url: http://127.0.0.1:3102
+      description: Loopback Rails health; not a hosted frontend route.
+    get:
+      operationId: localHealth
+      summary: Inspect local synthetic service health
+      tags:
+      - Local service
+      security: []
+      responses:
+        '200':
+          description: Current local service metadata.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    const: ok
+                  synthetic:
+                    const: true
+                  connected:
+                    const: false
+                  contract_version:
+                    type: string
+                  engine_version:
+                    type: string
+                required:
+                - status
+                - synthetic
+                - connected
+                - contract_version
+                - engine_version
+components:
+  securitySchemes:
+    CloudflareAccessSession:
+      type: apiKey
+      in: cookie
+      name: CF_Authorization
+      description: Existing Cloudflare Access browser session. This documents the hosted gate; it is not OAuth for
+        an MCP client. Do not put a session cookie in documentation or source.
+  schemas:
+    GraphQLRequest:
+      type: object
+      properties:
+        query:
+          type: string
+          description: GraphQL document, maximum 50,000 UTF-8 bytes at Rails.
+        variables:
+          type:
+          - object
+          - 'null'
+          additionalProperties: true
+        operationName:
+          type:
+          - string
+          - 'null'
+      required:
+      - query
+    GraphQLError:
+      type: object
+      properties:
+        message:
+          type: string
+        path:
+          type: array
+          items:
+            type:
+            - string
+            - integer
+        extensions:
+          type: object
+          properties:
+            code:
+              type: string
+          additionalProperties: true
+        locations:
+          type: array
+          items:
+            type: object
+            properties:
+              line:
+                type: integer
+              column:
+                type: integer
+      required:
+      - message
+      additionalProperties: true
+    GraphQLResponse:
+      type: object
+      properties:
+        data:
+          type:
+          - object
+          - 'null'
+          additionalProperties: true
+        errors:
+          type: array
+          items:
+            $ref: '#/components/schemas/GraphQLError'
+        extensions:
+          type: object
+          additionalProperties: true
+      additionalProperties: true
+      description: HTTP 200 may contain top-level GraphQL errors. Command domain errors are nested in data.<command>.errors;
+        inspect both before accepting a write.
+    HttpError:
+      type: object
+      properties:
+        error:
+          type: string
+        errors:
+          type: array
+          items:
+            $ref: '#/components/schemas/GraphQLError'
+      additionalProperties: true
+    DomainError:
+      type: object
+      properties:
+        code:
+          type: string
+        message:
+          type: string
+        path:
+          type: array
+          items:
+            type: string
+      required:
+      - code
+      - message
+      - path
+    CommandResult:
+      type: object
+      properties:
+        data: {}
+        errors:
+          type: array
+          items:
+            $ref: '#/components/schemas/DomainError'
+        run: {}
+      required:
+      - errors
+      description: Command-specific data is a GraphQL JSON scalar. Run is optionally selected on Payload. Empty
+        errors alone does not establish cash execution or accounting recognition.
+    MinorUnits: &id001
+      type: string
+      description: Exact minor units as a decimal integer string; unknown amounts are null, not zero.
+      pattern: ^-?[0-9]+$
+    IdempotencyKey:
+      type: string
+      description: Scoped by actor, command and tenant/entity. Reuse only for the identical input.
+      pattern: ^[a-zA-Z0-9_-]{1,100}$
+    HouseholdPolicy:
+      type: object
+      properties:
+        basis:
+          enum:
+          - ending_value
+          - average_daily_balance
+          - net_worth
+          - fixed
+          - hourly
+          - optional_service
+        cadence:
+          enum:
+          - monthly
+          - quarterly
+        annual_rate:
+          type:
+          - string
+          - 'null'
+          maxLength: 40
+          pattern: ^\d+(?:/[1-9]\d*)?$
+          description: Exact nonnegative rational fraction, e.g. 3/250 = 1.2% annually. Accepted combinations are
+            validated by DisclosurePolicy.
+        minimum_minor:
+          anyOf:
+          - *id001
+          - type: 'null'
+        fixed_amount_minor:
+          anyOf:
+          - *id001
+          - type: 'null'
+        hourly_rate_minor:
+          anyOf:
+          - *id001
+          - type: 'null'
+        optional_amount_minor:
+          anyOf:
+          - *id001
+          - type: 'null'
+        optional_service:
+          enum:
+          - none
+          - accepted
+        service_mode:
+          enum:
+          - full
+          - partial
+          - null
+      required:
+      - basis
+      - cadence
+      - optional_service
+      additionalProperties: false
+      description: Named household policy treatments. Monthly ending value supports a group minimum; other bases
+        require their matching source evidence. Unsupported field combinations fail validation. The policy graph
+        is data; Economics::Engine performs all arithmetic.
+    SavePolicyInput:
+      type: object
+      properties:
+        case_id:
+          const: advisor
+        base_policy_id:
+          type: string
+        policy:
+          $ref: '#/components/schemas/HouseholdPolicy'
+        effective_from: &id002
+          type: string
+          description: API end dates are exclusive; UI last-day dates are inclusive.
+          format: date
+        effective_to:
+          anyOf:
+          - *id002
+          - type: 'null'
+        reason:
+          type: string
+      required:
+      - case_id
+      - base_policy_id
+      - policy
+      - effective_from
+      - reason
+      additionalProperties: false
+    ComparePolicyInput:
+      type: object
+      properties:
+        case_id:
+          const: advisor
+        policy_id:
+          type: string
+        baseline_run_id:
+          type: string
+      required:
+      - case_id
+      - policy_id
+      - baseline_run_id
+      additionalProperties: false
+    ReviewPolicyInput:
+      type: object
+      properties:
+        case_id:
+          const: advisor
+        comparison_id:
+          type: string
+        decision:
+          enum:
+          - approve
+          - reject
+        reason:
+          type: string
+      required:
+      - case_id
+      - comparison_id
+      - decision
+      - reason
+      additionalProperties: false
+    PublishPolicyInput:
+      type: object
+      properties:
+        case_id:
+          const: advisor
+        policy_id:
+          type: string
+        comparison_id:
+          type: string
+      required:
+      - case_id
+      - policy_id
+      - comparison_id
+      additionalProperties: false
+    AssignPolicyInput:
+      type: object
+      properties:
+        case_id:
+          const: advisor
+        policy_id:
+          type: string
+        subject_id:
+          const: disclosure-alder-household
+        effective_from: *id002
+        effective_to:
+          anyOf:
+          - *id002
+          - type: 'null'
+        reason:
+          type: string
+        supersedes_assignment_id:
+          type: string
+      required:
+      - case_id
+      - policy_id
+      - subject_id
+      - effective_from
+      - reason
+      additionalProperties: false
+    EvaluateInput:
+      type: object
+      properties:
+        case_id:
+          const: advisor
+        knowledge_cutoff:
+          type: string
+          format: date-time
+      required:
+      - case_id
+      - knowledge_cutoff
+      additionalProperties: false
+    OneTimeEvent:
+      type: object
+      properties:
+        id:
+          type: string
+        revision:
+          type: integer
+          minimum: 1
+        kind:
+          enum:
+          - one_time_charge
+          - one_time_credit
+          - compensation_entitlement
+          - payout_request
+        amount_minor: &id004
+          type: string
+          description: Exact minor units as a decimal integer string; unknown amounts are null, not zero.
+          pattern: ^[1-9][0-9]*$
+        currency:
+          const: USD
+        debtor_id:
+          type: string
+        creditor_id:
+          type: string
+        subject_id:
+          type: string
+        reason:
+          type: string
+        economic_date: *id002
+        posting_period:
+          type: string
+          pattern: ^\d{4}-\d{2}$
+        policy_id:
+          type: string
+        event_policy_id:
+          type: string
+        original_id:
+          type: string
+        original_revision:
+          type: integer
+          minimum: 1
+        original_hash:
+          type: string
+        reason_code:
+          type: string
+      required:
+      - id
+      - revision
+      - kind
+      - amount_minor
+      - currency
+      - debtor_id
+      - creditor_id
+      - subject_id
+      - reason
+      - economic_date
+      - posting_period
+      - policy_id
+      additionalProperties: false
+      description: Baseline September 2026 event input. Advisor supports compensation_entitlement and payout_request,
+        firm-demo → advisor-demo. RIA supports one_time_charge (ria-harbor → firm-demo) and one_time_credit (reverse
+        direction). Amount is positive; kind and parties carry direction. Non-payout items need a published event_policy_id.
+        Revisions must bind original identity/revision/hash.
+    SubmitEventInput:
+      type: object
+      properties:
+        case_id: &id003
+          type: string
+          enum:
+          - advisor
+          - ria
+        scenario_id:
+          type: string
+          default: baseline
+        event:
+          $ref: '#/components/schemas/OneTimeEvent'
+      required:
+      - case_id
+      - event
+    ReviewEventInput:
+      type: object
+      properties:
+        case_id: *id003
+        scenario_id:
+          type: string
+          default: baseline
+        event_id:
+          type: string
+        revision:
+          type: integer
+          minimum: 1
+        expected_hash:
+          type: string
+        decision:
+          enum:
+          - approved
+          - rejected
+      required:
+      - case_id
+      - event_id
+      - revision
+      - expected_hash
+      - decision
+    CashAssociationInput:
+      type: object
+      properties:
+        payment_id:
+          type: string
+        invoice_id:
+          type: string
+        currency:
+          const: USD
+        amount_minor: *id004
+        posting_period:
+          type: string
+          pattern: ^\d{4}-\d{2}$
+        reason:
+          type: string
+      required:
+      - payment_id
+      - invoice_id
+      - currency
+      - amount_minor
+      - posting_period
+      - reason
+      additionalProperties: false
+    CashReversalInput:
+      type: object
+      properties:
+        application_id:
+          type: string
+        reason:
+          type: string
+        posting_period:
+          type: string
+          pattern: ^\d{4}-\d{2}$
+      required:
+      - application_id
+      - reason
+      - posting_period
+      additionalProperties: false
+x-graphql-operations:
+- name: disclosureWorkspace
+  kind: query
+  group: Household billing
+  description: Selected household invoice, account allocations, valuation, terms, credit/refund, compensation and
+    cost evidence. Internal audiences also receive policy and recognition records. The RIA case reports a separately
+    observed cost; it does not infer a platform fee.
+  arguments:
+  - name: audience
+    type: String!
+    required: true
+  - name: caseId
+    type: ID!
+    required: true
+  - name: limit
+    type: Int
+    required: false
+  - name: offset
+    type: Int
+    required: false
+  returns: JSON!
+  request: *id005
+  example_note: Replace identifiers prefixed REPLACE_WITH using IDs from a preceding read.
+- name: audienceClient
+  kind: query
+  group: Client experience
+  description: Account detail and its paged observations. Obtain clientId from audienceClients.
+  arguments:
+  - name: caseId
+    type: ID!
+    required: true
+  - name: clientId
+    type: ID!
+    required: true
+  - name: limit
+    type: Int
+    required: false
+  - name: offset
+    type: Int
+    required: false
+  returns: JSON!
+  request:
+    query: 'query AudienceClient($caseId: ID!, $clientId: ID!, $limit: Int, $offset: Int) { audienceClient(caseId:
+      $caseId, clientId: $clientId, limit: $limit, offset: $offset) }'
+    variables:
+      caseId: advisor
+      clientId: REPLACE_WITH_CLIENT_ID
+      limit: 20
+      offset: 0
+  example_note: Replace identifiers prefixed REPLACE_WITH using IDs from a preceding read.
+- name: audienceClients
+  kind: query
+  group: Client experience
+  description: Search and page through underlying clients/accounts before drilling into one account.
+  arguments:
+  - name: caseId
+    type: ID!
+    required: true
+  - name: limit
+    type: Int
+    required: false
+  - name: offset
+    type: Int
+    required: false
+  - name: search
+    type: String
+    required: false
+  returns: JSON!
+  request:
+    query: 'query AudienceClients($caseId: ID!, $limit: Int, $offset: Int, $search: String) { audienceClients(caseId:
+      $caseId, limit: $limit, offset: $offset, search: $search) }'
+    variables:
+      caseId: advisor
+      limit: 20
+      offset: 0
+      search: null
+  example_note: Replace identifiers prefixed REPLACE_WITH using IDs from a preceding read.
+- name: audienceStatement
+  kind: query
+  group: Client experience
+  description: Published statement lines, governing terms, calculation basis and pending items. This baseline book
+    is a separate example from the February household.
+  arguments:
+  - name: caseId
+    type: ID!
+    required: true
+  - name: limit
+    type: Int
+    required: false
+  - name: offset
+    type: Int
+    required: false
+  returns: JSON!
+  request:
+    query: 'query AudienceStatement($caseId: ID!, $limit: Int, $offset: Int) { audienceStatement(caseId: $caseId,
+      limit: $limit, offset: $offset) }'
+    variables:
+      caseId: advisor
+      limit: 20
+      offset: 0
+  example_note: Replace identifiers prefixed REPLACE_WITH using IDs from a preceding read.
+- name: audienceSummary
+  kind: query
+  group: Client experience
+  description: Published business overview and dated terms for the scoped advisor or RIA.
+  arguments:
+  - name: caseId
+    type: ID!
+    required: true
+  returns: JSON!
+  request:
+    query: 'query AudienceSummary($caseId: ID!) { audienceSummary(caseId: $caseId) }'
+    variables:
+      caseId: advisor
+  example_note: Replace identifiers prefixed REPLACE_WITH using IDs from a preceding read.
+- name: brokerBook
+  kind: query
+  group: Earlier workspaces
+  description: Earlier broker book with exact earned, coverage and incremental cash amounts. RIA identity is excluded.
+  arguments:
+  - name: brokerId
+    type: ID!
+    required: true
+  - name: runId
+    type: ID
+    required: false
+  returns: BrokerBook
+  request:
+    query: 'query BrokerBook($brokerId: ID!, $runId: ID) { brokerBook(brokerId: $brokerId, runId: $runId) { id name
+      completeness earned { minorUnits currency } coverage { minorUnits currency } incrementalCash { minorUnits
+      currency } customers } }'
+    variables:
+      brokerId: broker-alex
+      runId: REPLACE_WITH_RUN_ID
+  example_note: Replace identifiers prefixed REPLACE_WITH using IDs from a preceding read.
+- name: collections
+  kind: query
+  group: Earlier workspaces
+  description: Earlier source-observation collection projection. RIA identity is excluded. This is not a live collections
+    integration.
+  arguments:
+  - name: customerId
+    type: ID
+    required: false
+  - name: knowledgeCutoff
+    type: String
+    required: false
+  returns: JSON!
+  request:
+    query: 'query Collections($customerId: ID, $knowledgeCutoff: String) { collections(customerId: $customerId,
+      knowledgeCutoff: $knowledgeCutoff) }'
+    variables:
+      knowledgeCutoff: '2026-10-02T23:00:00Z'
+  example_note: Replace identifiers prefixed REPLACE_WITH using IDs from a preceding read.
+- name: entitlementLedger
+  kind: query
+  group: Earlier workspaces
+  description: Earlier entitlement ledger projection. RIA identity is excluded.
+  arguments:
+  - name: brokerId
+    type: ID
+    required: false
+  returns: JSON!
+  request:
+    query: 'query EntitlementLedger($brokerId: ID) { entitlementLedger(brokerId: $brokerId) }'
+    variables:
+      brokerId: broker-alex
+  example_note: Replace identifiers prefixed REPLACE_WITH using IDs from a preceding read.
+- name: financeWorkspace
+  kind: query
+  group: Internal Finance
+  description: Cash associations, supplied recognition evidence and unresolved outcomes. The cash/recognition fixture
+    is separate from household billing. Campfire remains mocked.
+  arguments:
+  - name: caseId
+    type: ID!
+    required: true
+  returns: JSON!
+  request:
+    query: 'query FinanceWorkspace($caseId: ID!) { financeWorkspace(caseId: $caseId) }'
+    variables:
+      caseId: ria
+  example_note: Replace identifiers prefixed REPLACE_WITH using IDs from a preceding read.
+- name: lineageRecord
+  kind: query
+  group: Internal evidence
+  description: Open a retained record and its service/input/output edges. Obtain recordId from lineageRecords or
+    an internal workspace.
+  arguments:
+  - name: caseId
+    type: ID!
+    required: true
+  - name: limit
+    type: Int
+    required: false
+  - name: offset
+    type: Int
+    required: false
+  - name: recordId
+    type: ID!
+    required: true
+  returns: JSON!
+  request:
+    query: 'query LineageRecord($caseId: ID!, $limit: Int, $offset: Int, $recordId: ID!) { lineageRecord(caseId:
+      $caseId, limit: $limit, offset: $offset, recordId: $recordId) }'
+    variables:
+      caseId: advisor
+      limit: 20
+      offset: 0
+      recordId: REPLACE_WITH_RECORD_ID
+  example_note: Replace identifiers prefixed REPLACE_WITH using IDs from a preceding read.
+- name: lineageRecords
+  kind: query
+  group: Internal evidence
+  description: Search retained evidence records. Internal identities only; reads do not run the pipeline.
+  arguments:
+  - name: caseId
+    type: ID!
+    required: true
+  - name: limit
+    type: Int
+    required: false
+  - name: offset
+    type: Int
+    required: false
+  - name: search
+    type: String
+    required: false
+  returns: JSON!
+  request:
+    query: 'query LineageRecords($caseId: ID!, $limit: Int, $offset: Int, $search: String) { lineageRecords(caseId:
+      $caseId, limit: $limit, offset: $offset, search: $search) }'
+    variables:
+      caseId: advisor
+      limit: 20
+      offset: 0
+      search: null
+  example_note: Replace identifiers prefixed REPLACE_WITH using IDs from a preceding read.
+- name: medallionWorkspace
+  kind: query
+  group: Internal Product
+  description: Policy versions, assignments, runs, events and statements for the selected synthetic case and namespace.
+    Client identities are restricted to their own case/workspace.
+  arguments:
+  - name: caseId
+    type: ID!
+    required: true
+  - name: runId
+    type: ID
+    required: false
+  - name: scenarioId
+    type: ID
+    required: false
+  - name: workspace
+    type: String!
+    required: true
+  returns: JSON!
+  request:
+    query: 'query MedallionWorkspace($caseId: ID!, $runId: ID, $scenarioId: ID, $workspace: String!) { medallionWorkspace(caseId:
+      $caseId, runId: $runId, scenarioId: $scenarioId, workspace: $workspace) }'
+    variables:
+      caseId: advisor
+      runId: REPLACE_WITH_RUN_ID
+      scenarioId: baseline
+      workspace: advisor
+  example_note: Replace identifiers prefixed REPLACE_WITH using IDs from a preceding read.
+- name: productWorkspace
+  kind: query
+  group: Earlier workspaces
+  description: Earlier broker/internal presentation, terms proposals and comparisons. Advisor access is scoped;
+    RIA identity is excluded from this legacy endpoint.
+  arguments:
+  - name: brokerId
+    type: ID
+    required: false
+  - name: businessDate
+    type: String
+    required: false
+  - name: workspace
+    type: String!
+    required: true
+  returns: JSON!
+  request:
+    query: 'query ProductWorkspace($brokerId: ID, $businessDate: String, $workspace: String!) { productWorkspace(brokerId:
+      $brokerId, businessDate: $businessDate, workspace: $workspace) }'
+    variables:
+      brokerId: broker-alex
+      businessDate: '2026-11-13'
+      workspace: advisor
+  example_note: Replace identifiers prefixed REPLACE_WITH using IDs from a preceding read.
+- name: reconciliation
+  kind: query
+  group: Earlier workspaces
+  description: Earlier retained reconciliation state for a period. RIA identity is excluded. No live Campfire posting
+    is established.
+  arguments:
+  - name: closeId
+    type: ID
+    required: false
+  - name: periodEndExclusive
+    type: String!
+    required: true
+  - name: periodStart
+    type: String!
+    required: true
+  returns: JSON!
+  request:
+    query: 'query Reconciliation($closeId: ID, $periodEndExclusive: String!, $periodStart: String!) { reconciliation(closeId:
+      $closeId, periodEndExclusive: $periodEndExclusive, periodStart: $periodStart) }'
+    variables:
+      periodEndExclusive: '2026-10-01'
+      periodStart: '2026-09-01'
+  example_note: Replace identifiers prefixed REPLACE_WITH using IDs from a preceding read.
+- name: reviewPacket
+  kind: query
+  group: Earlier workspaces
+  description: Earlier review evidence for a retained run. RIA identity is excluded.
+  arguments:
+  - name: runId
+    type: ID!
+    required: true
+  returns: JSON
+  request:
+    query: 'query ReviewPacket($runId: ID!) { reviewPacket(runId: $runId) }'
+    variables:
+      runId: REPLACE_WITH_RUN_ID
+  example_note: Replace identifiers prefixed REPLACE_WITH using IDs from a preceding read.
+- name: run
+  kind: query
+  group: Earlier workspaces
+  description: Earlier retained run by ID. RIA identity is excluded.
+  arguments:
+  - name: id
+    type: ID!
+    required: true
+  returns: Run
+  request:
+    query: 'query Run($id: ID!) { run(id: $id) { id status policyHash inputManifestHash businessDate knowledgeCutoff
+      data } }'
+    variables:
+      id: REPLACE_WITH_RUN_ID
+  example_note: Replace identifiers prefixed REPLACE_WITH using IDs from a preceding read.
+- name: workbench
+  kind: query
+  group: Earlier workspaces
+  description: Earlier scoped workbench state. RIA identity is excluded.
+  arguments: []
+  returns: JSON!
+  request:
+    query: query Workbench { workbench }
+    variables: {}
+  example_note: Replace identifiers prefixed REPLACE_WITH using IDs from a preceding read.
+- name: disclosureCommand
+  kind: mutation
+  group: Household policies
+  description: Save draft → compare → independent Legal/Finance reviews → publish → assign → evaluate. Original
+    invoices remain retained; a changed billed result requires correction.
+  arguments:
+  - name: action
+    type: String!
+    required: true
+  - name: idempotencyKey
+    type: String!
+    required: true
+  - name: input
+    type: JSON!
+    required: true
+  returns: Payload!
+  request:
+    query: 'mutation DisclosureCommand($action: String!, $idempotencyKey: String!, $input: JSON!) { disclosureCommand(action:
+      $action, idempotencyKey: $idempotencyKey, input: $input) { data errors { code message path } } }'
+    variables:
+      action: SAVE_POLICY
+      input: {}
+      idempotencyKey: REPLACE_WITH_UNIQUE_KEY
+  example_note: Replace identifiers with IDs returned by reads. Mutation input shown separately below; the empty
+    catalog input is a shape template.
+- name: financeCommand
+  kind: mutation
+  group: Internal Finance
+  description: Record or reverse a local cash association, or retain a mocked accounting acknowledgment. These commands
+    do not execute cash or post a live journal.
+  arguments:
+  - name: action
+    type: FinanceCommand!
+    required: true
+  - name: idempotencyKey
+    type: String!
+    required: true
+  - name: input
+    type: JSON!
+    required: true
+  returns: Payload!
+  request:
+    query: 'mutation FinanceCommand($action: FinanceCommand!, $idempotencyKey: String!, $input: JSON!) { financeCommand(action:
+      $action, idempotencyKey: $idempotencyKey, input: $input) { data errors { code message path } } }'
+    variables:
+      action: FINANCE_ASSOCIATE
+      input: {}
+      idempotencyKey: REPLACE_WITH_UNIQUE_KEY
+  example_note: Replace identifiers with IDs returned by reads. Mutation input shown separately below; the empty
+    catalog input is a shape template.
+- name: medallionCommand
+  kind: mutation
+  group: Billing events and policies
+  description: Baseline policy lifecycle, source deliveries, one-time events, confirmed payment evidence, applications,
+    reversals and period controls. Actions have independent role and source/evidence checks.
+  arguments:
+  - name: action
+    type: MedallionCommand!
+    required: true
+  - name: idempotencyKey
+    type: String!
+    required: true
+  - name: input
+    type: JSON!
+    required: true
+  returns: Payload!
+  request:
+    query: 'mutation MedallionCommand($action: MedallionCommand!, $idempotencyKey: String!, $input: JSON!) { medallionCommand(action:
+      $action, idempotencyKey: $idempotencyKey, input: $input) { data errors { code message path } } }'
+    variables:
+      action: SUBMIT_EVENT
+      input: {}
+      idempotencyKey: REPLACE_WITH_UNIQUE_KEY
+  example_note: Replace identifiers with IDs returned by reads. Mutation input shown separately below; the empty
+    catalog input is a shape template.
+- name: workbenchCommand
+  kind: mutation
+  group: Earlier workspaces
+  description: Earlier operational commands and commercial proposals. Existing command-specific reviews and scopes
+    apply; RIA identity is excluded.
+  arguments:
+  - name: action
+    type: Command!
+    required: true
+  - name: idempotencyKey
+    type: String!
+    required: true
+  - name: input
+    type: JSON!
+    required: true
+  returns: Payload!
+  request:
+    query: 'mutation WorkbenchCommand($action: Command!, $idempotencyKey: String!, $input: JSON!) { workbenchCommand(action:
+      $action, idempotencyKey: $idempotencyKey, input: $input) { data errors { code message path } } }'
+    variables:
+      action: SAVE_TERMS_PROPOSAL
+      input: {}
+      idempotencyKey: REPLACE_WITH_UNIQUE_KEY
+  example_note: Replace identifiers with IDs returned by reads. Mutation input shown separately below; the empty
+    catalog input is a shape template.
+x-command-families:
+  disclosureCommand:
+  - BOOTSTRAP
+  - SAVE_POLICY
+  - COMPARE_POLICY
+  - REVIEW_POLICY
+  - PUBLISH_POLICY
+  - ASSIGN_POLICY
+  - EVALUATE
+  medallionCommand:
+  - APPLY_PAYMENT
+  - ASSIGN_POLICY
+  - BOOTSTRAP
+  - COMPARE_POLICIES
+  - EVALUATE_CASE
+  - INGEST_DELIVERY
+  - LOCK_POSTING_PERIOD
+  - PUBLISH_POLICY
+  - RECORD_PAYMENT
+  - REVERSE_FUNDING
+  - REVERSE_PAYMENT_APPLICATION
+  - REVERSE_SOURCE_RECEIPT
+  - REVIEW_EVENT
+  - REVIEW_POLICY
+  - SAVE_POLICY_VERSION
+  - SEAL_STATEMENT
+  - SUBMIT_EVENT
+  financeCommand:
+  - FINANCE_ASSOCIATE
+  - FINANCE_BOOTSTRAP
+  - FINANCE_MOCK_ACKNOWLEDGE
+  - FINANCE_REVERSE
+  workbenchCommand:
+  - ACTIVATE
+  - CLOSE_RECONCILIATION
+  - COMPARE_TERMS_PROPOSAL
+  - CONSUME_ENTITLEMENT
+  - IMPORT_SNAPSHOT
+  - LINK_INVOICE
+  - MATCH
+  - PROJECT
+  - RECORD_BANK_BATCH
+  - RECORD_INVOICE_APPLICATION
+  - REVERSE_BANK_BATCH
+  - REVERSE_ENTITLEMENT
+  - REVERSE_INVOICE_APPLICATION
+  - REVERSE_MATCH
+  - REVERSE_RECEIPT
+  - REVIEW
+  - REVIEW_TERMS_PROPOSAL
+  - SAVE_POLICY
+  - SAVE_TERMS_PROPOSAL
+  - SCHEDULE_TERMS_PROPOSAL
+x-command-examples:
+- family: disclosureCommand
+  action: SAVE_POLICY
+  schema: SavePolicyInput
+  role: operator
+  request: *id006
+- family: disclosureCommand
+  action: COMPARE_POLICY
+  schema: ComparePolicyInput
+  role: operator
+  request:
+    query: 'mutation DisclosureCommand($action: String!, $idempotencyKey: String!, $input: JSON!) { disclosureCommand(action:
+      $action, idempotencyKey: $idempotencyKey, input: $input) { data errors { code message path } } }'
+    variables:
+      action: COMPARE_POLICY
+      input:
+        case_id: advisor
+        policy_id: REPLACE_WITH_DRAFT_POLICY_ID
+        baseline_run_id: disclosure-run-v1
+      idempotencyKey: docs-compare-policy-001
+- family: disclosureCommand
+  action: REVIEW_POLICY
+  schema: ReviewPolicyInput
+  role: legal or finance
+  request:
+    query: 'mutation DisclosureCommand($action: String!, $idempotencyKey: String!, $input: JSON!) { disclosureCommand(action:
+      $action, idempotencyKey: $idempotencyKey, input: $input) { data errors { code message path } } }'
+    variables:
+      action: REVIEW_POLICY
+      input:
+        case_id: advisor
+        comparison_id: REPLACE_WITH_COMPARISON_ID
+        decision: approve
+        reason: Reviewed exact comparison and evidence
+      idempotencyKey: docs-review-policy-001
+- family: disclosureCommand
+  action: PUBLISH_POLICY
+  schema: PublishPolicyInput
+  role: operator
+  request:
+    query: 'mutation DisclosureCommand($action: String!, $idempotencyKey: String!, $input: JSON!) { disclosureCommand(action:
+      $action, idempotencyKey: $idempotencyKey, input: $input) { data errors { code message path } } }'
+    variables:
+      action: PUBLISH_POLICY
+      input:
+        case_id: advisor
+        policy_id: REPLACE_WITH_DRAFT_POLICY_ID
+        comparison_id: REPLACE_WITH_COMPARISON_ID
+      idempotencyKey: docs-publish-policy-001
+- family: disclosureCommand
+  action: ASSIGN_POLICY
+  schema: AssignPolicyInput
+  role: operator
+  request:
+    query: 'mutation DisclosureCommand($action: String!, $idempotencyKey: String!, $input: JSON!) { disclosureCommand(action:
+      $action, idempotencyKey: $idempotencyKey, input: $input) { data errors { code message path } } }'
+    variables:
+      action: ASSIGN_POLICY
+      input:
+        case_id: advisor
+        policy_id: REPLACE_WITH_PUBLISHED_POLICY_ID
+        subject_id: disclosure-alder-household
+        effective_from: '2027-02-01'
+        effective_to: '2027-03-01'
+        supersedes_assignment_id: disclosure-assignment-v1
+        reason: Assign the reviewed policy for this interval
+      idempotencyKey: docs-assign-policy-001
+- family: disclosureCommand
+  action: EVALUATE
+  schema: EvaluateInput
+  role: operator
+  request:
+    query: 'mutation DisclosureCommand($action: String!, $idempotencyKey: String!, $input: JSON!) { disclosureCommand(action:
+      $action, idempotencyKey: $idempotencyKey, input: $input) { data errors { code message path } } }'
+    variables:
+      action: EVALUATE
+      input:
+        case_id: advisor
+        knowledge_cutoff: '2027-02-28T23:59:59Z'
+      idempotencyKey: docs-evaluate-001
+- family: medallionCommand
+  action: SUBMIT_EVENT
+  schema: SubmitEventInput
+  role: operator or finance
+  request: *id007
+- family: medallionCommand
+  action: REVIEW_EVENT
+  schema: ReviewEventInput
+  role: finance
+  request:
+    query: 'mutation MedallionCommand($action: MedallionCommand!, $idempotencyKey: String!, $input: JSON!) { medallionCommand(action:
+      $action, idempotencyKey: $idempotencyKey, input: $input) { data errors { code message path } } }'
+    variables:
+      action: REVIEW_EVENT
+      input:
+        case_id: advisor
+        event_id: REPLACE_WITH_EVENT_ID
+        revision: 1
+        expected_hash: REPLACE_WITH_EVENT_HASH
+        decision: approved
+      idempotencyKey: docs-review-event-001
+- family: financeCommand
+  action: FINANCE_ASSOCIATE
+  schema: CashAssociationInput
+  role: finance
+  request:
+    query: 'mutation FinanceCommand($action: FinanceCommand!, $idempotencyKey: String!, $input: JSON!) { financeCommand(action:
+      $action, idempotencyKey: $idempotencyKey, input: $input) { data errors { code message path } } }'
+    variables:
+      action: FINANCE_ASSOCIATE
+      input:
+        payment_id: REPLACE_WITH_PAYMENT_ID
+        invoice_id: REPLACE_WITH_INVOICE_ID
+        currency: USD
+        amount_minor: '30000'
+        posting_period: 2027-01
+        reason: Associate confirmed cash with the suggested invoice
+      idempotencyKey: docs-finance-associate-001
+- family: financeCommand
+  action: FINANCE_REVERSE
+  schema: CashReversalInput
+  role: finance
+  request:
+    query: 'mutation FinanceCommand($action: FinanceCommand!, $idempotencyKey: String!, $input: JSON!) { financeCommand(action:
+      $action, idempotencyKey: $idempotencyKey, input: $input) { data errors { code message path } } }'
+    variables:
+      action: FINANCE_REVERSE
+      input:
+        application_id: REPLACE_WITH_APPLICATION_ID
+        posting_period: 2027-01
+        reason: Reverse the local cash association
+      idempotencyKey: docs-finance-reverse-001
+x-contract-sources:
+  graphql_sdl: contracts/schema.graphql
+  graphql_sdl_sha256: e2995891e6601bf983f4d0eb619950bd8ad0c4b3f83e7f6df6ba264441978425
+  source_commit: 56b9d90349b2d839f041320239aab6872c3f5eb1
+  controller: apps/api/app/controllers/graphql_controller.rb
+  proxy: apps/web/app/api/graphql/route.ts
+x-agent-interfaces:
+  mcp:
+    implemented: false
+  webmcp:
+    implemented: false
+  note: The API can underpin future named tools. Production identity, protocol adapters and client compatibility
+    still need implementation.
