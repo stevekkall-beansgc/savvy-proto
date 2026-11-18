@@ -1,13 +1,13 @@
 class GraphqlController < ActionController::API
   MAX_BYTES = 1_048_576
   def health
-    render json: { status: "ok", synthetic: true, connected: false, contract_version: "0.5.0", engine_version: Economics::Engine::VERSION }
+    render json: { status: "ok", synthetic: true, connected: false, contract_version: "0.6.0", engine_version: Economics::Engine::VERSION }
   end
   def execute
     raise Economics::Error.new("SYNTHETIC_ONLY") unless ENV["SYNTHETIC_DEMO"] == "1"
     return render(json: { error: "BODY_TOO_LARGE" }, status: 413) if request.raw_post.bytesize > MAX_BYTES
     origin = request.headers["Origin"]
-    if origin.present? && !%w[http://localhost:3100 http://127.0.0.1:3100 http://localhost:3101 http://127.0.0.1:3101].include?(origin)
+    if origin.present? && !%w[http://localhost:3100 http://127.0.0.1:3100 http://localhost:3101 http://127.0.0.1:3101 http://localhost:3102 http://127.0.0.1:3102 http://localhost:3103 http://127.0.0.1:3103].include?(origin)
       return render(json: { error: "LOCAL_ORIGIN_REQUIRED" }, status: 403)
     end
     return render(json: { error: "JSON_CONTENT_TYPE_REQUIRED" }, status: 415) unless request.media_type == "application/json"

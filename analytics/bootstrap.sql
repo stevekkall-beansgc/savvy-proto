@@ -33,4 +33,9 @@ CREATE OR REPLACE VIEW raw_demo.billing_invoice_lines AS SELECT * FROM public.bi
 CREATE OR REPLACE VIEW raw_demo.billing_instructions AS SELECT * FROM public.billing_instructions;
 CREATE OR REPLACE VIEW raw_demo.billing_instruction_items AS SELECT * FROM public.billing_instruction_items;
 CREATE OR REPLACE VIEW raw_demo.billing_accounting_facts AS SELECT * FROM public.billing_accounting_facts;
+-- Immutable medallion evidence; raw bytes stay in the operational store.
+CREATE OR REPLACE VIEW raw_demo.medallion_evidence AS
+  SELECT id, tenant_id, entity_id, case_id, scenario_id, kind, external_id, revision, status,
+         subject_id, parent_id, payload_hash, payload, recorded_at
+  FROM public.medallion_evidence;
 GRANT SELECT ON ALL TABLES IN SCHEMA raw_demo TO savvy_analytics;

@@ -1,7 +1,14 @@
 export const runtime = "nodejs";
 export async function POST(request: Request) {
   const origin = request.headers.get("origin");
-  const allowedOrigins = new Set(["http://127.0.0.1:3100", "http://localhost:3100"]);
+  const allowedOrigins = new Set([
+    "http://127.0.0.1:3100",
+    "http://localhost:3100",
+    "http://127.0.0.1:3103",
+    "http://localhost:3103",
+    "http://127.0.0.1:3104",
+    "http://localhost:3104",
+  ]);
   if (process.env.SAVVY_PUBLIC_ORIGIN) {
     allowedOrigins.add(new URL(process.env.SAVVY_PUBLIC_ORIGIN).origin);
   }
@@ -15,7 +22,20 @@ export async function POST(request: Request) {
   if (body.length > 1_048_576)
     return Response.json({ error: "BODY_TOO_LARGE" }, { status: 413 });
   try {
-    const response = await fetch("http://127.0.0.1:3101/graphql", {
+    const api = new URL(process.env.SAVVY_API_URL || "http://127.0.0.1:3101");
+    if (
+      api.protocol !== "http:" ||
+      !["3101", "3102"].includes(api.port) ||
+      !["127.0.0.1", "localhost", "::1", "[::1]"].includes(api.hostname) ||
+      api.username ||
+      api.password ||
+      api.pathname !== "/" ||
+      api.search ||
+      api.hash
+    ) {
+      return Response.json({ error: "INVALID_LOCAL_API" }, { status: 500 });
+    }
+    const response = await fetch(new URL("/graphql", api), {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -34,8 +54,7 @@ export async function POST(request: Request) {
       {
         errors: [
           {
-            message:
-              "Unable to load data. Please try again.",
+            message: "Unable to load data. Please try again.",
           },
         ],
       },

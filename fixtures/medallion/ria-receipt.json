@@ -1,0 +1,9 @@
+{
+  "synthetic": true,
+  "receipt": {"id":"receipt-network-1", "revision":1, "status":"confirmed", "payer":"network-fixture", "payee":"firm-demo", "currency":"USD", "amount_minor":30000, "recorded_at":"2026-10-02T00:00:00Z"},
+  "allocations": [
+    {"id":"receipt-allocation-cash", "receipt_id":"receipt-network-1", "subject":"ria-harbor", "report_line":"cash", "currency":"USD", "amount_minor":18000},
+    {"id":"receipt-allocation-margin", "receipt_id":"receipt-network-1", "subject":"ria-harbor", "report_line":"margin", "currency":"USD", "amount_minor":6000},
+    {"id":"receipt-allocation-lending", "receipt_id":"receipt-network-1", "subject":"ria-harbor", "report_line":"lending", "currency":"USD", "amount_minor":6000}
+  ]
+}

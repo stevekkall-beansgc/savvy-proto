@@ -10,6 +10,15 @@ class EngineTest < Minitest::Test
   def evaluate
     @e.evaluate(@s, @p, date: "2026-11-13", cutoff: "2026-11-13T23:00:00Z")
   end
+  def test_legacy_request_compiles_to_one_program_including_guarantee
+    @p['guarantees']=[guarantee_policy]
+    calls=0
+    trace=TracePoint.new(:call) { |event| calls += 1 if event.defined_class == Economics::Program && event.method_id == :run }
+    result=nil
+    trace.enable { result=evaluate }
+    assert_equal 'completed',result['status']
+    assert_equal 1,calls
+  end
   def test_shared_advance_is_not_reused_and_inputs_are_unchanged
     original = Economics::Canonical.copy(@s)
     r = evaluate

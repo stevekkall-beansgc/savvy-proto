@@ -1,0 +1,12 @@
+{
+  "treatment_id": "disclosure-treatment-v1",
+  "initial_deferred_minor": 100000,
+  "recognized_minor": 50000,
+  "deferred_before_credit_minor": 50000,
+  "correction_deferred_minor": 0,
+  "missing_outcome": "Await independent posting for the correction",
+  "contract_version": "disclosure/v1",
+  "synthetic": true,
+  "fixture_type": "recognition",
+  "received_at": "2027-02-18T00:00:00Z"
+}

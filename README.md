@@ -2,7 +2,7 @@
 
 Private source repository for the Savvy advisor workspace prototype. Maintained
 by Stephen Kall / Legume Labs. GitHub Releases are the versioned changelog;
-the synthetic API contract is currently 0.5.0. Source backup does not include the
+the development API contract is currently 0.6.0. Source backup does not include the
 retained Docker database volume. Current handoff: [NEW-SESSION-HANDOFF.md](NEW-SESSION-HANDOFF.md).
 
 **Live private app:** https://savvy-proto.beanshop.top/ — the full application runs
@@ -26,6 +26,36 @@ accounting entries, alter a loan, approve a payable, or execute a payment.
 
 
 ## Latest milestone
+
+The [disclosure-informed milestone](docs/DISCLOSURE-MILESTONE.md), planned with
+Astra and implemented/reviewed/stress-tested by Terra, adds engine-backed household
+billing, governed policy alternatives, separate credit/refund and compensation
+evidence, cost completeness and supplied recognition. Try the current local
+revision at **http://127.0.0.1:3104/**. The hosted app above is an earlier revision;
+port3103 stays available separately. Real Savvy disclosures have view/download
+controls; the agreement viewer awaits an actual agreement document.
+
+The [three-audience milestone](docs/THREE-AUDIENCE-MILESTONE.md) implements the
+walkthrough plan reviewed with Astra and Sol: a shared broker experience, Internal
+Product workflows and record proof, and Internal Finance cash matching plus
+revenue-recognition visibility. Terra agents implemented, independently reviewed
+and stress tested it. See [validation](docs/VALIDATION-THREE-AUDIENCE.md).
+
+The [medallion milestone](docs/MEDALLION-MILESTONE.md) adds two product experiences,
+an internal architecture/pipeline walkthrough, and one policy-driven billing
+interpreter for recurring and one-time economics. Astra reviewed the complete
+plan; Terra agents implemented, reviewed and stress-tested the changes.
+Commercial formulas and terms change through the versioned API. Campfire and CLM
+remain mocked. See the [sample calculations](docs/MEDALLION-SAMPLE-WALKTHROUGH.md),
+[API contract](docs/MEDALLION-API-CONTRACT.md) and [validation](docs/VALIDATION-MEDALLION.md).
+
+This milestone is isolated from the hosted app. Its local preview uses
+http://127.0.0.1:3103, API port 3102 and database port 55438 in the separate
+`savvy-medallion` container project/volume. Start it with
+`./scripts/medallion-preview.sh` after the documented fixture setup. Validate it
+with `./scripts/medallion-check.sh`. Do not use the default Compose project for
+this milestone's development or destructive tests. The existing hosted version
+has not been replaced.
 
 The Astra-planned, Terra-built [workspace milestone](docs/WORKSPACES-MILESTONE.md)
 separates Broker earnings/agreements from Internal advisors/commercial terms/approvals.

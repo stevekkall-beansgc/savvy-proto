@@ -1,0 +1,14 @@
+{
+  "contract_version": "disclosure/v1", "synthetic": true, "id": "disclosure-lifecycle-source", "revision": 1,
+  "termination": {"effective_at":"2027-02-15T00:00:00Z","received_at":"2027-02-16T00:00:00Z","approved":true,"unused_days":14,"period_days":28},
+  "original_receipt": {"id":"disclosure-receipt", "amount_minor":100000,"effective_at":"2027-02-01T00:00:00Z","received_at":"2027-02-01T00:00:00Z"},
+  "refund": {"id":"disclosure-refund", "amount_minor":30000,"effective_at":"2027-02-18T00:00:00Z","received_at":"2027-02-18T00:00:00Z"},
+  "salary": {"id":"disclosure-salary-terms", "amount_minor":500000,"approved":true,"confirmed_paid_minor":0},
+  "bonus": {"id":"disclosure-bonus-event", "amount_minor":100000,"approved":true},
+  "loan": {"id":"disclosure-loan-terms", "amount_minor":1200000,"approved":true,"cash_advance_minor":1200000},
+  "forgiveness": {"id":"disclosure-forgiveness-event", "amount_minor":100000,"approved":true,"tax_treatment":"unknown"},
+  "equity": {"id":"disclosure-equity-award", "units":100,"award_date":"2027-02-01","value_minor":null,"reason":"No valuation evidence"},
+  "custodian_charge": {"id":"disclosure-custody-statement", "amount_minor":2500,"charger":"custodian","recipient":"custodian","payer":"disclosure-alder-household"},
+  "embedded_fund_cost": {"id":"disclosure-fund-cost", "amount_minor":null,"reason":"No complete monetary observation for the period"},
+  "recognition": {"treatment_id":"disclosure-treatment-v1","initial_deferred_minor":100000,"recognized_minor":50000,"deferred_before_credit_minor":50000,"correction_deferred_minor":0,"missing_outcome":"Await independent posting for the correction"}
+}

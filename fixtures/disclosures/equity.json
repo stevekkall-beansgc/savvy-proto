@@ -1,0 +1,11 @@
+{
+  "id": "disclosure-equity-award",
+  "units": 100,
+  "award_date": "2027-02-01",
+  "value_minor": null,
+  "reason": "No valuation evidence",
+  "contract_version": "disclosure/v1",
+  "synthetic": true,
+  "fixture_type": "equity",
+  "received_at": "2027-02-01T00:00:00Z"
+}

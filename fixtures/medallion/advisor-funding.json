@@ -1,0 +1,5 @@
+{
+  "synthetic": true,
+  "funding": {"id":"funding-advisor-1", "revision":1, "status":"confirmed", "payer":"firm-demo", "payee":"advisor-demo", "currency":"USD", "amount_minor":100000, "recorded_at":"2026-09-01T12:00:00Z"},
+  "coverage_right": {"id":"coverage-right-1", "revision":1, "status":"eligible", "funding_id":"funding-advisor-1", "payer":"firm-demo", "payee":"advisor-demo", "subject":"advisor-demo", "currency":"USD", "available_minor":100000, "recorded_at":"2026-09-01T12:01:00Z"}
+}

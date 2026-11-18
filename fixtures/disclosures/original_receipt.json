@@ -1,0 +1,13 @@
+{
+  "id": "disclosure-receipt",
+  "amount_minor": 100000,
+  "effective_at": "2027-02-01T00:00:00Z",
+  "received_at": "2027-02-01T00:00:00Z",
+  "contract_version": "disclosure/v1",
+  "synthetic": true,
+  "fixture_type": "original_receipt",
+  "payer": "disclosure-alder-household",
+  "payee": "firm-demo",
+  "currency": "USD",
+  "status": "confirmed"
+}

@@ -1,0 +1,9 @@
+{
+  "id": "disclosure-fund-cost",
+  "amount_minor": null,
+  "reason": "No complete monetary observation for the period",
+  "contract_version": "disclosure/v1",
+  "synthetic": true,
+  "fixture_type": "embedded_fund_cost",
+  "received_at": "2027-02-01T00:00:00Z"
+}

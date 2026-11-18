@@ -1,16 +1,20 @@
 #!/usr/bin/env python3
 """Read-only acceptance checks through the actual local product GraphQL boundary."""
 import json
+import os
 from pathlib import Path
 import urllib.request
 
 QUERY = "query($workspace:String!,$broker:ID){productWorkspace(workspace:$workspace,brokerId:$broker)}"
 ROOT = Path(__file__).resolve().parent.parent
+API_ORIGIN = os.environ.get("SAVVY_API_ORIGIN", "http://127.0.0.1:3101")
+if API_ORIGIN not in {"http://127.0.0.1:3101", "http://127.0.0.1:3102"}:
+    raise ValueError("Expected an allowlisted local synthetic API origin")
 
 
 def query(role, workspace, broker="broker-alex"):
     body = {"query": QUERY, "variables": {"workspace": workspace, "broker": broker}}
-    request = urllib.request.Request("http://127.0.0.1:3101/graphql", data=json.dumps(body).encode(),
+    request = urllib.request.Request(API_ORIGIN + "/graphql", data=json.dumps(body).encode(),
         headers={"Content-Type": "application/json", "X-Demo-Role": role})
     with urllib.request.urlopen(request, timeout=20) as response:
         return json.load(response)

@@ -1,5 +1,189 @@
 # Savvy execution handoff
 
+## Disclosure-informed milestone complete — 16 November 2026
+
+Read [the latest milestone](docs/DISCLOSURE-MILESTONE.md),
+[Astra's revised plan](docs/DISCLOSURE-IMPLEMENTATION-PLAN.md),
+[API contract](docs/DISCLOSURE-API-CONTRACT.md),
+[independent review](docs/DISCLOSURE-INDEPENDENT-REVIEW.md) and
+[bounded backend scope](docs/DISCLOSURE-BACKEND-NOTES.md).
+
+**Preview ON: http://127.0.0.1:3104/**, retained on Internal Finance. The existing
+clarity LaunchAgent now uses `SAVVY_BUILD_DIRECTORY=evidence-final` /
+`.next-evidence-final`; `.next-evidence` is an inactive rollback/build slot.
+Port3103/.next remains running and unchanged. Never build into the active slot.
+
+One engine, API policies, Savvy-owned native billing, mocked Campfire/CLM and
+real disclosure viewers are preserved. Household valuation/fee allocation,
+alternative treatments, termination credit/independent refund, typed compensation,
+cost completeness and supplied recognition are persisted in `disclosure_2027`.
+The original invoice is $1,000 ($600/$400); credit $500, refund $300, remaining $200.
+An unassigned 1.32% draft/current comparison ($1,000→$1,100) is available in the
+household Product work queue; no reviews, publication or assignment were made.
+Historical comparisons remain in lineage. No original economics were changed.
+
+Final full regression: 191 tests / 12,139 assertions; final lineage/audience
+subset: 16 tests / 233 assertions; reference suite: 49 tests; dbt: 23 models /
+69 tests (92 steps); new HTTP: 102 checks; existing HTTP: 66+50+695+21 checks;
+publication proof: 10 checks. Build, typecheck, eager loading and desktop/mobile
+acceptance pass. All original row hashes across 16 tables remain intact. Raw logs/JSON/screenshots
+are under `artifacts/disclosure`. No retained reset, external provider write,
+hosted deployment, GitHub push, release or new infrastructure spend occurred.
+This is a bounded fixture milestone; parent–child advisor hierarchy stays deferred.
+
+## Real Savvy disclosures — 16 November 2026
+
+Latest preview remains **http://127.0.0.1:3104/**, left on Agreements & terms.
+Read `docs/SAVVY-DISCLOSURES-REVIEW-2026-11-16.md` for research and current gaps.
+Generated sample agreement PDFs/PNGs/output copies and generator are removed.
+Real, unchanged March 2026 Savvy Advisors ADV/CRS PDFs are available under separate
+Savvy disclosures cards with paged view, original-PDF link and download options.
+Agreement viewer remains document/version matched with an empty registry until
+an actual agreement is supplied. No source disclosure is treated as an agreement
+or as authorization to change the demo's terms. Retained DB references/history stay.
+
+The clarity LaunchAgent now selects `SAVVY_BUILD_DIRECTORY=disclosures` and serves
+`.next-disclosures`. Earlier `.next-clarity` is a rollback build; `.next`/port3103
+remain untouched. Build into an inactive directory before activating a revision.
+Production build/typecheck, 66 document/statement HTTP checks and 50 scoped audience
+HTTP checks pass. All 33 public disclosure pages render; PDF hashes match the
+recorded originals and generated document URLs return 404. Browser confirmed first/
+last page controls, CRS navigation, download links, Escape/focus return and no
+horizontal overflow at the current viewport. Campfire/CLM remain mocked; no pricing,
+accounting, provider, database or hosted deployment changes were made.
+
+## Current clarity revision — 16 November 2026
+
+Read [the clarity milestone](docs/CLARITY-REVISION-2026-11-16.md).
+The latest preview is http://127.0.0.1:3104/ and was left open on the visual
+Internal Product workspace. It has agreement PDF view/download modals, dated
+invoice-style statement lines, and clickable Product/Finance workflows and
+recognition timelines. The single engine/API policy model and mocked Campfire/CLM
+remain intact; no hierarchy decision was introduced.
+
+The original port-3103 preview is still running. Automatic review rejected
+interrupting it, so a separate `.next-clarity` build and user LaunchAgent
+`com.beanlabs.savvy-clarity.preview` serve port 3104 using the existing API 3102.
+Build with `SAVVY_BUILD_DIRECTORY=clarity`; never overwrite a live build directory.
+Config/log copies are under `.runtime`, and the plist is in `~/Library/LaunchAgents`.
+Both services use only loopback interfaces and existing infrastructure.
+
+Full regression: 160 Ruby tests/2,077 assertions pass. New HTTP/PDF checks 35,
+existing three-audience HTTP 50, and medallion HTTP 695 pass. Production build,
+desktop/mobile, sample PDF rendering and local match/reversal checks pass.
+The original $600/$600/$400/$800 accounting values are unchanged. No retained
+database reset, provider write, hosted deployment, commit or release was made.
+
+## Three-audience implementation complete — 15 November 2026
+
+The user explicitly authorized Terra implementation, independent review and stress
+testing of [the revised plan](docs/THREE-AUDIENCE-PLAN.md), with the local preview
+left running. This supersedes the planning-only boundary in the preceding review.
+Read [the delivered milestone](docs/THREE-AUDIENCE-MILESTONE.md),
+[validation](docs/VALIDATION-THREE-AUDIENCE.md),
+[API contract](docs/THREE-AUDIENCE-API-CONTRACT.md) and
+[independent review](docs/THREE-AUDIENCE-FINAL-REVIEW.md).
+Implementation and independent stress/review are complete in this isolated
+worktree. The optimized preview is running under the existing LaunchAgent at
+http://127.0.0.1:3103/ and was left open on the broker overview. No release, push
+or replacement of the original hosted app occurred.
+Keep one engine, API-driven policies, Savvy billing objects and mocked Campfire/CLM.
+The parent–child advisor-account model remains deferred. Root coordinates test
+database resets and the port-3103 production build/restart to avoid competing jobs.
+
+Broker navigation is shared; Product has contextual changes and a request-based
+work queue; Finance has scoped inbound/outbound cash and supplied recognition
+evidence. Search and drilldowns are paged; overview reads a published projection.
+The new Finance sample occupies `finance_timing_2027`, separate from September
+and November records. Source originals and all prior row fingerprints are retained.
+An acceptance-only $1 allocation was created and reversed. A standard-share 82%
+draft/comparison remains unassigned and unpublished for review; it changes no
+current earnings. Demo identities remain explicitly simulated, not authentication.
+
+The planning status in the historical sections below is superseded by this
+completion record.
+
+## Current audience plan reviewed with Astra and Sol — 15 November 2026
+
+Read [Three audiences](docs/THREE-AUDIENCE-PLAN.md) before further development.
+It integrates the queued walkthrough feedback and defines Clients (brokers under
+both products), Internal Product and Internal Finance as distinct audience jobs.
+Finance requires focused cash matching PLUS recognition inputs, supplied schedules
+and independently reported posted outcomes. Recognition is planned, not delivered.
+Both reviewers found no blocking ambiguity in the integrated plan.
+
+This review changed planning documents only. No app, data, policy, permission,
+provider or runtime change was made. Keep the preview running. One engine,
+API-driven policy, Savvy billing ownership and mocked Campfire/CLM remain required.
+The advisor-account parent–child hierarchy remains explicitly deferred.
+Earlier screen exclusions are superseded only to allow this focused Finance scope.
+
+## New walkthrough feedback queued — 15 November 2026
+
+Read docs/UI-WALKTHROUGH-FEEDBACK-2026-11-15.md before further interface work.
+The user wants one affiliated-advisor/independent-RIA experience, book-level
+overview with client drilldown, removal of overlapping Case/experience selectors,
+record/service lineage rather than a scenario runner, and understandable
+terms/review/one-time-item journeys. Proposed navigation and workflows are queued
+for review; no application or runtime changes were made for this feedback.
+The user explicitly deferred the advisor-account parent–child hierarchy. Do not
+choose or implement parent ownership, billing rollup or inherited permissions.
+
+## Medallion implementation — 15 November 2026
+
+Preview availability fix: the frontend now runs as the user LaunchAgent
+`com.beanlabs.savvy-medallion.preview`, with RunAtLoad/KeepAlive and its plist in
+`~/Library/LaunchAgents`. Runtime logs/config copy are in `.runtime/preview.*`
+and `.runtime/com.beanlabs.savvy-medallion.preview.plist`. It no longer depends on
+the coding session's terminal. The isolated API now clears its own container-local
+PID file on startup; a stale bind-mounted server.pid had caused a restart loop.
+API restart and browser rendering were verified without resetting data. Stop this
+specific LaunchAgent before rebuilding Next.js; do not start a competing frontend.
+
+The user authorized Astra's final full-plan review, then Terra implementation,
+independent review and stress testing. That authorization supersedes the earlier
+planning-only phase below. Read docs/MEDALLION-MILESTONE.md,
+docs/VALIDATION-MEDALLION.md and docs/MEDALLION-API-CONTRACT.md for current status.
+
+Implementation lives in the isolated `codex/medallion-billing` worktree at
+`/Users/stephenkall/beans/labs/savvy-medallion-development`. Preview 3103/API 3102/DB
+55438 use the separate savvy-medallion project and volume. Original hosted code,
+services, policies and retained records are unchanged. Do not copy changes into
+the running original checkout or restart its services as a development shortcut.
+
+Both product cases and legacy evaluations use the shared typed graph interpreter.
+Policies/rates/assignments are versioned API data. Bronze retains original bytes
+and arrivals; Silver selects known source facts/terms; Gold retains exact results;
+dbt selects publications without pricing. One-time event policies, approvals,
+payment applications, reversals and sealed statement roll-forwards stay distinct.
+Campfire/CLM remain mocks and no execution or real provider write was added.
+
+The local data is fictional and this remains a bounded prototype. Use the new
+validation record for passed checks and explicit capability limits. No release,
+GitHub push or replacement of the existing hosted app is part of this milestone.
+
+## Next milestone planned with Astra — 15 November 2026
+
+Read docs/MEDALLION-PROTOTYPE-PLAN.md and docs/MEDALLION-SAMPLE-WALKTHROUGH.md.
+These are planning documents and independently checked target figures, not
+implemented pipeline behavior. User requested preparation, retaining the explicit
+no-code-change boundary. No runtime or policy changes were made for this plan.
+
+Hard requirement: one billing engine for both affiliated-RIA and independent-RIA
+custodial products. Commercial terms/formulas/assignments change via versioned API
+policies without product-specific code or redeployment. Bronze original evidence,
+Silver normalized facts and same-engine policy binding, Gold detailed results and
+separate hourly/daily rollups. dbt never becomes a second fee calculator. Add
+internal-only Architecture/Data pipeline explanation and two external value stories
+using the same outputs. Keep providers mocked and preserve existing history.
+
+Include one-time/ad hoc/post hoc charges, credits and compensation entitlements
+through a governed event register feeding the same medallion path and engine.
+Keep payment requests distinct from independently evidenced payment applications.
+Statements are derived unified views, not an alternative writable amount source.
+The walkthrough adds bonus/guarantee, payment and service-credit cases, with exact
+approval/knowledge/posting boundaries and preserved historical statement fixtures.
+
 ## Full device-hosted application — 15 November 2026
 
 Live: https://savvy-proto.beanshop.top/ behind owner-only Cloudflare Access.

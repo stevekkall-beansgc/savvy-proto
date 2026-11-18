@@ -1,0 +1,10 @@
+{
+  "id": "disclosure-salary-terms",
+  "amount_minor": 500000,
+  "approved": true,
+  "confirmed_paid_minor": 0,
+  "contract_version": "disclosure/v1",
+  "synthetic": true,
+  "fixture_type": "salary",
+  "received_at": "2027-02-01T00:00:00Z"
+}

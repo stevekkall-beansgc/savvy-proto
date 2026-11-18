@@ -1,0 +1,522 @@
+{
+  "signup": {
+    "date": "2026-09-11"
+  },
+  "cedar_01": {
+    "unit": "USD_minor",
+    "basis": "source_reported",
+    "value": "365000000",
+    "date": "2026-09-01",
+    "subject_id": "cedar",
+    "dimensions": {
+      "customer_type": "existing"
+    }
+  },
+  "cedar_02": {
+    "unit": "USD_minor",
+    "basis": "source_reported",
+    "value": "365000000",
+    "date": "2026-09-02",
+    "subject_id": "cedar",
+    "dimensions": {
+      "customer_type": "existing"
+    }
+  },
+  "cedar_03": {
+    "unit": "USD_minor",
+    "basis": "source_reported",
+    "value": "365000000",
+    "date": "2026-09-03",
+    "subject_id": "cedar",
+    "dimensions": {
+      "customer_type": "existing"
+    }
+  },
+  "cedar_04": {
+    "unit": "USD_minor",
+    "basis": "source_reported",
+    "value": "365000000",
+    "date": "2026-09-04",
+    "subject_id": "cedar",
+    "dimensions": {
+      "customer_type": "existing"
+    }
+  },
+  "cedar_05": {
+    "unit": "USD_minor",
+    "basis": "source_reported",
+    "value": "365000000",
+    "date": "2026-09-05",
+    "subject_id": "cedar",
+    "dimensions": {
+      "customer_type": "existing"
+    }
+  },
+  "cedar_06": {
+    "unit": "USD_minor",
+    "basis": "source_reported",
+    "value": "365000000",
+    "date": "2026-09-06",
+    "subject_id": "cedar",
+    "dimensions": {
+      "customer_type": "existing"
+    }
+  },
+  "cedar_07": {
+    "unit": "USD_minor",
+    "basis": "source_reported",
+    "value": "365000000",
+    "date": "2026-09-07",
+    "subject_id": "cedar",
+    "dimensions": {
+      "customer_type": "existing"
+    }
+  },
+  "cedar_08": {
+    "unit": "USD_minor",
+    "basis": "source_reported",
+    "value": "365000000",
+    "date": "2026-09-08",
+    "subject_id": "cedar",
+    "dimensions": {
+      "customer_type": "existing"
+    }
+  },
+  "cedar_09": {
+    "unit": "USD_minor",
+    "basis": "source_reported",
+    "value": "365000000",
+    "date": "2026-09-09",
+    "subject_id": "cedar",
+    "dimensions": {
+      "customer_type": "existing"
+    }
+  },
+  "cedar_10": {
+    "unit": "USD_minor",
+    "basis": "source_reported",
+    "value": "365000000",
+    "date": "2026-09-10",
+    "subject_id": "cedar",
+    "dimensions": {
+      "customer_type": "existing"
+    }
+  },
+  "cedar_11": {
+    "unit": "USD_minor",
+    "basis": "source_reported",
+    "value": "365000000",
+    "date": "2026-09-11",
+    "subject_id": "cedar",
+    "dimensions": {
+      "customer_type": "existing"
+    }
+  },
+  "cedar_12": {
+    "unit": "USD_minor",
+    "basis": "source_reported",
+    "value": "365000000",
+    "date": "2026-09-12",
+    "subject_id": "cedar",
+    "dimensions": {
+      "customer_type": "existing"
+    }
+  },
+  "cedar_13": {
+    "unit": "USD_minor",
+    "basis": "source_reported",
+    "value": "365000000",
+    "date": "2026-09-13",
+    "subject_id": "cedar",
+    "dimensions": {
+      "customer_type": "existing"
+    }
+  },
+  "cedar_14": {
+    "unit": "USD_minor",
+    "basis": "source_reported",
+    "value": "365000000",
+    "date": "2026-09-14",
+    "subject_id": "cedar",
+    "dimensions": {
+      "customer_type": "existing"
+    }
+  },
+  "cedar_15": {
+    "unit": "USD_minor",
+    "basis": "source_reported",
+    "value": "365000000",
+    "date": "2026-09-15",
+    "subject_id": "cedar",
+    "dimensions": {
+      "customer_type": "existing"
+    }
+  },
+  "cedar_16": {
+    "unit": "USD_minor",
+    "basis": "source_reported",
+    "value": "365000000",
+    "date": "2026-09-16",
+    "subject_id": "cedar",
+    "dimensions": {
+      "customer_type": "existing"
+    }
+  },
+  "cedar_17": {
+    "unit": "USD_minor",
+    "basis": "source_reported",
+    "value": "365000000",
+    "date": "2026-09-17",
+    "subject_id": "cedar",
+    "dimensions": {
+      "customer_type": "existing"
+    }
+  },
+  "cedar_18": {
+    "unit": "USD_minor",
+    "basis": "source_reported",
+    "value": "365000000",
+    "date": "2026-09-18",
+    "subject_id": "cedar",
+    "dimensions": {
+      "customer_type": "existing"
+    }
+  },
+  "cedar_19": {
+    "unit": "USD_minor",
+    "basis": "source_reported",
+    "value": "365000000",
+    "date": "2026-09-19",
+    "subject_id": "cedar",
+    "dimensions": {
+      "customer_type": "existing"
+    }
+  },
+  "cedar_20": {
+    "unit": "USD_minor",
+    "basis": "source_reported",
+    "value": "365000000",
+    "date": "2026-09-20",
+    "subject_id": "cedar",
+    "dimensions": {
+      "customer_type": "existing"
+    }
+  },
+  "cedar_21": {
+    "unit": "USD_minor",
+    "basis": "source_reported",
+    "value": "365000000",
+    "date": "2026-09-21",
+    "subject_id": "cedar",
+    "dimensions": {
+      "customer_type": "existing"
+    }
+  },
+  "cedar_22": {
+    "unit": "USD_minor",
+    "basis": "source_reported",
+    "value": "365000000",
+    "date": "2026-09-22",
+    "subject_id": "cedar",
+    "dimensions": {
+      "customer_type": "existing"
+    }
+  },
+  "cedar_23": {
+    "unit": "USD_minor",
+    "basis": "source_reported",
+    "value": "365000000",
+    "date": "2026-09-23",
+    "subject_id": "cedar",
+    "dimensions": {
+      "customer_type": "existing"
+    }
+  },
+  "cedar_24": {
+    "unit": "USD_minor",
+    "basis": "source_reported",
+    "value": "365000000",
+    "date": "2026-09-24",
+    "subject_id": "cedar",
+    "dimensions": {
+      "customer_type": "existing"
+    }
+  },
+  "cedar_25": {
+    "unit": "USD_minor",
+    "basis": "source_reported",
+    "value": "365000000",
+    "date": "2026-09-25",
+    "subject_id": "cedar",
+    "dimensions": {
+      "customer_type": "existing"
+    }
+  },
+  "cedar_26": {
+    "unit": "USD_minor",
+    "basis": "source_reported",
+    "value": "365000000",
+    "date": "2026-09-26",
+    "subject_id": "cedar",
+    "dimensions": {
+      "customer_type": "existing"
+    }
+  },
+  "cedar_27": {
+    "unit": "USD_minor",
+    "basis": "source_reported",
+    "value": "365000000",
+    "date": "2026-09-27",
+    "subject_id": "cedar",
+    "dimensions": {
+      "customer_type": "existing"
+    }
+  },
+  "cedar_28": {
+    "unit": "USD_minor",
+    "basis": "source_reported",
+    "value": "365000000",
+    "date": "2026-09-28",
+    "subject_id": "cedar",
+    "dimensions": {
+      "customer_type": "existing"
+    }
+  },
+  "cedar_29": {
+    "unit": "USD_minor",
+    "basis": "source_reported",
+    "value": "365000000",
+    "date": "2026-09-29",
+    "subject_id": "cedar",
+    "dimensions": {
+      "customer_type": "existing"
+    }
+  },
+  "cedar_30": {
+    "unit": "USD_minor",
+    "basis": "source_reported",
+    "value": "365000000",
+    "date": "2026-09-30",
+    "subject_id": "cedar",
+    "dimensions": {
+      "customer_type": "existing"
+    }
+  },
+  "maple_11": {
+    "unit": "USD_minor",
+    "basis": "source_reported",
+    "value": "182500000",
+    "date": "2026-09-11",
+    "subject_id": "maple",
+    "dimensions": {
+      "customer_type": "new_signup"
+    }
+  },
+  "maple_12": {
+    "unit": "USD_minor",
+    "basis": "source_reported",
+    "value": "182500000",
+    "date": "2026-09-12",
+    "subject_id": "maple",
+    "dimensions": {
+      "customer_type": "new_signup"
+    }
+  },
+  "maple_13": {
+    "unit": "USD_minor",
+    "basis": "source_reported",
+    "value": "182500000",
+    "date": "2026-09-13",
+    "subject_id": "maple",
+    "dimensions": {
+      "customer_type": "new_signup"
+    }
+  },
+  "maple_14": {
+    "unit": "USD_minor",
+    "basis": "source_reported",
+    "value": "182500000",
+    "date": "2026-09-14",
+    "subject_id": "maple",
+    "dimensions": {
+      "customer_type": "new_signup"
+    }
+  },
+  "maple_15": {
+    "unit": "USD_minor",
+    "basis": "source_reported",
+    "value": "182500000",
+    "date": "2026-09-15",
+    "subject_id": "maple",
+    "dimensions": {
+      "customer_type": "new_signup"
+    }
+  },
+  "maple_16": {
+    "unit": "USD_minor",
+    "basis": "source_reported",
+    "value": "182500000",
+    "date": "2026-09-16",
+    "subject_id": "maple",
+    "dimensions": {
+      "customer_type": "new_signup"
+    }
+  },
+  "maple_17": {
+    "unit": "USD_minor",
+    "basis": "source_reported",
+    "value": "182500000",
+    "date": "2026-09-17",
+    "subject_id": "maple",
+    "dimensions": {
+      "customer_type": "new_signup"
+    }
+  },
+  "maple_18": {
+    "unit": "USD_minor",
+    "basis": "source_reported",
+    "value": "182500000",
+    "date": "2026-09-18",
+    "subject_id": "maple",
+    "dimensions": {
+      "customer_type": "new_signup"
+    }
+  },
+  "maple_19": {
+    "unit": "USD_minor",
+    "basis": "source_reported",
+    "value": "182500000",
+    "date": "2026-09-19",
+    "subject_id": "maple",
+    "dimensions": {
+      "customer_type": "new_signup"
+    }
+  },
+  "maple_20": {
+    "unit": "USD_minor",
+    "basis": "source_reported",
+    "value": "182500000",
+    "date": "2026-09-20",
+    "subject_id": "maple",
+    "dimensions": {
+      "customer_type": "new_signup"
+    }
+  },
+  "maple_21": {
+    "unit": "USD_minor",
+    "basis": "source_reported",
+    "value": "182500000",
+    "date": "2026-09-21",
+    "subject_id": "maple",
+    "dimensions": {
+      "customer_type": "new_signup"
+    }
+  },
+  "maple_22": {
+    "unit": "USD_minor",
+    "basis": "source_reported",
+    "value": "182500000",
+    "date": "2026-09-22",
+    "subject_id": "maple",
+    "dimensions": {
+      "customer_type": "new_signup"
+    }
+  },
+  "maple_23": {
+    "unit": "USD_minor",
+    "basis": "source_reported",
+    "value": "182500000",
+    "date": "2026-09-23",
+    "subject_id": "maple",
+    "dimensions": {
+      "customer_type": "new_signup"
+    }
+  },
+  "maple_24": {
+    "unit": "USD_minor",
+    "basis": "source_reported",
+    "value": "182500000",
+    "date": "2026-09-24",
+    "subject_id": "maple",
+    "dimensions": {
+      "customer_type": "new_signup"
+    }
+  },
+  "maple_25": {
+    "unit": "USD_minor",
+    "basis": "source_reported",
+    "value": "182500000",
+    "date": "2026-09-25",
+    "subject_id": "maple",
+    "dimensions": {
+      "customer_type": "new_signup"
+    }
+  },
+  "maple_26": {
+    "unit": "USD_minor",
+    "basis": "source_reported",
+    "value": "182500000",
+    "date": "2026-09-26",
+    "subject_id": "maple",
+    "dimensions": {
+      "customer_type": "new_signup"
+    }
+  },
+  "maple_27": {
+    "unit": "USD_minor",
+    "basis": "source_reported",
+    "value": "182500000",
+    "date": "2026-09-27",
+    "subject_id": "maple",
+    "dimensions": {
+      "customer_type": "new_signup"
+    }
+  },
+  "maple_28": {
+    "unit": "USD_minor",
+    "basis": "source_reported",
+    "value": "182500000",
+    "date": "2026-09-28",
+    "subject_id": "maple",
+    "dimensions": {
+      "customer_type": "new_signup"
+    }
+  },
+  "maple_29": {
+    "unit": "USD_minor",
+    "basis": "source_reported",
+    "value": "182500000",
+    "date": "2026-09-29",
+    "subject_id": "maple",
+    "dimensions": {
+      "customer_type": "new_signup"
+    }
+  },
+  "maple_30": {
+    "unit": "USD_minor",
+    "basis": "source_reported",
+    "value": "182500000",
+    "date": "2026-09-30",
+    "subject_id": "maple",
+    "dimensions": {
+      "customer_type": "new_signup"
+    }
+  },
+  "funded_coverage": {
+    "unit": "USD_minor",
+    "basis": "assessed",
+    "value": "100000",
+    "status": "confirmed",
+    "direction": "firm_to_advisor",
+    "right": "eligible",
+    "funding": "evidenced"
+  },
+  "payout_request": {
+    "unit": "USD_minor",
+    "basis": "source_reported",
+    "value": "50000",
+    "status": "pending",
+    "direction": "firm_to_advisor",
+    "recorded_at": "2026-10-03T00:00:00Z"
+  }
+}

@@ -4,7 +4,7 @@ savvy_synthetic:
     demo:
       type: postgres
       host: 127.0.0.1
-      port: 55437
+      port: "{{ env_var('SAVVY_ANALYTICS_PORT', '55437') | int }}"
       user: savvy_analytics
       password: ''
       dbname: advisor_economics_synthetic

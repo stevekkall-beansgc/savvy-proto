@@ -1,0 +1,537 @@
+{
+  "version": "extra-50-v1",
+  "nodes": [
+    {
+      "id": "fixed",
+      "op": "literal",
+      "unit": "USD_minor",
+      "basis": "assessed",
+      "role": "intermediate",
+      "value": "20000",
+      "currency": "USD"
+    },
+    {
+      "id": "accounts",
+      "op": "fact",
+      "unit": "scalar",
+      "basis": "scalar",
+      "role": "intermediate",
+      "key": "account_months",
+      "requires": {
+        "measurement": "eligible_account_months",
+        "subject_id": "ria-harbor"
+      }
+    },
+    {
+      "id": "price",
+      "op": "literal",
+      "unit": "USD_minor",
+      "basis": "assessed",
+      "role": "intermediate",
+      "value": "200",
+      "currency": "USD"
+    },
+    {
+      "id": "cap",
+      "op": "literal",
+      "unit": "USD_minor",
+      "basis": "assessed",
+      "role": "intermediate",
+      "value": "25000",
+      "currency": "USD"
+    },
+    {
+      "id": "rebate_rate",
+      "op": "fact",
+      "unit": "scalar",
+      "basis": "scalar",
+      "role": "intermediate",
+      "key": "rate_rebate_rate",
+      "requires": {
+        "component": "receipt_rebate",
+        "broker_id": "ria-harbor"
+      }
+    },
+    {
+      "id": "receipt",
+      "op": "fact",
+      "unit": "USD_minor",
+      "basis": "source_reported",
+      "role": "intermediate",
+      "key": "receipt",
+      "requires": {
+        "status": "confirmed",
+        "direction": "network_to_savvy",
+        "allocated_to": "harbor"
+      },
+      "currency": "USD"
+    },
+    {
+      "id": "usage",
+      "op": "multiply",
+      "unit": "USD_minor",
+      "basis": "assessed",
+      "role": "intermediate",
+      "left": "accounts",
+      "right": "price",
+      "currency": "USD"
+    },
+    {
+      "id": "uncapped",
+      "op": "add",
+      "unit": "USD_minor",
+      "basis": "assessed",
+      "role": "intermediate",
+      "inputs": [
+        "fixed",
+        "usage"
+      ],
+      "currency": "USD"
+    },
+    {
+      "id": "charge",
+      "op": "min",
+      "unit": "USD_minor",
+      "basis": "assessed",
+      "role": "terminal",
+      "inputs": [
+        "uncapped",
+        "cap"
+      ],
+      "currency": "USD",
+      "payer": "ria-harbor",
+      "payee": "firm-demo",
+      "subject": "ria-harbor",
+      "output_class": "obligation"
+    },
+    {
+      "id": "rebate_exact",
+      "op": "accrue",
+      "unit": "USD_minor",
+      "basis": "exact_accrual",
+      "role": "intermediate",
+      "left": "receipt",
+      "right": "rebate_rate",
+      "currency": "USD"
+    },
+    {
+      "id": "rebate",
+      "op": "assess",
+      "unit": "USD_minor",
+      "basis": "assessed",
+      "role": "terminal",
+      "input": "rebate_exact",
+      "rounding": "half_up",
+      "currency": "USD",
+      "payer": "firm-demo",
+      "payee": "ria-harbor",
+      "subject": "ria-harbor",
+      "output_class": "obligation"
+    },
+    {
+      "id": "net",
+      "op": "net",
+      "unit": "USD_minor",
+      "basis": "assessed",
+      "role": "summary",
+      "left": "gross_with_extra",
+      "right": "rebate",
+      "currency": "USD",
+      "authority_fact": "netting_authority",
+      "payer": "ria-harbor",
+      "payee": "firm-demo",
+      "output_class": "net_balance"
+    },
+    {
+      "id": "days",
+      "op": "literal",
+      "unit": "scalar",
+      "basis": "scalar",
+      "role": "intermediate",
+      "value": "30/365"
+    },
+    {
+      "id": "cash_ref",
+      "op": "fact",
+      "unit": "scalar",
+      "basis": "scalar",
+      "role": "intermediate",
+      "key": "rate_cash_ref"
+    },
+    {
+      "id": "cash_investor_rate",
+      "op": "fact",
+      "unit": "scalar",
+      "basis": "scalar",
+      "role": "intermediate",
+      "key": "rate_cash_investor_rate"
+    },
+    {
+      "id": "margin_rate",
+      "op": "fact",
+      "unit": "scalar",
+      "basis": "scalar",
+      "role": "intermediate",
+      "key": "rate_margin_rate"
+    },
+    {
+      "id": "margin_funding_rate",
+      "op": "fact",
+      "unit": "scalar",
+      "basis": "scalar",
+      "role": "intermediate",
+      "key": "rate_margin_funding_rate"
+    },
+    {
+      "id": "savvy_share",
+      "op": "fact",
+      "unit": "scalar",
+      "basis": "scalar",
+      "role": "intermediate",
+      "key": "rate_savvy_share",
+      "requires": {
+        "component": "network_savvy_allocation",
+        "broker_id": "ria-harbor"
+      }
+    },
+    {
+      "id": "network_share",
+      "op": "fact",
+      "unit": "scalar",
+      "basis": "scalar",
+      "role": "intermediate",
+      "key": "rate_network_share",
+      "requires": {
+        "component": "network_other_allocation",
+        "broker_id": "ria-harbor"
+      }
+    },
+    {
+      "id": "cash_balance",
+      "op": "fact",
+      "unit": "USD_minor",
+      "basis": "source_reported",
+      "role": "intermediate",
+      "key": "cash_balance",
+      "currency": "USD"
+    },
+    {
+      "id": "cash_annual",
+      "op": "accrue",
+      "unit": "USD_minor",
+      "basis": "exact_accrual",
+      "role": "intermediate",
+      "left": "cash_balance",
+      "right": "cash_ref",
+      "currency": "USD"
+    },
+    {
+      "id": "cash_exact",
+      "op": "multiply",
+      "unit": "USD_minor",
+      "basis": "exact_accrual",
+      "role": "intermediate",
+      "left": "cash_annual",
+      "right": "days",
+      "currency": "USD"
+    },
+    {
+      "id": "cash_assessed",
+      "op": "assess",
+      "unit": "USD_minor",
+      "basis": "assessed",
+      "role": "intermediate",
+      "input": "cash_exact",
+      "rounding": "half_up",
+      "currency": "USD"
+    },
+    {
+      "id": "cash_investor_annual",
+      "op": "accrue",
+      "unit": "USD_minor",
+      "basis": "exact_accrual",
+      "role": "intermediate",
+      "left": "cash_balance",
+      "right": "cash_investor_rate",
+      "currency": "USD"
+    },
+    {
+      "id": "cash_investor_exact",
+      "op": "multiply",
+      "unit": "USD_minor",
+      "basis": "exact_accrual",
+      "role": "intermediate",
+      "left": "cash_investor_annual",
+      "right": "days",
+      "currency": "USD"
+    },
+    {
+      "id": "cash_investor_assessed",
+      "op": "assess",
+      "unit": "USD_minor",
+      "basis": "assessed",
+      "role": "intermediate",
+      "input": "cash_investor_exact",
+      "rounding": "half_up",
+      "currency": "USD"
+    },
+    {
+      "id": "margin_balance",
+      "op": "fact",
+      "unit": "USD_minor",
+      "basis": "source_reported",
+      "role": "intermediate",
+      "key": "margin_balance",
+      "currency": "USD"
+    },
+    {
+      "id": "margin_annual",
+      "op": "accrue",
+      "unit": "USD_minor",
+      "basis": "exact_accrual",
+      "role": "intermediate",
+      "left": "margin_balance",
+      "right": "margin_rate",
+      "currency": "USD"
+    },
+    {
+      "id": "margin_exact",
+      "op": "multiply",
+      "unit": "USD_minor",
+      "basis": "exact_accrual",
+      "role": "intermediate",
+      "left": "margin_annual",
+      "right": "days",
+      "currency": "USD"
+    },
+    {
+      "id": "margin_assessed",
+      "op": "assess",
+      "unit": "USD_minor",
+      "basis": "assessed",
+      "role": "intermediate",
+      "input": "margin_exact",
+      "rounding": "half_up",
+      "currency": "USD"
+    },
+    {
+      "id": "margin_funding_annual",
+      "op": "accrue",
+      "unit": "USD_minor",
+      "basis": "exact_accrual",
+      "role": "intermediate",
+      "left": "margin_balance",
+      "right": "margin_funding_rate",
+      "currency": "USD"
+    },
+    {
+      "id": "margin_funding_exact",
+      "op": "multiply",
+      "unit": "USD_minor",
+      "basis": "exact_accrual",
+      "role": "intermediate",
+      "left": "margin_funding_annual",
+      "right": "days",
+      "currency": "USD"
+    },
+    {
+      "id": "margin_funding_assessed",
+      "op": "assess",
+      "unit": "USD_minor",
+      "basis": "assessed",
+      "role": "intermediate",
+      "input": "margin_funding_exact",
+      "rounding": "half_up",
+      "currency": "USD"
+    },
+    {
+      "id": "cash_spread",
+      "op": "subtract",
+      "unit": "USD_minor",
+      "basis": "exact_accrual",
+      "role": "intermediate",
+      "left": "cash_exact",
+      "right": "cash_investor_exact",
+      "currency": "USD"
+    },
+    {
+      "id": "cash_savvy_exact",
+      "op": "multiply",
+      "unit": "USD_minor",
+      "basis": "exact_accrual",
+      "role": "intermediate",
+      "left": "cash_spread",
+      "right": "savvy_share",
+      "currency": "USD"
+    },
+    {
+      "id": "cash_network_exact",
+      "op": "multiply",
+      "unit": "USD_minor",
+      "basis": "exact_accrual",
+      "role": "intermediate",
+      "left": "cash_spread",
+      "right": "network_share",
+      "currency": "USD"
+    },
+    {
+      "id": "cash_savvy",
+      "op": "assess",
+      "unit": "USD_minor",
+      "basis": "assessed",
+      "role": "intermediate",
+      "input": "cash_savvy_exact",
+      "rounding": "half_up",
+      "currency": "USD"
+    },
+    {
+      "id": "cash_network",
+      "op": "assess",
+      "unit": "USD_minor",
+      "basis": "assessed",
+      "role": "intermediate",
+      "input": "cash_network_exact",
+      "rounding": "half_up",
+      "currency": "USD"
+    },
+    {
+      "id": "margin_savvy_exact",
+      "op": "subtract",
+      "unit": "USD_minor",
+      "basis": "exact_accrual",
+      "role": "intermediate",
+      "left": "margin_exact",
+      "right": "margin_funding_exact",
+      "currency": "USD"
+    },
+    {
+      "id": "margin_savvy",
+      "op": "assess",
+      "unit": "USD_minor",
+      "basis": "assessed",
+      "role": "intermediate",
+      "input": "margin_savvy_exact",
+      "rounding": "half_up",
+      "currency": "USD"
+    },
+    {
+      "id": "lending_gross_report",
+      "op": "fact",
+      "unit": "USD_minor",
+      "basis": "source_reported",
+      "role": "terminal",
+      "key": "lending_gross_report",
+      "currency": "USD",
+      "output_class": "evidence"
+    },
+    {
+      "id": "lending_investor_report",
+      "op": "fact",
+      "unit": "USD_minor",
+      "basis": "source_reported",
+      "role": "terminal",
+      "key": "lending_investor_report",
+      "currency": "USD",
+      "output_class": "evidence"
+    },
+    {
+      "id": "lending_network_report",
+      "op": "fact",
+      "unit": "USD_minor",
+      "basis": "source_reported",
+      "role": "terminal",
+      "key": "lending_network_report",
+      "currency": "USD",
+      "output_class": "evidence"
+    },
+    {
+      "id": "lending_savvy_report",
+      "op": "fact",
+      "unit": "USD_minor",
+      "basis": "source_reported",
+      "role": "terminal",
+      "key": "lending_savvy_report",
+      "currency": "USD",
+      "output_class": "evidence"
+    },
+    {
+      "id": "reported_cash_savvy",
+      "op": "fact",
+      "unit": "USD_minor",
+      "basis": "source_reported",
+      "role": "terminal",
+      "key": "reported_cash_savvy",
+      "currency": "USD",
+      "output_class": "evidence"
+    },
+    {
+      "id": "reported_margin_savvy",
+      "op": "fact",
+      "unit": "USD_minor",
+      "basis": "source_reported",
+      "role": "terminal",
+      "key": "reported_margin_savvy",
+      "currency": "USD",
+      "output_class": "evidence"
+    },
+    {
+      "id": "reported_lending_savvy",
+      "op": "fact",
+      "unit": "USD_minor",
+      "basis": "source_reported",
+      "role": "terminal",
+      "key": "reported_lending_savvy",
+      "currency": "USD",
+      "output_class": "evidence"
+    },
+    {
+      "id": "extra_monthly",
+      "op": "literal",
+      "unit": "USD_minor",
+      "basis": "assessed",
+      "role": "terminal",
+      "value": "5000",
+      "currency": "USD",
+      "output_class": "obligation",
+      "payer": "ria-harbor",
+      "payee": "firm-demo"
+    },
+    {
+      "id": "gross_with_extra",
+      "op": "add",
+      "unit": "USD_minor",
+      "basis": "assessed",
+      "role": "intermediate",
+      "inputs": [
+        "charge",
+        "extra_monthly"
+      ],
+      "currency": "USD",
+      "payer": "ria-harbor",
+      "payee": "firm-demo"
+    }
+  ],
+  "rate_rows": {
+    "rate_rebate_rate": {
+      "unit": "scalar",
+      "basis": "scalar",
+      "value": "2/5",
+      "component": "receipt_rebate",
+      "broker_id": "ria-harbor"
+    },
+    "rate_savvy_share": {
+      "unit": "scalar",
+      "basis": "scalar",
+      "value": "3/5",
+      "component": "network_savvy_allocation",
+      "broker_id": "ria-harbor"
+    },
+    "rate_network_share": {
+      "unit": "scalar",
+      "basis": "scalar",
+      "value": "2/5",
+      "component": "network_other_allocation",
+      "broker_id": "ria-harbor"
+    }
+  }
+}

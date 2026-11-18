@@ -16,6 +16,10 @@ __pycache__/
 artifacts/
 node_modules/
 .next/
+.next-clarity/
+.next-disclosures/
+.next-evidence/
+.next-evidence-final/
 .runtime/
 .bundle/
 log/

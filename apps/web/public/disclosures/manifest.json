@@ -1,0 +1,20 @@
+[
+  {
+    "slug": "savvy-form-adv-2026-03-31",
+    "name": "Form ADV Part 2A",
+    "pages": 31,
+    "edition": "2026-03-31",
+    "source": "https://info.savvywealth.com/hubfs/Form%20ADV%20%2B%20CRS/Savvy-Advisors-ADV.pdf",
+    "retrieved_on": "2026-11-16",
+    "sha256": "2ab73362518a2ddb14e8cf6e7b7cc30d8261b4c881e642cf97b19bf2ac7d761a"
+  },
+  {
+    "slug": "savvy-form-crs-2026-03",
+    "name": "Form CRS",
+    "pages": 2,
+    "edition": "2026-03",
+    "source": "https://info.savvywealth.com/hubfs/Form%20ADV%20%2B%20CRS/Savvy-Advisors-CRS.pdf",
+    "retrieved_on": "2026-11-16",
+    "sha256": "9112ebe3ea6a8f2fe8e0548289a7c28d139255c4d08d70975f3936866de2b7d0"
+  }
+]

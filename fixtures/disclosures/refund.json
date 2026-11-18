@@ -1,0 +1,13 @@
+{
+  "id": "disclosure-refund",
+  "amount_minor": 30000,
+  "effective_at": "2027-02-18T00:00:00Z",
+  "received_at": "2027-02-18T00:00:00Z",
+  "contract_version": "disclosure/v1",
+  "synthetic": true,
+  "fixture_type": "refund",
+  "payer": "firm-demo",
+  "payee": "disclosure-alder-household",
+  "currency": "USD",
+  "status": "confirmed"
+}

@@ -1,4 +1,21 @@
-# Local synthetic API 0.5.0
+# Local synthetic API 0.6.0
+
+## Disclosure-informed addition — 16 November 2026
+
+The additive `disclosure/v1` workspace and governed policy actions are documented
+in [the disclosure API contract](../docs/DISCLOSURE-API-CONTRACT.md).
+They retain one shared interpreter, canonical Savvy billing objects, exact evidence
+and separate mocked accounting/CLM responsibilities. The engine is
+`economics-ruby/0.5.0`, graph language `0.4`, with generic exact `allocate_by`.
+No public-disclosure publication establishes contractual authority.
+
+The isolated Medallion additions, current command input fields, role and scenario
+boundaries, evidence clocks and fixture reproduction are documented in the
+[Medallion API contract](../docs/MEDALLION-API-CONTRACT.md). The exported SDL
+remains authoritative for GraphQL names and types. Both products and the retained
+legacy calculation requests use the shared Ruby interpreter; the Python reference
+is an offline historical reference, not a second runtime financial authority.
+
 
 ## Current product additions
 
@@ -35,9 +52,9 @@ per request, at most 1 MiB and 50 KB of query text. Maximum depth 10, complexity
 150. Same-origin frontend proxy at `http://127.0.0.1:3100/api/graphql` points only
 to the local Rails service. No caller-supplied URL or provider credential.
 
-`X-Demo-Role`: operator, finance, legal, advisor or auditor. Roles are selectable
+`X-Demo-Role`: operator, finance, legal, advisor, ria or auditor. Roles are selectable
 fictional identities; this is NOT authentication. Tenant/entity scope is fixed
-by the server. The advisor identity is limited to Alex's book. These controls
+by the server. The advisor identity is limited to Alex's book; the RIA identity is restricted to its shared Medallion cases and cannot access retained legacy operations. These controls
 are a tested local simulation, not production-grade authorization.
 
 Read operations: `workbench`, `brokerBook(brokerId, runId?)`, `collections`,
@@ -81,9 +98,9 @@ specified scope. Dates are half-open; timezone America/New_York, service-date
 rate/assignment. Exact weighted shares are rounded half-up once per source fee
 line, then distributed by largest remainder with stable broker ID ties.
 
-The first Ruby engine consumes fixed eligible fee observations. The retained
-Python reference handles daily AUM-based fees; they are separate financial paths.
-Neither proves actual company rules. Broader typed GraphQL domain coverage,
+The retained November fixture consumes fixed eligible fee observations through the
+shared Ruby interpreter; the Python daily-AUM reference remains offline and
+historical. Neither proves actual company rules. Broader typed GraphQL domain coverage,
 pagination, bitemporal warehouse publication and the rest of the plan remain
 future work; the JSON payload fields are the explicit initial contract.
 

@@ -25,6 +25,28 @@ COMMENT ON EXTENSION btree_gist IS 'support for indexing common datatypes in GiS
 
 
 --
+-- Name: commercial_rates_append_only(); Type: FUNCTION; Schema: public; Owner: -
+--
+
+CREATE FUNCTION public.commercial_rates_append_only() RETURNS trigger
+    LANGUAGE plpgsql
+    AS $$
+BEGIN RAISE EXCEPTION 'commercial rate history is append-only'; END;
+$$;
+
+
+--
+-- Name: medallion_append_only(); Type: FUNCTION; Schema: public; Owner: -
+--
+
+CREATE FUNCTION public.medallion_append_only() RETURNS trigger
+    LANGUAGE plpgsql
+    AS $$
+BEGIN RAISE EXCEPTION 'medallion evidence is append-only'; END;
+$$;
+
+
+--
 -- Name: validate_synthetic_billing_conservation(); Type: FUNCTION; Schema: public; Owner: -
 --
 
@@ -45,25 +67,6 @@ END $$;
 SET default_tablespace = '';
 
 SET default_table_access_method = heap;
-
---
--- Name: demo_records; Type: TABLE; Schema: public; Owner: -
---
-
-CREATE TABLE public.demo_records (
-    id bigint NOT NULL,
-    tenant_id character varying NOT NULL,
-    entity_id character varying NOT NULL,
-    kind character varying NOT NULL,
-    external_id character varying NOT NULL,
-    revision integer NOT NULL,
-    synthetic boolean DEFAULT true NOT NULL,
-    payload_hash character varying NOT NULL,
-    payload jsonb NOT NULL,
-    recorded_at timestamp(6) without time zone NOT NULL,
-    CONSTRAINT synthetic_only_records CHECK (((synthetic = true) AND (revision > 0)))
-);
-
 
 --
 -- Name: ar_internal_metadata; Type: TABLE; Schema: public; Owner: -
@@ -285,7 +288,7 @@ CREATE TABLE public.billing_obligations (
     amount_minor bigint NOT NULL,
     service_period_start date NOT NULL,
     service_period_end date NOT NULL,
-    CONSTRAINT billing_obligation_values CHECK (((amount_minor > 0) AND ((currency)::text = 'USD'::text) AND (revision > 0) AND (source_revision > 0) AND (service_period_start < service_period_end) AND ((route)::text = ANY ((ARRAY['invoice'::character varying, 'custodial'::character varying])::text[]))))
+    CONSTRAINT billing_obligation_values CHECK (((amount_minor > 0) AND ((currency)::text = 'USD'::text) AND (revision > 0) AND (source_revision > 0) AND (service_period_start < service_period_end) AND ((route)::text = ANY (ARRAY[('invoice'::character varying)::text, ('custodial'::character varying)::text]))))
 );
 
 
@@ -330,7 +333,11 @@ CREATE TABLE public.commercial_rates (
     signup_within_days integer,
     priority integer,
     recorded_at timestamp(6) without time zone NOT NULL,
-    CONSTRAINT valid_commercial_rate CHECK ((((component)::text = 'advisor_share'::text) AND ((kind)::text = ANY ((ARRAY['standard'::character varying, 'promotion'::character varying, 'targeted_promotion'::character varying])::text[])) AND (numerator >= 0) AND ((denominator >= 1) AND (denominator <= 1000000)) AND (numerator <= denominator) AND ((ends_on IS NULL) OR (starts_on < ends_on)) AND ((signup_within_days IS NULL) OR ((signup_within_days >= 1) AND (signup_within_days <= 365))) AND (jsonb_typeof(selector) = 'object'::text)))
+    unit character varying DEFAULT 'ratio'::character varying NOT NULL,
+    payer_id character varying,
+    payee_id character varying,
+    commercial_group character varying,
+    CONSTRAINT valid_commercial_rate_v2 CHECK (((length((component)::text) > 0) AND ((kind)::text = ANY (ARRAY[('standard'::character varying)::text, ('promotion'::character varying)::text, ('targeted_promotion'::character varying)::text])) AND (numerator >= 0) AND ((denominator >= 1) AND (denominator <= 1000000)) AND (((unit)::text <> 'ratio'::text) OR (numerator <= denominator)) AND ((unit)::text = ANY (ARRAY[('ratio'::character varying)::text, ('USD_minor'::character varying)::text, ('unit_price'::character varying)::text])) AND ((ends_on IS NULL) OR (starts_on < ends_on)) AND ((signup_within_days IS NULL) OR ((signup_within_days >= 1) AND (signup_within_days <= 365))) AND (jsonb_typeof(selector) = 'object'::text)))
 );
 
 
@@ -504,6 +511,25 @@ ALTER SEQUENCE public.demo_operations_id_seq OWNED BY public.demo_operations.id;
 
 
 --
+-- Name: demo_records; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.demo_records (
+    id bigint NOT NULL,
+    tenant_id character varying NOT NULL,
+    entity_id character varying NOT NULL,
+    kind character varying NOT NULL,
+    external_id character varying NOT NULL,
+    revision integer NOT NULL,
+    synthetic boolean DEFAULT true NOT NULL,
+    payload_hash character varying NOT NULL,
+    payload jsonb NOT NULL,
+    recorded_at timestamp(6) without time zone NOT NULL,
+    CONSTRAINT synthetic_only_records CHECK (((synthetic = true) AND (revision > 0)))
+);
+
+
+--
 -- Name: demo_records_id_seq; Type: SEQUENCE; Schema: public; Owner: -
 --
 
@@ -552,6 +578,59 @@ CREATE SEQUENCE public.demo_scopes_id_seq
 --
 
 ALTER SEQUENCE public.demo_scopes_id_seq OWNED BY public.demo_scopes.id;
+
+
+--
+-- Name: medallion_evidence; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.medallion_evidence (
+    id bigint NOT NULL,
+    tenant_id character varying NOT NULL,
+    entity_id character varying NOT NULL,
+    case_id character varying NOT NULL,
+    kind character varying NOT NULL,
+    external_id character varying NOT NULL,
+    revision integer DEFAULT 1 NOT NULL,
+    status character varying NOT NULL,
+    subject_id character varying,
+    parent_id bigint,
+    payload_hash character varying NOT NULL,
+    payload jsonb DEFAULT '{}'::jsonb NOT NULL,
+    original_bytes bytea,
+    recorded_at timestamp(6) without time zone NOT NULL,
+    scenario_id character varying DEFAULT 'baseline'::character varying NOT NULL,
+    product_id character varying,
+    starts_on date,
+    ends_on date,
+    schedule_version integer DEFAULT 1 NOT NULL,
+    CONSTRAINT medallion_assignment_interval CHECK ((((kind)::text <> 'assignment'::text) OR ((subject_id IS NOT NULL) AND (product_id IS NOT NULL) AND (starts_on IS NOT NULL) AND ((ends_on IS NULL) OR (starts_on < ends_on))))),
+    CONSTRAINT medallion_evidence_kind CHECK (((kind)::text = ANY (ARRAY[('artifact'::character varying)::text, ('delivery'::character varying)::text, ('fact'::character varying)::text, ('policy'::character varying)::text, ('assignment'::character varying)::text, ('comparison'::character varying)::text, ('review'::character varying)::text, ('publication'::character varying)::text, ('event'::character varying)::text, ('event_review'::character varying)::text, ('payment'::character varying)::text, ('application'::character varying)::text, ('application_reversal'::character varying)::text, ('run'::character varying)::text, ('statement'::character varying)::text, ('period_lock'::character varying)::text, ('funding'::character varying)::text, ('coverage_right'::character varying)::text, ('receipt'::character varying)::text, ('receipt_allocation'::character varying)::text, ('netting_authority'::character varying)::text, ('receipt_reversal'::character varying)::text, ('funding_reversal'::character varying)::text, ('adjustment_intent'::character varying)::text]))),
+    CONSTRAINT medallion_evidence_status CHECK (((status)::text = ANY (ARRAY[('retained'::character varying)::text, ('accepted'::character varying)::text, ('draft'::character varying)::text, ('approved'::character varying)::text, ('rejected'::character varying)::text, ('published'::character varying)::text, ('confirmed'::character varying)::text, ('pending'::character varying)::text, ('reversed'::character varying)::text, ('completed'::character varying)::text, ('blocked'::character varying)::text, ('sealed'::character varying)::text, ('locked'::character varying)::text]))),
+    CONSTRAINT medallion_original_bytes CHECK (((((kind)::text = 'artifact'::text) AND (original_bytes IS NOT NULL)) OR (((kind)::text <> 'artifact'::text) AND (original_bytes IS NULL)))),
+    CONSTRAINT medallion_scenario_body CHECK ((((scenario_id)::text ~ '^[a-zA-Z0-9_-]{1,100}$'::text) AND (jsonb_typeof(payload) = 'object'::text))),
+    CONSTRAINT medallion_schedule_version CHECK ((schedule_version > 0)),
+    CONSTRAINT medallion_scope_contract CHECK (((revision > 0) AND (length((payload_hash)::text) = 64) AND ((case_id)::text = ANY (ARRAY[('advisor'::character varying)::text, ('ria'::character varying)::text]))))
+);
+
+
+--
+-- Name: medallion_evidence_id_seq; Type: SEQUENCE; Schema: public; Owner: -
+--
+
+CREATE SEQUENCE public.medallion_evidence_id_seq
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+--
+-- Name: medallion_evidence_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: -
+--
+
+ALTER SEQUENCE public.medallion_evidence_id_seq OWNED BY public.medallion_evidence.id;
 
 
 --
@@ -655,6 +734,13 @@ ALTER TABLE ONLY public.demo_scopes ALTER COLUMN id SET DEFAULT nextval('public.
 
 
 --
+-- Name: medallion_evidence id; Type: DEFAULT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.medallion_evidence ALTER COLUMN id SET DEFAULT nextval('public.medallion_evidence_id_seq'::regclass);
+
+
+--
 -- Name: ar_internal_metadata ar_internal_metadata_pkey; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -715,7 +801,7 @@ ALTER TABLE ONLY public.billing_obligations
 --
 
 ALTER TABLE ONLY public.commercial_rates
-    ADD CONSTRAINT commercial_rate_no_overlap EXCLUDE USING gist (tenant_id WITH =, entity_id WITH =, configuration_id WITH =, broker_id WITH =, component WITH =, kind WITH =, daterange(starts_on, ends_on, '[)'::text) WITH &&) WHERE (((kind)::text = ANY ((ARRAY['standard'::character varying, 'promotion'::character varying])::text[])));
+    ADD CONSTRAINT commercial_rate_no_overlap EXCLUDE USING gist (tenant_id WITH =, entity_id WITH =, configuration_id WITH =, broker_id WITH =, component WITH =, kind WITH =, daterange(starts_on, ends_on, '[)'::text) WITH &&) WHERE (((kind)::text = ANY (ARRAY[('standard'::character varying)::text, ('promotion'::character varying)::text])));
 
 
 --
@@ -780,6 +866,22 @@ ALTER TABLE ONLY public.demo_records
 
 ALTER TABLE ONLY public.demo_scopes
     ADD CONSTRAINT demo_scopes_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: medallion_evidence medallion_assignment_no_overlap; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.medallion_evidence
+    ADD CONSTRAINT medallion_assignment_no_overlap EXCLUDE USING gist (tenant_id WITH =, entity_id WITH =, case_id WITH =, scenario_id WITH =, schedule_version WITH =, subject_id WITH =, product_id WITH =, daterange(starts_on, ends_on, '[)'::text) WITH &&) WHERE (((kind)::text = 'assignment'::text));
+
+
+--
+-- Name: medallion_evidence medallion_evidence_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.medallion_evidence
+    ADD CONSTRAINT medallion_evidence_pkey PRIMARY KEY (id);
 
 
 --
@@ -917,6 +1019,27 @@ CREATE UNIQUE INDEX index_demo_scopes_on_tenant_id_and_entity_id ON public.demo_
 
 
 --
+-- Name: medallion_history; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX medallion_history ON public.medallion_evidence USING btree (tenant_id, entity_id, case_id, kind, recorded_at);
+
+
+--
+-- Name: medallion_scoped_id; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE UNIQUE INDEX medallion_scoped_id ON public.medallion_evidence USING btree (tenant_id, entity_id, case_id, scenario_id, id);
+
+
+--
+-- Name: medallion_version_identity; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE UNIQUE INDEX medallion_version_identity ON public.medallion_evidence USING btree (tenant_id, entity_id, case_id, scenario_id, kind, external_id, revision);
+
+
+--
 -- Name: one_entitlement_reversal; Type: INDEX; Schema: public; Owner: -
 --
 
@@ -1001,6 +1124,20 @@ CREATE CONSTRAINT TRIGGER billing_obligations_conservation AFTER INSERT OR DELET
 
 
 --
+-- Name: commercial_rates commercial_rates_no_update_delete; Type: TRIGGER; Schema: public; Owner: -
+--
+
+CREATE TRIGGER commercial_rates_no_update_delete BEFORE DELETE OR UPDATE ON public.commercial_rates FOR EACH ROW EXECUTE FUNCTION public.commercial_rates_append_only();
+
+
+--
+-- Name: medallion_evidence medallion_no_update_delete; Type: TRIGGER; Schema: public; Owner: -
+--
+
+CREATE TRIGGER medallion_no_update_delete BEFORE DELETE OR UPDATE ON public.medallion_evidence FOR EACH ROW EXECUTE FUNCTION public.medallion_append_only();
+
+
+--
 -- Name: demo_entitlement_entries entitlement_reversal_same_scope; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -1054,6 +1191,14 @@ ALTER TABLE ONLY public.billing_invoice_lines
 
 ALTER TABLE ONLY public.billing_invoice_lines
     ADD CONSTRAINT fk_billing_invoice_lines_billing_obligation_id FOREIGN KEY (tenant_id, entity_id, billing_obligation_id) REFERENCES public.billing_obligations(tenant_id, entity_id, id);
+
+
+--
+-- Name: medallion_evidence fk_rails_00ef76fc97; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.medallion_evidence
+    ADD CONSTRAINT fk_rails_00ef76fc97 FOREIGN KEY (tenant_id, entity_id) REFERENCES public.demo_scopes(tenant_id, entity_id);
 
 
 --
@@ -1161,12 +1306,29 @@ ALTER TABLE ONLY public.demo_match_reversals
 
 
 --
+-- Name: medallion_evidence medallion_parent_scope; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.medallion_evidence
+    ADD CONSTRAINT medallion_parent_scope FOREIGN KEY (tenant_id, entity_id, case_id, scenario_id, parent_id) REFERENCES public.medallion_evidence(tenant_id, entity_id, case_id, scenario_id, id);
+
+
+--
 -- PostgreSQL database dump complete
 --
 
 SET search_path TO "$user", public;
 
 INSERT INTO "schema_migrations" (version) VALUES
+('20261115000900'),
+('20261115000800'),
+('20261115000700'),
+('20261115000600'),
+('20261115000500'),
+('20261115000400'),
+('20261115000300'),
+('20261115000200'),
+('20261115000100'),
 ('20261114000200'),
 ('20261114000100'),
 ('20261113000200'),

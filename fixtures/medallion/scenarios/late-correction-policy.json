@@ -1,0 +1,4586 @@
+{
+  "version": "late-correction-v1",
+  "nodes": [
+    {
+      "id": "r12",
+      "op": "fact",
+      "unit": "scalar",
+      "basis": "scalar",
+      "role": "intermediate",
+      "key": "rate_r12",
+      "requires": {
+        "component": "client_fee_first_band",
+        "broker_id": "advisor-demo",
+        "payer_id": "client",
+        "payee_id": "firm-demo"
+      }
+    },
+    {
+      "id": "r08",
+      "op": "fact",
+      "unit": "scalar",
+      "basis": "scalar",
+      "role": "intermediate",
+      "key": "rate_r08",
+      "requires": {
+        "component": "client_fee_next_band",
+        "broker_id": "advisor-demo",
+        "payer_id": "client",
+        "payee_id": "firm-demo"
+      }
+    },
+    {
+      "id": "day",
+      "op": "literal",
+      "unit": "scalar",
+      "basis": "scalar",
+      "role": "intermediate",
+      "value": "1/365"
+    },
+    {
+      "id": "s80",
+      "op": "fact",
+      "unit": "scalar",
+      "basis": "scalar",
+      "role": "intermediate",
+      "key": "rate_s80",
+      "requires": {
+        "component": "advisor_share",
+        "broker_id": "advisor-demo",
+        "kind": "standard",
+        "payer_id": "firm-demo",
+        "payee_id": "advisor-demo"
+      }
+    },
+    {
+      "id": "s85",
+      "op": "fact",
+      "unit": "scalar",
+      "basis": "scalar",
+      "role": "intermediate",
+      "key": "rate_s85",
+      "requires": {
+        "component": "advisor_share",
+        "broker_id": "advisor-demo",
+        "kind": "promotion",
+        "payer_id": "firm-demo",
+        "payee_id": "advisor-demo"
+      }
+    },
+    {
+      "id": "s90",
+      "op": "fact",
+      "unit": "scalar",
+      "basis": "scalar",
+      "role": "intermediate",
+      "key": "rate_s90",
+      "requires": {
+        "component": "advisor_share",
+        "broker_id": "advisor-demo",
+        "kind": "targeted_promotion",
+        "payer_id": "firm-demo",
+        "payee_id": "advisor-demo"
+      }
+    },
+    {
+      "id": "zero",
+      "op": "literal",
+      "unit": "USD_minor",
+      "basis": "assessed",
+      "role": "intermediate",
+      "value": "0",
+      "currency": "USD"
+    },
+    {
+      "id": "floor",
+      "op": "literal",
+      "unit": "USD_minor",
+      "basis": "assessed",
+      "role": "intermediate",
+      "value": "330000",
+      "currency": "USD"
+    },
+    {
+      "id": "advance",
+      "op": "fact",
+      "unit": "USD_minor",
+      "basis": "assessed",
+      "role": "intermediate",
+      "key": "funded_coverage",
+      "requires": {
+        "status": "confirmed",
+        "direction": "firm_to_advisor",
+        "right": "eligible",
+        "funding": "evidenced"
+      },
+      "currency": "USD"
+    },
+    {
+      "id": "cedar_01",
+      "op": "fact",
+      "unit": "USD_minor",
+      "basis": "source_reported",
+      "role": "intermediate",
+      "key": "cedar_01",
+      "interval_fact": "cedar_01",
+      "subject": "cedar",
+      "currency": "USD"
+    },
+    {
+      "id": "cedar_01_annual",
+      "op": "bands",
+      "unit": "USD_minor",
+      "basis": "exact_accrual",
+      "role": "intermediate",
+      "input": "cedar_01",
+      "bands": [
+        {
+          "upper": "182500000",
+          "rate": "r12"
+        },
+        {
+          "upper": null,
+          "rate": "r08"
+        }
+      ],
+      "interval_fact": "cedar_01",
+      "subject": "cedar",
+      "currency": "USD"
+    },
+    {
+      "id": "cedar_01_fee",
+      "op": "multiply",
+      "unit": "USD_minor",
+      "basis": "exact_accrual",
+      "role": "intermediate",
+      "left": "cedar_01_annual",
+      "right": "day",
+      "interval_fact": "cedar_01",
+      "subject": "cedar",
+      "currency": "USD"
+    },
+    {
+      "id": "cedar_01_rate",
+      "op": "select",
+      "unit": "scalar",
+      "basis": "scalar",
+      "role": "intermediate",
+      "candidates": [
+        {
+          "id": "standard",
+          "priority": 0,
+          "value": "s80"
+        },
+        {
+          "id": "promotion",
+          "priority": 1,
+          "value": "s85",
+          "from": "2026-09-10",
+          "to": "2026-09-21"
+        }
+      ],
+      "date_fact": "cedar_01",
+      "interval_fact": "cedar_01",
+      "subject": "cedar"
+    },
+    {
+      "id": "cedar_01_share",
+      "op": "multiply",
+      "unit": "USD_minor",
+      "basis": "exact_accrual",
+      "role": "intermediate",
+      "left": "cedar_01_fee",
+      "right": "cedar_01_rate",
+      "interval_fact": "cedar_01",
+      "subject": "cedar",
+      "currency": "USD"
+    },
+    {
+      "id": "cedar_02",
+      "op": "fact",
+      "unit": "USD_minor",
+      "basis": "source_reported",
+      "role": "intermediate",
+      "key": "cedar_02",
+      "interval_fact": "cedar_02",
+      "subject": "cedar",
+      "currency": "USD"
+    },
+    {
+      "id": "cedar_02_annual",
+      "op": "bands",
+      "unit": "USD_minor",
+      "basis": "exact_accrual",
+      "role": "intermediate",
+      "input": "cedar_02",
+      "bands": [
+        {
+          "upper": "182500000",
+          "rate": "r12"
+        },
+        {
+          "upper": null,
+          "rate": "r08"
+        }
+      ],
+      "interval_fact": "cedar_02",
+      "subject": "cedar",
+      "currency": "USD"
+    },
+    {
+      "id": "cedar_02_fee",
+      "op": "multiply",
+      "unit": "USD_minor",
+      "basis": "exact_accrual",
+      "role": "intermediate",
+      "left": "cedar_02_annual",
+      "right": "day",
+      "interval_fact": "cedar_02",
+      "subject": "cedar",
+      "currency": "USD"
+    },
+    {
+      "id": "cedar_02_rate",
+      "op": "select",
+      "unit": "scalar",
+      "basis": "scalar",
+      "role": "intermediate",
+      "candidates": [
+        {
+          "id": "standard",
+          "priority": 0,
+          "value": "s80"
+        },
+        {
+          "id": "promotion",
+          "priority": 1,
+          "value": "s85",
+          "from": "2026-09-10",
+          "to": "2026-09-21"
+        }
+      ],
+      "date_fact": "cedar_02",
+      "interval_fact": "cedar_02",
+      "subject": "cedar"
+    },
+    {
+      "id": "cedar_02_share",
+      "op": "multiply",
+      "unit": "USD_minor",
+      "basis": "exact_accrual",
+      "role": "intermediate",
+      "left": "cedar_02_fee",
+      "right": "cedar_02_rate",
+      "interval_fact": "cedar_02",
+      "subject": "cedar",
+      "currency": "USD"
+    },
+    {
+      "id": "cedar_03",
+      "op": "fact",
+      "unit": "USD_minor",
+      "basis": "source_reported",
+      "role": "intermediate",
+      "key": "cedar_03",
+      "interval_fact": "cedar_03",
+      "subject": "cedar",
+      "currency": "USD"
+    },
+    {
+      "id": "cedar_03_annual",
+      "op": "bands",
+      "unit": "USD_minor",
+      "basis": "exact_accrual",
+      "role": "intermediate",
+      "input": "cedar_03",
+      "bands": [
+        {
+          "upper": "182500000",
+          "rate": "r12"
+        },
+        {
+          "upper": null,
+          "rate": "r08"
+        }
+      ],
+      "interval_fact": "cedar_03",
+      "subject": "cedar",
+      "currency": "USD"
+    },
+    {
+      "id": "cedar_03_fee",
+      "op": "multiply",
+      "unit": "USD_minor",
+      "basis": "exact_accrual",
+      "role": "intermediate",
+      "left": "cedar_03_annual",
+      "right": "day",
+      "interval_fact": "cedar_03",
+      "subject": "cedar",
+      "currency": "USD"
+    },
+    {
+      "id": "cedar_03_rate",
+      "op": "select",
+      "unit": "scalar",
+      "basis": "scalar",
+      "role": "intermediate",
+      "candidates": [
+        {
+          "id": "standard",
+          "priority": 0,
+          "value": "s80"
+        },
+        {
+          "id": "promotion",
+          "priority": 1,
+          "value": "s85",
+          "from": "2026-09-10",
+          "to": "2026-09-21"
+        }
+      ],
+      "date_fact": "cedar_03",
+      "interval_fact": "cedar_03",
+      "subject": "cedar"
+    },
+    {
+      "id": "cedar_03_share",
+      "op": "multiply",
+      "unit": "USD_minor",
+      "basis": "exact_accrual",
+      "role": "intermediate",
+      "left": "cedar_03_fee",
+      "right": "cedar_03_rate",
+      "interval_fact": "cedar_03",
+      "subject": "cedar",
+      "currency": "USD"
+    },
+    {
+      "id": "cedar_04",
+      "op": "fact",
+      "unit": "USD_minor",
+      "basis": "source_reported",
+      "role": "intermediate",
+      "key": "cedar_04",
+      "interval_fact": "cedar_04",
+      "subject": "cedar",
+      "currency": "USD"
+    },
+    {
+      "id": "cedar_04_annual",
+      "op": "bands",
+      "unit": "USD_minor",
+      "basis": "exact_accrual",
+      "role": "intermediate",
+      "input": "cedar_04",
+      "bands": [
+        {
+          "upper": "182500000",
+          "rate": "r12"
+        },
+        {
+          "upper": null,
+          "rate": "r08"
+        }
+      ],
+      "interval_fact": "cedar_04",
+      "subject": "cedar",
+      "currency": "USD"
+    },
+    {
+      "id": "cedar_04_fee",
+      "op": "multiply",
+      "unit": "USD_minor",
+      "basis": "exact_accrual",
+      "role": "intermediate",
+      "left": "cedar_04_annual",
+      "right": "day",
+      "interval_fact": "cedar_04",
+      "subject": "cedar",
+      "currency": "USD"
+    },
+    {
+      "id": "cedar_04_rate",
+      "op": "select",
+      "unit": "scalar",
+      "basis": "scalar",
+      "role": "intermediate",
+      "candidates": [
+        {
+          "id": "standard",
+          "priority": 0,
+          "value": "s80"
+        },
+        {
+          "id": "promotion",
+          "priority": 1,
+          "value": "s85",
+          "from": "2026-09-10",
+          "to": "2026-09-21"
+        }
+      ],
+      "date_fact": "cedar_04",
+      "interval_fact": "cedar_04",
+      "subject": "cedar"
+    },
+    {
+      "id": "cedar_04_share",
+      "op": "multiply",
+      "unit": "USD_minor",
+      "basis": "exact_accrual",
+      "role": "intermediate",
+      "left": "cedar_04_fee",
+      "right": "cedar_04_rate",
+      "interval_fact": "cedar_04",
+      "subject": "cedar",
+      "currency": "USD"
+    },
+    {
+      "id": "cedar_05",
+      "op": "fact",
+      "unit": "USD_minor",
+      "basis": "source_reported",
+      "role": "intermediate",
+      "key": "cedar_05",
+      "interval_fact": "cedar_05",
+      "subject": "cedar",
+      "currency": "USD"
+    },
+    {
+      "id": "cedar_05_annual",
+      "op": "bands",
+      "unit": "USD_minor",
+      "basis": "exact_accrual",
+      "role": "intermediate",
+      "input": "cedar_05",
+      "bands": [
+        {
+          "upper": "182500000",
+          "rate": "r12"
+        },
+        {
+          "upper": null,
+          "rate": "r08"
+        }
+      ],
+      "interval_fact": "cedar_05",
+      "subject": "cedar",
+      "currency": "USD"
+    },
+    {
+      "id": "cedar_05_fee",
+      "op": "multiply",
+      "unit": "USD_minor",
+      "basis": "exact_accrual",
+      "role": "intermediate",
+      "left": "cedar_05_annual",
+      "right": "day",
+      "interval_fact": "cedar_05",
+      "subject": "cedar",
+      "currency": "USD"
+    },
+    {
+      "id": "cedar_05_rate",
+      "op": "select",
+      "unit": "scalar",
+      "basis": "scalar",
+      "role": "intermediate",
+      "candidates": [
+        {
+          "id": "standard",
+          "priority": 0,
+          "value": "s80"
+        },
+        {
+          "id": "promotion",
+          "priority": 1,
+          "value": "s85",
+          "from": "2026-09-10",
+          "to": "2026-09-21"
+        }
+      ],
+      "date_fact": "cedar_05",
+      "interval_fact": "cedar_05",
+      "subject": "cedar"
+    },
+    {
+      "id": "cedar_05_share",
+      "op": "multiply",
+      "unit": "USD_minor",
+      "basis": "exact_accrual",
+      "role": "intermediate",
+      "left": "cedar_05_fee",
+      "right": "cedar_05_rate",
+      "interval_fact": "cedar_05",
+      "subject": "cedar",
+      "currency": "USD"
+    },
+    {
+      "id": "cedar_06",
+      "op": "fact",
+      "unit": "USD_minor",
+      "basis": "source_reported",
+      "role": "intermediate",
+      "key": "cedar_06",
+      "interval_fact": "cedar_06",
+      "subject": "cedar",
+      "currency": "USD"
+    },
+    {
+      "id": "cedar_06_annual",
+      "op": "bands",
+      "unit": "USD_minor",
+      "basis": "exact_accrual",
+      "role": "intermediate",
+      "input": "cedar_06",
+      "bands": [
+        {
+          "upper": "182500000",
+          "rate": "r12"
+        },
+        {
+          "upper": null,
+          "rate": "r08"
+        }
+      ],
+      "interval_fact": "cedar_06",
+      "subject": "cedar",
+      "currency": "USD"
+    },
+    {
+      "id": "cedar_06_fee",
+      "op": "multiply",
+      "unit": "USD_minor",
+      "basis": "exact_accrual",
+      "role": "intermediate",
+      "left": "cedar_06_annual",
+      "right": "day",
+      "interval_fact": "cedar_06",
+      "subject": "cedar",
+      "currency": "USD"
+    },
+    {
+      "id": "cedar_06_rate",
+      "op": "select",
+      "unit": "scalar",
+      "basis": "scalar",
+      "role": "intermediate",
+      "candidates": [
+        {
+          "id": "standard",
+          "priority": 0,
+          "value": "s80"
+        },
+        {
+          "id": "promotion",
+          "priority": 1,
+          "value": "s85",
+          "from": "2026-09-10",
+          "to": "2026-09-21"
+        }
+      ],
+      "date_fact": "cedar_06",
+      "interval_fact": "cedar_06",
+      "subject": "cedar"
+    },
+    {
+      "id": "cedar_06_share",
+      "op": "multiply",
+      "unit": "USD_minor",
+      "basis": "exact_accrual",
+      "role": "intermediate",
+      "left": "cedar_06_fee",
+      "right": "cedar_06_rate",
+      "interval_fact": "cedar_06",
+      "subject": "cedar",
+      "currency": "USD"
+    },
+    {
+      "id": "cedar_07",
+      "op": "fact",
+      "unit": "USD_minor",
+      "basis": "source_reported",
+      "role": "intermediate",
+      "key": "cedar_07",
+      "interval_fact": "cedar_07",
+      "subject": "cedar",
+      "currency": "USD"
+    },
+    {
+      "id": "cedar_07_annual",
+      "op": "bands",
+      "unit": "USD_minor",
+      "basis": "exact_accrual",
+      "role": "intermediate",
+      "input": "cedar_07",
+      "bands": [
+        {
+          "upper": "182500000",
+          "rate": "r12"
+        },
+        {
+          "upper": null,
+          "rate": "r08"
+        }
+      ],
+      "interval_fact": "cedar_07",
+      "subject": "cedar",
+      "currency": "USD"
+    },
+    {
+      "id": "cedar_07_fee",
+      "op": "multiply",
+      "unit": "USD_minor",
+      "basis": "exact_accrual",
+      "role": "intermediate",
+      "left": "cedar_07_annual",
+      "right": "day",
+      "interval_fact": "cedar_07",
+      "subject": "cedar",
+      "currency": "USD"
+    },
+    {
+      "id": "cedar_07_rate",
+      "op": "select",
+      "unit": "scalar",
+      "basis": "scalar",
+      "role": "intermediate",
+      "candidates": [
+        {
+          "id": "standard",
+          "priority": 0,
+          "value": "s80"
+        },
+        {
+          "id": "promotion",
+          "priority": 1,
+          "value": "s85",
+          "from": "2026-09-10",
+          "to": "2026-09-21"
+        }
+      ],
+      "date_fact": "cedar_07",
+      "interval_fact": "cedar_07",
+      "subject": "cedar"
+    },
+    {
+      "id": "cedar_07_share",
+      "op": "multiply",
+      "unit": "USD_minor",
+      "basis": "exact_accrual",
+      "role": "intermediate",
+      "left": "cedar_07_fee",
+      "right": "cedar_07_rate",
+      "interval_fact": "cedar_07",
+      "subject": "cedar",
+      "currency": "USD"
+    },
+    {
+      "id": "cedar_08",
+      "op": "fact",
+      "unit": "USD_minor",
+      "basis": "source_reported",
+      "role": "intermediate",
+      "key": "cedar_08",
+      "interval_fact": "cedar_08",
+      "subject": "cedar",
+      "currency": "USD"
+    },
+    {
+      "id": "cedar_08_annual",
+      "op": "bands",
+      "unit": "USD_minor",
+      "basis": "exact_accrual",
+      "role": "intermediate",
+      "input": "cedar_08",
+      "bands": [
+        {
+          "upper": "182500000",
+          "rate": "r12"
+        },
+        {
+          "upper": null,
+          "rate": "r08"
+        }
+      ],
+      "interval_fact": "cedar_08",
+      "subject": "cedar",
+      "currency": "USD"
+    },
+    {
+      "id": "cedar_08_fee",
+      "op": "multiply",
+      "unit": "USD_minor",
+      "basis": "exact_accrual",
+      "role": "intermediate",
+      "left": "cedar_08_annual",
+      "right": "day",
+      "interval_fact": "cedar_08",
+      "subject": "cedar",
+      "currency": "USD"
+    },
+    {
+      "id": "cedar_08_rate",
+      "op": "select",
+      "unit": "scalar",
+      "basis": "scalar",
+      "role": "intermediate",
+      "candidates": [
+        {
+          "id": "standard",
+          "priority": 0,
+          "value": "s80"
+        },
+        {
+          "id": "promotion",
+          "priority": 1,
+          "value": "s85",
+          "from": "2026-09-10",
+          "to": "2026-09-21"
+        }
+      ],
+      "date_fact": "cedar_08",
+      "interval_fact": "cedar_08",
+      "subject": "cedar"
+    },
+    {
+      "id": "cedar_08_share",
+      "op": "multiply",
+      "unit": "USD_minor",
+      "basis": "exact_accrual",
+      "role": "intermediate",
+      "left": "cedar_08_fee",
+      "right": "cedar_08_rate",
+      "interval_fact": "cedar_08",
+      "subject": "cedar",
+      "currency": "USD"
+    },
+    {
+      "id": "cedar_09",
+      "op": "fact",
+      "unit": "USD_minor",
+      "basis": "source_reported",
+      "role": "intermediate",
+      "key": "cedar_09",
+      "interval_fact": "cedar_09",
+      "subject": "cedar",
+      "currency": "USD"
+    },
+    {
+      "id": "cedar_09_annual",
+      "op": "bands",
+      "unit": "USD_minor",
+      "basis": "exact_accrual",
+      "role": "intermediate",
+      "input": "cedar_09",
+      "bands": [
+        {
+          "upper": "182500000",
+          "rate": "r12"
+        },
+        {
+          "upper": null,
+          "rate": "r08"
+        }
+      ],
+      "interval_fact": "cedar_09",
+      "subject": "cedar",
+      "currency": "USD"
+    },
+    {
+      "id": "cedar_09_fee",
+      "op": "multiply",
+      "unit": "USD_minor",
+      "basis": "exact_accrual",
+      "role": "intermediate",
+      "left": "cedar_09_annual",
+      "right": "day",
+      "interval_fact": "cedar_09",
+      "subject": "cedar",
+      "currency": "USD"
+    },
+    {
+      "id": "cedar_09_rate",
+      "op": "select",
+      "unit": "scalar",
+      "basis": "scalar",
+      "role": "intermediate",
+      "candidates": [
+        {
+          "id": "standard",
+          "priority": 0,
+          "value": "s80"
+        },
+        {
+          "id": "promotion",
+          "priority": 1,
+          "value": "s85",
+          "from": "2026-09-10",
+          "to": "2026-09-21"
+        }
+      ],
+      "date_fact": "cedar_09",
+      "interval_fact": "cedar_09",
+      "subject": "cedar"
+    },
+    {
+      "id": "cedar_09_share",
+      "op": "multiply",
+      "unit": "USD_minor",
+      "basis": "exact_accrual",
+      "role": "intermediate",
+      "left": "cedar_09_fee",
+      "right": "cedar_09_rate",
+      "interval_fact": "cedar_09",
+      "subject": "cedar",
+      "currency": "USD"
+    },
+    {
+      "id": "cedar_10",
+      "op": "fact",
+      "unit": "USD_minor",
+      "basis": "source_reported",
+      "role": "intermediate",
+      "key": "cedar_10",
+      "interval_fact": "cedar_10",
+      "subject": "cedar",
+      "currency": "USD"
+    },
+    {
+      "id": "cedar_10_annual",
+      "op": "bands",
+      "unit": "USD_minor",
+      "basis": "exact_accrual",
+      "role": "intermediate",
+      "input": "cedar_10",
+      "bands": [
+        {
+          "upper": "182500000",
+          "rate": "r12"
+        },
+        {
+          "upper": null,
+          "rate": "r08"
+        }
+      ],
+      "interval_fact": "cedar_10",
+      "subject": "cedar",
+      "currency": "USD"
+    },
+    {
+      "id": "cedar_10_fee",
+      "op": "multiply",
+      "unit": "USD_minor",
+      "basis": "exact_accrual",
+      "role": "intermediate",
+      "left": "cedar_10_annual",
+      "right": "day",
+      "interval_fact": "cedar_10",
+      "subject": "cedar",
+      "currency": "USD"
+    },
+    {
+      "id": "cedar_10_rate",
+      "op": "select",
+      "unit": "scalar",
+      "basis": "scalar",
+      "role": "intermediate",
+      "candidates": [
+        {
+          "id": "standard",
+          "priority": 0,
+          "value": "s80"
+        },
+        {
+          "id": "promotion",
+          "priority": 1,
+          "value": "s85",
+          "from": "2026-09-10",
+          "to": "2026-09-21"
+        }
+      ],
+      "date_fact": "cedar_10",
+      "interval_fact": "cedar_10",
+      "subject": "cedar"
+    },
+    {
+      "id": "cedar_10_share",
+      "op": "multiply",
+      "unit": "USD_minor",
+      "basis": "exact_accrual",
+      "role": "intermediate",
+      "left": "cedar_10_fee",
+      "right": "cedar_10_rate",
+      "interval_fact": "cedar_10",
+      "subject": "cedar",
+      "currency": "USD"
+    },
+    {
+      "id": "cedar_11",
+      "op": "fact",
+      "unit": "USD_minor",
+      "basis": "source_reported",
+      "role": "intermediate",
+      "key": "cedar_11",
+      "interval_fact": "cedar_11",
+      "subject": "cedar",
+      "currency": "USD"
+    },
+    {
+      "id": "cedar_11_annual",
+      "op": "bands",
+      "unit": "USD_minor",
+      "basis": "exact_accrual",
+      "role": "intermediate",
+      "input": "cedar_11",
+      "bands": [
+        {
+          "upper": "182500000",
+          "rate": "r12"
+        },
+        {
+          "upper": null,
+          "rate": "r08"
+        }
+      ],
+      "interval_fact": "cedar_11",
+      "subject": "cedar",
+      "currency": "USD"
+    },
+    {
+      "id": "cedar_11_fee",
+      "op": "multiply",
+      "unit": "USD_minor",
+      "basis": "exact_accrual",
+      "role": "intermediate",
+      "left": "cedar_11_annual",
+      "right": "day",
+      "interval_fact": "cedar_11",
+      "subject": "cedar",
+      "currency": "USD"
+    },
+    {
+      "id": "cedar_11_rate",
+      "op": "select",
+      "unit": "scalar",
+      "basis": "scalar",
+      "role": "intermediate",
+      "candidates": [
+        {
+          "id": "standard",
+          "priority": 0,
+          "value": "s80"
+        },
+        {
+          "id": "promotion",
+          "priority": 1,
+          "value": "s85",
+          "from": "2026-09-10",
+          "to": "2026-09-21"
+        }
+      ],
+      "date_fact": "cedar_11",
+      "interval_fact": "cedar_11",
+      "subject": "cedar"
+    },
+    {
+      "id": "cedar_11_share",
+      "op": "multiply",
+      "unit": "USD_minor",
+      "basis": "exact_accrual",
+      "role": "intermediate",
+      "left": "cedar_11_fee",
+      "right": "cedar_11_rate",
+      "interval_fact": "cedar_11",
+      "subject": "cedar",
+      "currency": "USD"
+    },
+    {
+      "id": "cedar_12",
+      "op": "fact",
+      "unit": "USD_minor",
+      "basis": "source_reported",
+      "role": "intermediate",
+      "key": "cedar_12",
+      "interval_fact": "cedar_12",
+      "subject": "cedar",
+      "currency": "USD"
+    },
+    {
+      "id": "cedar_12_annual",
+      "op": "bands",
+      "unit": "USD_minor",
+      "basis": "exact_accrual",
+      "role": "intermediate",
+      "input": "cedar_12",
+      "bands": [
+        {
+          "upper": "182500000",
+          "rate": "r12"
+        },
+        {
+          "upper": null,
+          "rate": "r08"
+        }
+      ],
+      "interval_fact": "cedar_12",
+      "subject": "cedar",
+      "currency": "USD"
+    },
+    {
+      "id": "cedar_12_fee",
+      "op": "multiply",
+      "unit": "USD_minor",
+      "basis": "exact_accrual",
+      "role": "intermediate",
+      "left": "cedar_12_annual",
+      "right": "day",
+      "interval_fact": "cedar_12",
+      "subject": "cedar",
+      "currency": "USD"
+    },
+    {
+      "id": "cedar_12_rate",
+      "op": "select",
+      "unit": "scalar",
+      "basis": "scalar",
+      "role": "intermediate",
+      "candidates": [
+        {
+          "id": "standard",
+          "priority": 0,
+          "value": "s80"
+        },
+        {
+          "id": "promotion",
+          "priority": 1,
+          "value": "s85",
+          "from": "2026-09-10",
+          "to": "2026-09-21"
+        }
+      ],
+      "date_fact": "cedar_12",
+      "interval_fact": "cedar_12",
+      "subject": "cedar"
+    },
+    {
+      "id": "cedar_12_share",
+      "op": "multiply",
+      "unit": "USD_minor",
+      "basis": "exact_accrual",
+      "role": "intermediate",
+      "left": "cedar_12_fee",
+      "right": "cedar_12_rate",
+      "interval_fact": "cedar_12",
+      "subject": "cedar",
+      "currency": "USD"
+    },
+    {
+      "id": "cedar_13",
+      "op": "fact",
+      "unit": "USD_minor",
+      "basis": "source_reported",
+      "role": "intermediate",
+      "key": "cedar_13",
+      "interval_fact": "cedar_13",
+      "subject": "cedar",
+      "currency": "USD"
+    },
+    {
+      "id": "cedar_13_annual",
+      "op": "bands",
+      "unit": "USD_minor",
+      "basis": "exact_accrual",
+      "role": "intermediate",
+      "input": "cedar_13",
+      "bands": [
+        {
+          "upper": "182500000",
+          "rate": "r12"
+        },
+        {
+          "upper": null,
+          "rate": "r08"
+        }
+      ],
+      "interval_fact": "cedar_13",
+      "subject": "cedar",
+      "currency": "USD"
+    },
+    {
+      "id": "cedar_13_fee",
+      "op": "multiply",
+      "unit": "USD_minor",
+      "basis": "exact_accrual",
+      "role": "intermediate",
+      "left": "cedar_13_annual",
+      "right": "day",
+      "interval_fact": "cedar_13",
+      "subject": "cedar",
+      "currency": "USD"
+    },
+    {
+      "id": "cedar_13_rate",
+      "op": "select",
+      "unit": "scalar",
+      "basis": "scalar",
+      "role": "intermediate",
+      "candidates": [
+        {
+          "id": "standard",
+          "priority": 0,
+          "value": "s80"
+        },
+        {
+          "id": "promotion",
+          "priority": 1,
+          "value": "s85",
+          "from": "2026-09-10",
+          "to": "2026-09-21"
+        }
+      ],
+      "date_fact": "cedar_13",
+      "interval_fact": "cedar_13",
+      "subject": "cedar"
+    },
+    {
+      "id": "cedar_13_share",
+      "op": "multiply",
+      "unit": "USD_minor",
+      "basis": "exact_accrual",
+      "role": "intermediate",
+      "left": "cedar_13_fee",
+      "right": "cedar_13_rate",
+      "interval_fact": "cedar_13",
+      "subject": "cedar",
+      "currency": "USD"
+    },
+    {
+      "id": "cedar_14",
+      "op": "fact",
+      "unit": "USD_minor",
+      "basis": "source_reported",
+      "role": "intermediate",
+      "key": "cedar_14",
+      "interval_fact": "cedar_14",
+      "subject": "cedar",
+      "currency": "USD"
+    },
+    {
+      "id": "cedar_14_annual",
+      "op": "bands",
+      "unit": "USD_minor",
+      "basis": "exact_accrual",
+      "role": "intermediate",
+      "input": "cedar_14",
+      "bands": [
+        {
+          "upper": "182500000",
+          "rate": "r12"
+        },
+        {
+          "upper": null,
+          "rate": "r08"
+        }
+      ],
+      "interval_fact": "cedar_14",
+      "subject": "cedar",
+      "currency": "USD"
+    },
+    {
+      "id": "cedar_14_fee",
+      "op": "multiply",
+      "unit": "USD_minor",
+      "basis": "exact_accrual",
+      "role": "intermediate",
+      "left": "cedar_14_annual",
+      "right": "day",
+      "interval_fact": "cedar_14",
+      "subject": "cedar",
+      "currency": "USD"
+    },
+    {
+      "id": "cedar_14_rate",
+      "op": "select",
+      "unit": "scalar",
+      "basis": "scalar",
+      "role": "intermediate",
+      "candidates": [
+        {
+          "id": "standard",
+          "priority": 0,
+          "value": "s80"
+        },
+        {
+          "id": "promotion",
+          "priority": 1,
+          "value": "s85",
+          "from": "2026-09-10",
+          "to": "2026-09-21"
+        }
+      ],
+      "date_fact": "cedar_14",
+      "interval_fact": "cedar_14",
+      "subject": "cedar"
+    },
+    {
+      "id": "cedar_14_share",
+      "op": "multiply",
+      "unit": "USD_minor",
+      "basis": "exact_accrual",
+      "role": "intermediate",
+      "left": "cedar_14_fee",
+      "right": "cedar_14_rate",
+      "interval_fact": "cedar_14",
+      "subject": "cedar",
+      "currency": "USD"
+    },
+    {
+      "id": "cedar_15",
+      "op": "fact",
+      "unit": "USD_minor",
+      "basis": "source_reported",
+      "role": "intermediate",
+      "key": "cedar_15",
+      "interval_fact": "cedar_15",
+      "subject": "cedar",
+      "currency": "USD"
+    },
+    {
+      "id": "cedar_15_annual",
+      "op": "bands",
+      "unit": "USD_minor",
+      "basis": "exact_accrual",
+      "role": "intermediate",
+      "input": "cedar_15",
+      "bands": [
+        {
+          "upper": "182500000",
+          "rate": "r12"
+        },
+        {
+          "upper": null,
+          "rate": "r08"
+        }
+      ],
+      "interval_fact": "cedar_15",
+      "subject": "cedar",
+      "currency": "USD"
+    },
+    {
+      "id": "cedar_15_fee",
+      "op": "multiply",
+      "unit": "USD_minor",
+      "basis": "exact_accrual",
+      "role": "intermediate",
+      "left": "cedar_15_annual",
+      "right": "day",
+      "interval_fact": "cedar_15",
+      "subject": "cedar",
+      "currency": "USD"
+    },
+    {
+      "id": "cedar_15_rate",
+      "op": "select",
+      "unit": "scalar",
+      "basis": "scalar",
+      "role": "intermediate",
+      "candidates": [
+        {
+          "id": "standard",
+          "priority": 0,
+          "value": "s80"
+        },
+        {
+          "id": "promotion",
+          "priority": 1,
+          "value": "s85",
+          "from": "2026-09-10",
+          "to": "2026-09-21"
+        }
+      ],
+      "date_fact": "cedar_15",
+      "interval_fact": "cedar_15",
+      "subject": "cedar"
+    },
+    {
+      "id": "cedar_15_share",
+      "op": "multiply",
+      "unit": "USD_minor",
+      "basis": "exact_accrual",
+      "role": "intermediate",
+      "left": "cedar_15_fee",
+      "right": "cedar_15_rate",
+      "interval_fact": "cedar_15",
+      "subject": "cedar",
+      "currency": "USD"
+    },
+    {
+      "id": "cedar_16",
+      "op": "fact",
+      "unit": "USD_minor",
+      "basis": "source_reported",
+      "role": "intermediate",
+      "key": "cedar_16",
+      "interval_fact": "cedar_16",
+      "subject": "cedar",
+      "currency": "USD"
+    },
+    {
+      "id": "cedar_16_annual",
+      "op": "bands",
+      "unit": "USD_minor",
+      "basis": "exact_accrual",
+      "role": "intermediate",
+      "input": "cedar_16",
+      "bands": [
+        {
+          "upper": "182500000",
+          "rate": "r12"
+        },
+        {
+          "upper": null,
+          "rate": "r08"
+        }
+      ],
+      "interval_fact": "cedar_16",
+      "subject": "cedar",
+      "currency": "USD"
+    },
+    {
+      "id": "cedar_16_fee",
+      "op": "multiply",
+      "unit": "USD_minor",
+      "basis": "exact_accrual",
+      "role": "intermediate",
+      "left": "cedar_16_annual",
+      "right": "day",
+      "interval_fact": "cedar_16",
+      "subject": "cedar",
+      "currency": "USD"
+    },
+    {
+      "id": "cedar_16_rate",
+      "op": "select",
+      "unit": "scalar",
+      "basis": "scalar",
+      "role": "intermediate",
+      "candidates": [
+        {
+          "id": "standard",
+          "priority": 0,
+          "value": "s80"
+        },
+        {
+          "id": "promotion",
+          "priority": 1,
+          "value": "s85",
+          "from": "2026-09-10",
+          "to": "2026-09-21"
+        }
+      ],
+      "date_fact": "cedar_16",
+      "interval_fact": "cedar_16",
+      "subject": "cedar"
+    },
+    {
+      "id": "cedar_16_share",
+      "op": "multiply",
+      "unit": "USD_minor",
+      "basis": "exact_accrual",
+      "role": "intermediate",
+      "left": "cedar_16_fee",
+      "right": "cedar_16_rate",
+      "interval_fact": "cedar_16",
+      "subject": "cedar",
+      "currency": "USD"
+    },
+    {
+      "id": "cedar_17",
+      "op": "fact",
+      "unit": "USD_minor",
+      "basis": "source_reported",
+      "role": "intermediate",
+      "key": "cedar_17",
+      "interval_fact": "cedar_17",
+      "subject": "cedar",
+      "currency": "USD"
+    },
+    {
+      "id": "cedar_17_annual",
+      "op": "bands",
+      "unit": "USD_minor",
+      "basis": "exact_accrual",
+      "role": "intermediate",
+      "input": "cedar_17",
+      "bands": [
+        {
+          "upper": "182500000",
+          "rate": "r12"
+        },
+        {
+          "upper": null,
+          "rate": "r08"
+        }
+      ],
+      "interval_fact": "cedar_17",
+      "subject": "cedar",
+      "currency": "USD"
+    },
+    {
+      "id": "cedar_17_fee",
+      "op": "multiply",
+      "unit": "USD_minor",
+      "basis": "exact_accrual",
+      "role": "intermediate",
+      "left": "cedar_17_annual",
+      "right": "day",
+      "interval_fact": "cedar_17",
+      "subject": "cedar",
+      "currency": "USD"
+    },
+    {
+      "id": "cedar_17_rate",
+      "op": "select",
+      "unit": "scalar",
+      "basis": "scalar",
+      "role": "intermediate",
+      "candidates": [
+        {
+          "id": "standard",
+          "priority": 0,
+          "value": "s80"
+        },
+        {
+          "id": "promotion",
+          "priority": 1,
+          "value": "s85",
+          "from": "2026-09-10",
+          "to": "2026-09-21"
+        }
+      ],
+      "date_fact": "cedar_17",
+      "interval_fact": "cedar_17",
+      "subject": "cedar"
+    },
+    {
+      "id": "cedar_17_share",
+      "op": "multiply",
+      "unit": "USD_minor",
+      "basis": "exact_accrual",
+      "role": "intermediate",
+      "left": "cedar_17_fee",
+      "right": "cedar_17_rate",
+      "interval_fact": "cedar_17",
+      "subject": "cedar",
+      "currency": "USD"
+    },
+    {
+      "id": "cedar_18",
+      "op": "fact",
+      "unit": "USD_minor",
+      "basis": "source_reported",
+      "role": "intermediate",
+      "key": "cedar_18",
+      "interval_fact": "cedar_18",
+      "subject": "cedar",
+      "currency": "USD"
+    },
+    {
+      "id": "cedar_18_annual",
+      "op": "bands",
+      "unit": "USD_minor",
+      "basis": "exact_accrual",
+      "role": "intermediate",
+      "input": "cedar_18",
+      "bands": [
+        {
+          "upper": "182500000",
+          "rate": "r12"
+        },
+        {
+          "upper": null,
+          "rate": "r08"
+        }
+      ],
+      "interval_fact": "cedar_18",
+      "subject": "cedar",
+      "currency": "USD"
+    },
+    {
+      "id": "cedar_18_fee",
+      "op": "multiply",
+      "unit": "USD_minor",
+      "basis": "exact_accrual",
+      "role": "intermediate",
+      "left": "cedar_18_annual",
+      "right": "day",
+      "interval_fact": "cedar_18",
+      "subject": "cedar",
+      "currency": "USD"
+    },
+    {
+      "id": "cedar_18_rate",
+      "op": "select",
+      "unit": "scalar",
+      "basis": "scalar",
+      "role": "intermediate",
+      "candidates": [
+        {
+          "id": "standard",
+          "priority": 0,
+          "value": "s80"
+        },
+        {
+          "id": "promotion",
+          "priority": 1,
+          "value": "s85",
+          "from": "2026-09-10",
+          "to": "2026-09-21"
+        }
+      ],
+      "date_fact": "cedar_18",
+      "interval_fact": "cedar_18",
+      "subject": "cedar"
+    },
+    {
+      "id": "cedar_18_share",
+      "op": "multiply",
+      "unit": "USD_minor",
+      "basis": "exact_accrual",
+      "role": "intermediate",
+      "left": "cedar_18_fee",
+      "right": "cedar_18_rate",
+      "interval_fact": "cedar_18",
+      "subject": "cedar",
+      "currency": "USD"
+    },
+    {
+      "id": "cedar_19",
+      "op": "fact",
+      "unit": "USD_minor",
+      "basis": "source_reported",
+      "role": "intermediate",
+      "key": "cedar_19",
+      "interval_fact": "cedar_19",
+      "subject": "cedar",
+      "currency": "USD"
+    },
+    {
+      "id": "cedar_19_annual",
+      "op": "bands",
+      "unit": "USD_minor",
+      "basis": "exact_accrual",
+      "role": "intermediate",
+      "input": "cedar_19",
+      "bands": [
+        {
+          "upper": "182500000",
+          "rate": "r12"
+        },
+        {
+          "upper": null,
+          "rate": "r08"
+        }
+      ],
+      "interval_fact": "cedar_19",
+      "subject": "cedar",
+      "currency": "USD"
+    },
+    {
+      "id": "cedar_19_fee",
+      "op": "multiply",
+      "unit": "USD_minor",
+      "basis": "exact_accrual",
+      "role": "intermediate",
+      "left": "cedar_19_annual",
+      "right": "day",
+      "interval_fact": "cedar_19",
+      "subject": "cedar",
+      "currency": "USD"
+    },
+    {
+      "id": "cedar_19_rate",
+      "op": "select",
+      "unit": "scalar",
+      "basis": "scalar",
+      "role": "intermediate",
+      "candidates": [
+        {
+          "id": "standard",
+          "priority": 0,
+          "value": "s80"
+        },
+        {
+          "id": "promotion",
+          "priority": 1,
+          "value": "s85",
+          "from": "2026-09-10",
+          "to": "2026-09-21"
+        }
+      ],
+      "date_fact": "cedar_19",
+      "interval_fact": "cedar_19",
+      "subject": "cedar"
+    },
+    {
+      "id": "cedar_19_share",
+      "op": "multiply",
+      "unit": "USD_minor",
+      "basis": "exact_accrual",
+      "role": "intermediate",
+      "left": "cedar_19_fee",
+      "right": "cedar_19_rate",
+      "interval_fact": "cedar_19",
+      "subject": "cedar",
+      "currency": "USD"
+    },
+    {
+      "id": "cedar_20",
+      "op": "fact",
+      "unit": "USD_minor",
+      "basis": "source_reported",
+      "role": "intermediate",
+      "key": "cedar_20",
+      "interval_fact": "cedar_20",
+      "subject": "cedar",
+      "currency": "USD"
+    },
+    {
+      "id": "cedar_20_annual",
+      "op": "bands",
+      "unit": "USD_minor",
+      "basis": "exact_accrual",
+      "role": "intermediate",
+      "input": "cedar_20",
+      "bands": [
+        {
+          "upper": "182500000",
+          "rate": "r12"
+        },
+        {
+          "upper": null,
+          "rate": "r08"
+        }
+      ],
+      "interval_fact": "cedar_20",
+      "subject": "cedar",
+      "currency": "USD"
+    },
+    {
+      "id": "cedar_20_fee",
+      "op": "multiply",
+      "unit": "USD_minor",
+      "basis": "exact_accrual",
+      "role": "intermediate",
+      "left": "cedar_20_annual",
+      "right": "day",
+      "interval_fact": "cedar_20",
+      "subject": "cedar",
+      "currency": "USD"
+    },
+    {
+      "id": "cedar_20_rate",
+      "op": "select",
+      "unit": "scalar",
+      "basis": "scalar",
+      "role": "intermediate",
+      "candidates": [
+        {
+          "id": "standard",
+          "priority": 0,
+          "value": "s80"
+        },
+        {
+          "id": "promotion",
+          "priority": 1,
+          "value": "s85",
+          "from": "2026-09-10",
+          "to": "2026-09-21"
+        }
+      ],
+      "date_fact": "cedar_20",
+      "interval_fact": "cedar_20",
+      "subject": "cedar"
+    },
+    {
+      "id": "cedar_20_share",
+      "op": "multiply",
+      "unit": "USD_minor",
+      "basis": "exact_accrual",
+      "role": "intermediate",
+      "left": "cedar_20_fee",
+      "right": "cedar_20_rate",
+      "interval_fact": "cedar_20",
+      "subject": "cedar",
+      "currency": "USD"
+    },
+    {
+      "id": "cedar_21",
+      "op": "fact",
+      "unit": "USD_minor",
+      "basis": "source_reported",
+      "role": "intermediate",
+      "key": "cedar_21",
+      "interval_fact": "cedar_21",
+      "subject": "cedar",
+      "currency": "USD"
+    },
+    {
+      "id": "cedar_21_annual",
+      "op": "bands",
+      "unit": "USD_minor",
+      "basis": "exact_accrual",
+      "role": "intermediate",
+      "input": "cedar_21",
+      "bands": [
+        {
+          "upper": "182500000",
+          "rate": "r12"
+        },
+        {
+          "upper": null,
+          "rate": "r08"
+        }
+      ],
+      "interval_fact": "cedar_21",
+      "subject": "cedar",
+      "currency": "USD"
+    },
+    {
+      "id": "cedar_21_fee",
+      "op": "multiply",
+      "unit": "USD_minor",
+      "basis": "exact_accrual",
+      "role": "intermediate",
+      "left": "cedar_21_annual",
+      "right": "day",
+      "interval_fact": "cedar_21",
+      "subject": "cedar",
+      "currency": "USD"
+    },
+    {
+      "id": "cedar_21_rate",
+      "op": "select",
+      "unit": "scalar",
+      "basis": "scalar",
+      "role": "intermediate",
+      "candidates": [
+        {
+          "id": "standard",
+          "priority": 0,
+          "value": "s80"
+        },
+        {
+          "id": "promotion",
+          "priority": 1,
+          "value": "s85",
+          "from": "2026-09-10",
+          "to": "2026-09-21"
+        }
+      ],
+      "date_fact": "cedar_21",
+      "interval_fact": "cedar_21",
+      "subject": "cedar"
+    },
+    {
+      "id": "cedar_21_share",
+      "op": "multiply",
+      "unit": "USD_minor",
+      "basis": "exact_accrual",
+      "role": "intermediate",
+      "left": "cedar_21_fee",
+      "right": "cedar_21_rate",
+      "interval_fact": "cedar_21",
+      "subject": "cedar",
+      "currency": "USD"
+    },
+    {
+      "id": "cedar_22",
+      "op": "fact",
+      "unit": "USD_minor",
+      "basis": "source_reported",
+      "role": "intermediate",
+      "key": "cedar_22",
+      "interval_fact": "cedar_22",
+      "subject": "cedar",
+      "currency": "USD"
+    },
+    {
+      "id": "cedar_22_annual",
+      "op": "bands",
+      "unit": "USD_minor",
+      "basis": "exact_accrual",
+      "role": "intermediate",
+      "input": "cedar_22",
+      "bands": [
+        {
+          "upper": "182500000",
+          "rate": "r12"
+        },
+        {
+          "upper": null,
+          "rate": "r08"
+        }
+      ],
+      "interval_fact": "cedar_22",
+      "subject": "cedar",
+      "currency": "USD"
+    },
+    {
+      "id": "cedar_22_fee",
+      "op": "multiply",
+      "unit": "USD_minor",
+      "basis": "exact_accrual",
+      "role": "intermediate",
+      "left": "cedar_22_annual",
+      "right": "day",
+      "interval_fact": "cedar_22",
+      "subject": "cedar",
+      "currency": "USD"
+    },
+    {
+      "id": "cedar_22_rate",
+      "op": "select",
+      "unit": "scalar",
+      "basis": "scalar",
+      "role": "intermediate",
+      "candidates": [
+        {
+          "id": "standard",
+          "priority": 0,
+          "value": "s80"
+        },
+        {
+          "id": "promotion",
+          "priority": 1,
+          "value": "s85",
+          "from": "2026-09-10",
+          "to": "2026-09-21"
+        }
+      ],
+      "date_fact": "cedar_22",
+      "interval_fact": "cedar_22",
+      "subject": "cedar"
+    },
+    {
+      "id": "cedar_22_share",
+      "op": "multiply",
+      "unit": "USD_minor",
+      "basis": "exact_accrual",
+      "role": "intermediate",
+      "left": "cedar_22_fee",
+      "right": "cedar_22_rate",
+      "interval_fact": "cedar_22",
+      "subject": "cedar",
+      "currency": "USD"
+    },
+    {
+      "id": "cedar_23",
+      "op": "fact",
+      "unit": "USD_minor",
+      "basis": "source_reported",
+      "role": "intermediate",
+      "key": "cedar_23",
+      "interval_fact": "cedar_23",
+      "subject": "cedar",
+      "currency": "USD"
+    },
+    {
+      "id": "cedar_23_annual",
+      "op": "bands",
+      "unit": "USD_minor",
+      "basis": "exact_accrual",
+      "role": "intermediate",
+      "input": "cedar_23",
+      "bands": [
+        {
+          "upper": "182500000",
+          "rate": "r12"
+        },
+        {
+          "upper": null,
+          "rate": "r08"
+        }
+      ],
+      "interval_fact": "cedar_23",
+      "subject": "cedar",
+      "currency": "USD"
+    },
+    {
+      "id": "cedar_23_fee",
+      "op": "multiply",
+      "unit": "USD_minor",
+      "basis": "exact_accrual",
+      "role": "intermediate",
+      "left": "cedar_23_annual",
+      "right": "day",
+      "interval_fact": "cedar_23",
+      "subject": "cedar",
+      "currency": "USD"
+    },
+    {
+      "id": "cedar_23_rate",
+      "op": "select",
+      "unit": "scalar",
+      "basis": "scalar",
+      "role": "intermediate",
+      "candidates": [
+        {
+          "id": "standard",
+          "priority": 0,
+          "value": "s80"
+        },
+        {
+          "id": "promotion",
+          "priority": 1,
+          "value": "s85",
+          "from": "2026-09-10",
+          "to": "2026-09-21"
+        }
+      ],
+      "date_fact": "cedar_23",
+      "interval_fact": "cedar_23",
+      "subject": "cedar"
+    },
+    {
+      "id": "cedar_23_share",
+      "op": "multiply",
+      "unit": "USD_minor",
+      "basis": "exact_accrual",
+      "role": "intermediate",
+      "left": "cedar_23_fee",
+      "right": "cedar_23_rate",
+      "interval_fact": "cedar_23",
+      "subject": "cedar",
+      "currency": "USD"
+    },
+    {
+      "id": "cedar_24",
+      "op": "fact",
+      "unit": "USD_minor",
+      "basis": "source_reported",
+      "role": "intermediate",
+      "key": "cedar_24",
+      "interval_fact": "cedar_24",
+      "subject": "cedar",
+      "currency": "USD"
+    },
+    {
+      "id": "cedar_24_annual",
+      "op": "bands",
+      "unit": "USD_minor",
+      "basis": "exact_accrual",
+      "role": "intermediate",
+      "input": "cedar_24",
+      "bands": [
+        {
+          "upper": "182500000",
+          "rate": "r12"
+        },
+        {
+          "upper": null,
+          "rate": "r08"
+        }
+      ],
+      "interval_fact": "cedar_24",
+      "subject": "cedar",
+      "currency": "USD"
+    },
+    {
+      "id": "cedar_24_fee",
+      "op": "multiply",
+      "unit": "USD_minor",
+      "basis": "exact_accrual",
+      "role": "intermediate",
+      "left": "cedar_24_annual",
+      "right": "day",
+      "interval_fact": "cedar_24",
+      "subject": "cedar",
+      "currency": "USD"
+    },
+    {
+      "id": "cedar_24_rate",
+      "op": "select",
+      "unit": "scalar",
+      "basis": "scalar",
+      "role": "intermediate",
+      "candidates": [
+        {
+          "id": "standard",
+          "priority": 0,
+          "value": "s80"
+        },
+        {
+          "id": "promotion",
+          "priority": 1,
+          "value": "s85",
+          "from": "2026-09-10",
+          "to": "2026-09-21"
+        }
+      ],
+      "date_fact": "cedar_24",
+      "interval_fact": "cedar_24",
+      "subject": "cedar"
+    },
+    {
+      "id": "cedar_24_share",
+      "op": "multiply",
+      "unit": "USD_minor",
+      "basis": "exact_accrual",
+      "role": "intermediate",
+      "left": "cedar_24_fee",
+      "right": "cedar_24_rate",
+      "interval_fact": "cedar_24",
+      "subject": "cedar",
+      "currency": "USD"
+    },
+    {
+      "id": "cedar_25",
+      "op": "fact",
+      "unit": "USD_minor",
+      "basis": "source_reported",
+      "role": "intermediate",
+      "key": "cedar_25",
+      "interval_fact": "cedar_25",
+      "subject": "cedar",
+      "currency": "USD"
+    },
+    {
+      "id": "cedar_25_annual",
+      "op": "bands",
+      "unit": "USD_minor",
+      "basis": "exact_accrual",
+      "role": "intermediate",
+      "input": "cedar_25",
+      "bands": [
+        {
+          "upper": "182500000",
+          "rate": "r12"
+        },
+        {
+          "upper": null,
+          "rate": "r08"
+        }
+      ],
+      "interval_fact": "cedar_25",
+      "subject": "cedar",
+      "currency": "USD"
+    },
+    {
+      "id": "cedar_25_fee",
+      "op": "multiply",
+      "unit": "USD_minor",
+      "basis": "exact_accrual",
+      "role": "intermediate",
+      "left": "cedar_25_annual",
+      "right": "day",
+      "interval_fact": "cedar_25",
+      "subject": "cedar",
+      "currency": "USD"
+    },
+    {
+      "id": "cedar_25_rate",
+      "op": "select",
+      "unit": "scalar",
+      "basis": "scalar",
+      "role": "intermediate",
+      "candidates": [
+        {
+          "id": "standard",
+          "priority": 0,
+          "value": "s80"
+        },
+        {
+          "id": "promotion",
+          "priority": 1,
+          "value": "s85",
+          "from": "2026-09-10",
+          "to": "2026-09-21"
+        }
+      ],
+      "date_fact": "cedar_25",
+      "interval_fact": "cedar_25",
+      "subject": "cedar"
+    },
+    {
+      "id": "cedar_25_share",
+      "op": "multiply",
+      "unit": "USD_minor",
+      "basis": "exact_accrual",
+      "role": "intermediate",
+      "left": "cedar_25_fee",
+      "right": "cedar_25_rate",
+      "interval_fact": "cedar_25",
+      "subject": "cedar",
+      "currency": "USD"
+    },
+    {
+      "id": "cedar_26",
+      "op": "fact",
+      "unit": "USD_minor",
+      "basis": "source_reported",
+      "role": "intermediate",
+      "key": "cedar_26",
+      "interval_fact": "cedar_26",
+      "subject": "cedar",
+      "currency": "USD"
+    },
+    {
+      "id": "cedar_26_annual",
+      "op": "bands",
+      "unit": "USD_minor",
+      "basis": "exact_accrual",
+      "role": "intermediate",
+      "input": "cedar_26",
+      "bands": [
+        {
+          "upper": "182500000",
+          "rate": "r12"
+        },
+        {
+          "upper": null,
+          "rate": "r08"
+        }
+      ],
+      "interval_fact": "cedar_26",
+      "subject": "cedar",
+      "currency": "USD"
+    },
+    {
+      "id": "cedar_26_fee",
+      "op": "multiply",
+      "unit": "USD_minor",
+      "basis": "exact_accrual",
+      "role": "intermediate",
+      "left": "cedar_26_annual",
+      "right": "day",
+      "interval_fact": "cedar_26",
+      "subject": "cedar",
+      "currency": "USD"
+    },
+    {
+      "id": "cedar_26_rate",
+      "op": "select",
+      "unit": "scalar",
+      "basis": "scalar",
+      "role": "intermediate",
+      "candidates": [
+        {
+          "id": "standard",
+          "priority": 0,
+          "value": "s80"
+        },
+        {
+          "id": "promotion",
+          "priority": 1,
+          "value": "s85",
+          "from": "2026-09-10",
+          "to": "2026-09-21"
+        }
+      ],
+      "date_fact": "cedar_26",
+      "interval_fact": "cedar_26",
+      "subject": "cedar"
+    },
+    {
+      "id": "cedar_26_share",
+      "op": "multiply",
+      "unit": "USD_minor",
+      "basis": "exact_accrual",
+      "role": "intermediate",
+      "left": "cedar_26_fee",
+      "right": "cedar_26_rate",
+      "interval_fact": "cedar_26",
+      "subject": "cedar",
+      "currency": "USD"
+    },
+    {
+      "id": "cedar_27",
+      "op": "fact",
+      "unit": "USD_minor",
+      "basis": "source_reported",
+      "role": "intermediate",
+      "key": "cedar_27",
+      "interval_fact": "cedar_27",
+      "subject": "cedar",
+      "currency": "USD"
+    },
+    {
+      "id": "cedar_27_annual",
+      "op": "bands",
+      "unit": "USD_minor",
+      "basis": "exact_accrual",
+      "role": "intermediate",
+      "input": "cedar_27",
+      "bands": [
+        {
+          "upper": "182500000",
+          "rate": "r12"
+        },
+        {
+          "upper": null,
+          "rate": "r08"
+        }
+      ],
+      "interval_fact": "cedar_27",
+      "subject": "cedar",
+      "currency": "USD"
+    },
+    {
+      "id": "cedar_27_fee",
+      "op": "multiply",
+      "unit": "USD_minor",
+      "basis": "exact_accrual",
+      "role": "intermediate",
+      "left": "cedar_27_annual",
+      "right": "day",
+      "interval_fact": "cedar_27",
+      "subject": "cedar",
+      "currency": "USD"
+    },
+    {
+      "id": "cedar_27_rate",
+      "op": "select",
+      "unit": "scalar",
+      "basis": "scalar",
+      "role": "intermediate",
+      "candidates": [
+        {
+          "id": "standard",
+          "priority": 0,
+          "value": "s80"
+        },
+        {
+          "id": "promotion",
+          "priority": 1,
+          "value": "s85",
+          "from": "2026-09-10",
+          "to": "2026-09-21"
+        }
+      ],
+      "date_fact": "cedar_27",
+      "interval_fact": "cedar_27",
+      "subject": "cedar"
+    },
+    {
+      "id": "cedar_27_share",
+      "op": "multiply",
+      "unit": "USD_minor",
+      "basis": "exact_accrual",
+      "role": "intermediate",
+      "left": "cedar_27_fee",
+      "right": "cedar_27_rate",
+      "interval_fact": "cedar_27",
+      "subject": "cedar",
+      "currency": "USD"
+    },
+    {
+      "id": "cedar_28",
+      "op": "fact",
+      "unit": "USD_minor",
+      "basis": "source_reported",
+      "role": "intermediate",
+      "key": "cedar_28",
+      "interval_fact": "cedar_28",
+      "subject": "cedar",
+      "currency": "USD"
+    },
+    {
+      "id": "cedar_28_annual",
+      "op": "bands",
+      "unit": "USD_minor",
+      "basis": "exact_accrual",
+      "role": "intermediate",
+      "input": "cedar_28",
+      "bands": [
+        {
+          "upper": "182500000",
+          "rate": "r12"
+        },
+        {
+          "upper": null,
+          "rate": "r08"
+        }
+      ],
+      "interval_fact": "cedar_28",
+      "subject": "cedar",
+      "currency": "USD"
+    },
+    {
+      "id": "cedar_28_fee",
+      "op": "multiply",
+      "unit": "USD_minor",
+      "basis": "exact_accrual",
+      "role": "intermediate",
+      "left": "cedar_28_annual",
+      "right": "day",
+      "interval_fact": "cedar_28",
+      "subject": "cedar",
+      "currency": "USD"
+    },
+    {
+      "id": "cedar_28_rate",
+      "op": "select",
+      "unit": "scalar",
+      "basis": "scalar",
+      "role": "intermediate",
+      "candidates": [
+        {
+          "id": "standard",
+          "priority": 0,
+          "value": "s80"
+        },
+        {
+          "id": "promotion",
+          "priority": 1,
+          "value": "s85",
+          "from": "2026-09-10",
+          "to": "2026-09-21"
+        }
+      ],
+      "date_fact": "cedar_28",
+      "interval_fact": "cedar_28",
+      "subject": "cedar"
+    },
+    {
+      "id": "cedar_28_share",
+      "op": "multiply",
+      "unit": "USD_minor",
+      "basis": "exact_accrual",
+      "role": "intermediate",
+      "left": "cedar_28_fee",
+      "right": "cedar_28_rate",
+      "interval_fact": "cedar_28",
+      "subject": "cedar",
+      "currency": "USD"
+    },
+    {
+      "id": "cedar_29",
+      "op": "fact",
+      "unit": "USD_minor",
+      "basis": "source_reported",
+      "role": "intermediate",
+      "key": "cedar_29",
+      "interval_fact": "cedar_29",
+      "subject": "cedar",
+      "currency": "USD"
+    },
+    {
+      "id": "cedar_29_annual",
+      "op": "bands",
+      "unit": "USD_minor",
+      "basis": "exact_accrual",
+      "role": "intermediate",
+      "input": "cedar_29",
+      "bands": [
+        {
+          "upper": "182500000",
+          "rate": "r12"
+        },
+        {
+          "upper": null,
+          "rate": "r08"
+        }
+      ],
+      "interval_fact": "cedar_29",
+      "subject": "cedar",
+      "currency": "USD"
+    },
+    {
+      "id": "cedar_29_fee",
+      "op": "multiply",
+      "unit": "USD_minor",
+      "basis": "exact_accrual",
+      "role": "intermediate",
+      "left": "cedar_29_annual",
+      "right": "day",
+      "interval_fact": "cedar_29",
+      "subject": "cedar",
+      "currency": "USD"
+    },
+    {
+      "id": "cedar_29_rate",
+      "op": "select",
+      "unit": "scalar",
+      "basis": "scalar",
+      "role": "intermediate",
+      "candidates": [
+        {
+          "id": "standard",
+          "priority": 0,
+          "value": "s80"
+        },
+        {
+          "id": "promotion",
+          "priority": 1,
+          "value": "s85",
+          "from": "2026-09-10",
+          "to": "2026-09-21"
+        }
+      ],
+      "date_fact": "cedar_29",
+      "interval_fact": "cedar_29",
+      "subject": "cedar"
+    },
+    {
+      "id": "cedar_29_share",
+      "op": "multiply",
+      "unit": "USD_minor",
+      "basis": "exact_accrual",
+      "role": "intermediate",
+      "left": "cedar_29_fee",
+      "right": "cedar_29_rate",
+      "interval_fact": "cedar_29",
+      "subject": "cedar",
+      "currency": "USD"
+    },
+    {
+      "id": "cedar_30",
+      "op": "fact",
+      "unit": "USD_minor",
+      "basis": "source_reported",
+      "role": "intermediate",
+      "key": "cedar_30",
+      "interval_fact": "cedar_30",
+      "subject": "cedar",
+      "currency": "USD"
+    },
+    {
+      "id": "cedar_30_annual",
+      "op": "bands",
+      "unit": "USD_minor",
+      "basis": "exact_accrual",
+      "role": "intermediate",
+      "input": "cedar_30",
+      "bands": [
+        {
+          "upper": "182500000",
+          "rate": "r12"
+        },
+        {
+          "upper": null,
+          "rate": "r08"
+        }
+      ],
+      "interval_fact": "cedar_30",
+      "subject": "cedar",
+      "currency": "USD"
+    },
+    {
+      "id": "cedar_30_fee",
+      "op": "multiply",
+      "unit": "USD_minor",
+      "basis": "exact_accrual",
+      "role": "intermediate",
+      "left": "cedar_30_annual",
+      "right": "day",
+      "interval_fact": "cedar_30",
+      "subject": "cedar",
+      "currency": "USD"
+    },
+    {
+      "id": "cedar_30_rate",
+      "op": "select",
+      "unit": "scalar",
+      "basis": "scalar",
+      "role": "intermediate",
+      "candidates": [
+        {
+          "id": "standard",
+          "priority": 0,
+          "value": "s80"
+        },
+        {
+          "id": "promotion",
+          "priority": 1,
+          "value": "s85",
+          "from": "2026-09-10",
+          "to": "2026-09-21"
+        }
+      ],
+      "date_fact": "cedar_30",
+      "interval_fact": "cedar_30",
+      "subject": "cedar"
+    },
+    {
+      "id": "cedar_30_share",
+      "op": "multiply",
+      "unit": "USD_minor",
+      "basis": "exact_accrual",
+      "role": "intermediate",
+      "left": "cedar_30_fee",
+      "right": "cedar_30_rate",
+      "interval_fact": "cedar_30",
+      "subject": "cedar",
+      "currency": "USD"
+    },
+    {
+      "id": "cedar_fee_exact",
+      "op": "add",
+      "unit": "USD_minor",
+      "basis": "exact_accrual",
+      "role": "intermediate",
+      "inputs": [
+        "cedar_01_fee",
+        "cedar_02_fee",
+        "cedar_03_fee",
+        "cedar_04_fee",
+        "cedar_05_fee",
+        "cedar_06_fee",
+        "cedar_07_fee",
+        "cedar_08_fee",
+        "cedar_09_fee",
+        "cedar_10_fee",
+        "cedar_11_fee",
+        "cedar_12_fee",
+        "cedar_13_fee",
+        "cedar_14_fee",
+        "cedar_15_fee",
+        "cedar_16_fee",
+        "cedar_17_fee",
+        "cedar_18_fee",
+        "cedar_19_fee",
+        "cedar_20_fee",
+        "cedar_21_fee",
+        "cedar_22_fee",
+        "cedar_23_fee",
+        "cedar_24_fee",
+        "cedar_25_fee",
+        "cedar_26_fee",
+        "cedar_27_fee",
+        "cedar_28_fee",
+        "cedar_29_fee",
+        "cedar_30_fee"
+      ],
+      "currency": "USD"
+    },
+    {
+      "id": "cedar_fee",
+      "op": "assess",
+      "unit": "USD_minor",
+      "basis": "assessed",
+      "role": "terminal",
+      "input": "cedar_fee_exact",
+      "rounding": "half_up",
+      "currency": "USD",
+      "payer": "cedar",
+      "payee": "firm-demo",
+      "output_class": "obligation",
+      "explanation": "Progressive annual tier rates apply to Cedar’s daily billable balances. Applicable rates and dates are shown in Agreements."
+    },
+    {
+      "id": "cedar_share_exact",
+      "op": "add",
+      "unit": "USD_minor",
+      "basis": "exact_accrual",
+      "role": "intermediate",
+      "inputs": [
+        "cedar_01_share",
+        "cedar_02_share",
+        "cedar_03_share",
+        "cedar_04_share",
+        "cedar_05_share",
+        "cedar_06_share",
+        "cedar_07_share",
+        "cedar_08_share",
+        "cedar_09_share",
+        "cedar_10_share",
+        "cedar_11_share",
+        "cedar_12_share",
+        "cedar_13_share",
+        "cedar_14_share",
+        "cedar_15_share",
+        "cedar_16_share",
+        "cedar_17_share",
+        "cedar_18_share",
+        "cedar_19_share",
+        "cedar_20_share",
+        "cedar_21_share",
+        "cedar_22_share",
+        "cedar_23_share",
+        "cedar_24_share",
+        "cedar_25_share",
+        "cedar_26_share",
+        "cedar_27_share",
+        "cedar_28_share",
+        "cedar_29_share",
+        "cedar_30_share"
+      ],
+      "currency": "USD"
+    },
+    {
+      "id": "cedar_share",
+      "op": "assess",
+      "unit": "USD_minor",
+      "basis": "assessed",
+      "role": "terminal",
+      "input": "cedar_share_exact",
+      "rounding": "half_up",
+      "currency": "USD",
+      "payer": "firm-demo",
+      "payee": "advisor-demo",
+      "subject": "advisor-demo",
+      "output_class": "obligation",
+      "explanation": "Advisor share of Cedar’s earned daily advisory fees uses the terms in effect for each day."
+    },
+    {
+      "id": "maple_11",
+      "op": "fact",
+      "unit": "USD_minor",
+      "basis": "source_reported",
+      "role": "intermediate",
+      "key": "maple_11",
+      "interval_fact": "maple_11",
+      "subject": "maple",
+      "currency": "USD"
+    },
+    {
+      "id": "maple_11_annual",
+      "op": "accrue",
+      "unit": "USD_minor",
+      "basis": "exact_accrual",
+      "role": "intermediate",
+      "left": "maple_11",
+      "right": "r08",
+      "interval_fact": "maple_11",
+      "subject": "maple",
+      "currency": "USD"
+    },
+    {
+      "id": "maple_11_fee",
+      "op": "multiply",
+      "unit": "USD_minor",
+      "basis": "exact_accrual",
+      "role": "intermediate",
+      "left": "maple_11_annual",
+      "right": "day",
+      "interval_fact": "maple_11",
+      "subject": "maple",
+      "currency": "USD"
+    },
+    {
+      "id": "maple_11_rate",
+      "op": "select",
+      "unit": "scalar",
+      "basis": "scalar",
+      "role": "intermediate",
+      "candidates": [
+        {
+          "id": "standard",
+          "priority": 0,
+          "value": "s80"
+        },
+        {
+          "id": "promotion",
+          "priority": 1,
+          "value": "s85",
+          "from": "2026-09-10",
+          "to": "2026-09-21"
+        },
+        {
+          "id": "welcome",
+          "priority": 2,
+          "value": "s90",
+          "signup_fact": "signup",
+          "days": 10
+        }
+      ],
+      "date_fact": "maple_11",
+      "interval_fact": "maple_11",
+      "subject": "maple"
+    },
+    {
+      "id": "maple_11_share",
+      "op": "multiply",
+      "unit": "USD_minor",
+      "basis": "exact_accrual",
+      "role": "intermediate",
+      "left": "maple_11_fee",
+      "right": "maple_11_rate",
+      "interval_fact": "maple_11",
+      "subject": "maple",
+      "currency": "USD"
+    },
+    {
+      "id": "maple_12",
+      "op": "fact",
+      "unit": "USD_minor",
+      "basis": "source_reported",
+      "role": "intermediate",
+      "key": "maple_12",
+      "interval_fact": "maple_12",
+      "subject": "maple",
+      "currency": "USD"
+    },
+    {
+      "id": "maple_12_annual",
+      "op": "accrue",
+      "unit": "USD_minor",
+      "basis": "exact_accrual",
+      "role": "intermediate",
+      "left": "maple_12",
+      "right": "r08",
+      "interval_fact": "maple_12",
+      "subject": "maple",
+      "currency": "USD"
+    },
+    {
+      "id": "maple_12_fee",
+      "op": "multiply",
+      "unit": "USD_minor",
+      "basis": "exact_accrual",
+      "role": "intermediate",
+      "left": "maple_12_annual",
+      "right": "day",
+      "interval_fact": "maple_12",
+      "subject": "maple",
+      "currency": "USD"
+    },
+    {
+      "id": "maple_12_rate",
+      "op": "select",
+      "unit": "scalar",
+      "basis": "scalar",
+      "role": "intermediate",
+      "candidates": [
+        {
+          "id": "standard",
+          "priority": 0,
+          "value": "s80"
+        },
+        {
+          "id": "promotion",
+          "priority": 1,
+          "value": "s85",
+          "from": "2026-09-10",
+          "to": "2026-09-21"
+        },
+        {
+          "id": "welcome",
+          "priority": 2,
+          "value": "s90",
+          "signup_fact": "signup",
+          "days": 10
+        }
+      ],
+      "date_fact": "maple_12",
+      "interval_fact": "maple_12",
+      "subject": "maple"
+    },
+    {
+      "id": "maple_12_share",
+      "op": "multiply",
+      "unit": "USD_minor",
+      "basis": "exact_accrual",
+      "role": "intermediate",
+      "left": "maple_12_fee",
+      "right": "maple_12_rate",
+      "interval_fact": "maple_12",
+      "subject": "maple",
+      "currency": "USD"
+    },
+    {
+      "id": "maple_13",
+      "op": "fact",
+      "unit": "USD_minor",
+      "basis": "source_reported",
+      "role": "intermediate",
+      "key": "maple_13",
+      "interval_fact": "maple_13",
+      "subject": "maple",
+      "currency": "USD"
+    },
+    {
+      "id": "maple_13_annual",
+      "op": "accrue",
+      "unit": "USD_minor",
+      "basis": "exact_accrual",
+      "role": "intermediate",
+      "left": "maple_13",
+      "right": "r08",
+      "interval_fact": "maple_13",
+      "subject": "maple",
+      "currency": "USD"
+    },
+    {
+      "id": "maple_13_fee",
+      "op": "multiply",
+      "unit": "USD_minor",
+      "basis": "exact_accrual",
+      "role": "intermediate",
+      "left": "maple_13_annual",
+      "right": "day",
+      "interval_fact": "maple_13",
+      "subject": "maple",
+      "currency": "USD"
+    },
+    {
+      "id": "maple_13_rate",
+      "op": "select",
+      "unit": "scalar",
+      "basis": "scalar",
+      "role": "intermediate",
+      "candidates": [
+        {
+          "id": "standard",
+          "priority": 0,
+          "value": "s80"
+        },
+        {
+          "id": "promotion",
+          "priority": 1,
+          "value": "s85",
+          "from": "2026-09-10",
+          "to": "2026-09-21"
+        },
+        {
+          "id": "welcome",
+          "priority": 2,
+          "value": "s90",
+          "signup_fact": "signup",
+          "days": 10
+        }
+      ],
+      "date_fact": "maple_13",
+      "interval_fact": "maple_13",
+      "subject": "maple"
+    },
+    {
+      "id": "maple_13_share",
+      "op": "multiply",
+      "unit": "USD_minor",
+      "basis": "exact_accrual",
+      "role": "intermediate",
+      "left": "maple_13_fee",
+      "right": "maple_13_rate",
+      "interval_fact": "maple_13",
+      "subject": "maple",
+      "currency": "USD"
+    },
+    {
+      "id": "maple_14",
+      "op": "fact",
+      "unit": "USD_minor",
+      "basis": "source_reported",
+      "role": "intermediate",
+      "key": "maple_14",
+      "interval_fact": "maple_14",
+      "subject": "maple",
+      "currency": "USD"
+    },
+    {
+      "id": "maple_14_annual",
+      "op": "accrue",
+      "unit": "USD_minor",
+      "basis": "exact_accrual",
+      "role": "intermediate",
+      "left": "maple_14",
+      "right": "r08",
+      "interval_fact": "maple_14",
+      "subject": "maple",
+      "currency": "USD"
+    },
+    {
+      "id": "maple_14_fee",
+      "op": "multiply",
+      "unit": "USD_minor",
+      "basis": "exact_accrual",
+      "role": "intermediate",
+      "left": "maple_14_annual",
+      "right": "day",
+      "interval_fact": "maple_14",
+      "subject": "maple",
+      "currency": "USD"
+    },
+    {
+      "id": "maple_14_rate",
+      "op": "select",
+      "unit": "scalar",
+      "basis": "scalar",
+      "role": "intermediate",
+      "candidates": [
+        {
+          "id": "standard",
+          "priority": 0,
+          "value": "s80"
+        },
+        {
+          "id": "promotion",
+          "priority": 1,
+          "value": "s85",
+          "from": "2026-09-10",
+          "to": "2026-09-21"
+        },
+        {
+          "id": "welcome",
+          "priority": 2,
+          "value": "s90",
+          "signup_fact": "signup",
+          "days": 10
+        }
+      ],
+      "date_fact": "maple_14",
+      "interval_fact": "maple_14",
+      "subject": "maple"
+    },
+    {
+      "id": "maple_14_share",
+      "op": "multiply",
+      "unit": "USD_minor",
+      "basis": "exact_accrual",
+      "role": "intermediate",
+      "left": "maple_14_fee",
+      "right": "maple_14_rate",
+      "interval_fact": "maple_14",
+      "subject": "maple",
+      "currency": "USD"
+    },
+    {
+      "id": "maple_15",
+      "op": "fact",
+      "unit": "USD_minor",
+      "basis": "source_reported",
+      "role": "intermediate",
+      "key": "maple_15",
+      "interval_fact": "maple_15",
+      "subject": "maple",
+      "currency": "USD"
+    },
+    {
+      "id": "maple_15_annual",
+      "op": "accrue",
+      "unit": "USD_minor",
+      "basis": "exact_accrual",
+      "role": "intermediate",
+      "left": "maple_15",
+      "right": "r08",
+      "interval_fact": "maple_15",
+      "subject": "maple",
+      "currency": "USD"
+    },
+    {
+      "id": "maple_15_fee",
+      "op": "multiply",
+      "unit": "USD_minor",
+      "basis": "exact_accrual",
+      "role": "intermediate",
+      "left": "maple_15_annual",
+      "right": "day",
+      "interval_fact": "maple_15",
+      "subject": "maple",
+      "currency": "USD"
+    },
+    {
+      "id": "maple_15_rate",
+      "op": "select",
+      "unit": "scalar",
+      "basis": "scalar",
+      "role": "intermediate",
+      "candidates": [
+        {
+          "id": "standard",
+          "priority": 0,
+          "value": "s80"
+        },
+        {
+          "id": "promotion",
+          "priority": 1,
+          "value": "s85",
+          "from": "2026-09-10",
+          "to": "2026-09-21"
+        },
+        {
+          "id": "welcome",
+          "priority": 2,
+          "value": "s90",
+          "signup_fact": "signup",
+          "days": 10
+        }
+      ],
+      "date_fact": "maple_15",
+      "interval_fact": "maple_15",
+      "subject": "maple"
+    },
+    {
+      "id": "maple_15_share",
+      "op": "multiply",
+      "unit": "USD_minor",
+      "basis": "exact_accrual",
+      "role": "intermediate",
+      "left": "maple_15_fee",
+      "right": "maple_15_rate",
+      "interval_fact": "maple_15",
+      "subject": "maple",
+      "currency": "USD"
+    },
+    {
+      "id": "maple_16",
+      "op": "fact",
+      "unit": "USD_minor",
+      "basis": "source_reported",
+      "role": "intermediate",
+      "key": "maple_16",
+      "interval_fact": "maple_16",
+      "subject": "maple",
+      "currency": "USD"
+    },
+    {
+      "id": "maple_16_annual",
+      "op": "accrue",
+      "unit": "USD_minor",
+      "basis": "exact_accrual",
+      "role": "intermediate",
+      "left": "maple_16",
+      "right": "r08",
+      "interval_fact": "maple_16",
+      "subject": "maple",
+      "currency": "USD"
+    },
+    {
+      "id": "maple_16_fee",
+      "op": "multiply",
+      "unit": "USD_minor",
+      "basis": "exact_accrual",
+      "role": "intermediate",
+      "left": "maple_16_annual",
+      "right": "day",
+      "interval_fact": "maple_16",
+      "subject": "maple",
+      "currency": "USD"
+    },
+    {
+      "id": "maple_16_rate",
+      "op": "select",
+      "unit": "scalar",
+      "basis": "scalar",
+      "role": "intermediate",
+      "candidates": [
+        {
+          "id": "standard",
+          "priority": 0,
+          "value": "s80"
+        },
+        {
+          "id": "promotion",
+          "priority": 1,
+          "value": "s85",
+          "from": "2026-09-10",
+          "to": "2026-09-21"
+        },
+        {
+          "id": "welcome",
+          "priority": 2,
+          "value": "s90",
+          "signup_fact": "signup",
+          "days": 10
+        }
+      ],
+      "date_fact": "maple_16",
+      "interval_fact": "maple_16",
+      "subject": "maple"
+    },
+    {
+      "id": "maple_16_share",
+      "op": "multiply",
+      "unit": "USD_minor",
+      "basis": "exact_accrual",
+      "role": "intermediate",
+      "left": "maple_16_fee",
+      "right": "maple_16_rate",
+      "interval_fact": "maple_16",
+      "subject": "maple",
+      "currency": "USD"
+    },
+    {
+      "id": "maple_17",
+      "op": "fact",
+      "unit": "USD_minor",
+      "basis": "source_reported",
+      "role": "intermediate",
+      "key": "maple_17",
+      "interval_fact": "maple_17",
+      "subject": "maple",
+      "currency": "USD"
+    },
+    {
+      "id": "maple_17_annual",
+      "op": "accrue",
+      "unit": "USD_minor",
+      "basis": "exact_accrual",
+      "role": "intermediate",
+      "left": "maple_17",
+      "right": "r08",
+      "interval_fact": "maple_17",
+      "subject": "maple",
+      "currency": "USD"
+    },
+    {
+      "id": "maple_17_fee",
+      "op": "multiply",
+      "unit": "USD_minor",
+      "basis": "exact_accrual",
+      "role": "intermediate",
+      "left": "maple_17_annual",
+      "right": "day",
+      "interval_fact": "maple_17",
+      "subject": "maple",
+      "currency": "USD"
+    },
+    {
+      "id": "maple_17_rate",
+      "op": "select",
+      "unit": "scalar",
+      "basis": "scalar",
+      "role": "intermediate",
+      "candidates": [
+        {
+          "id": "standard",
+          "priority": 0,
+          "value": "s80"
+        },
+        {
+          "id": "promotion",
+          "priority": 1,
+          "value": "s85",
+          "from": "2026-09-10",
+          "to": "2026-09-21"
+        },
+        {
+          "id": "welcome",
+          "priority": 2,
+          "value": "s90",
+          "signup_fact": "signup",
+          "days": 10
+        }
+      ],
+      "date_fact": "maple_17",
+      "interval_fact": "maple_17",
+      "subject": "maple"
+    },
+    {
+      "id": "maple_17_share",
+      "op": "multiply",
+      "unit": "USD_minor",
+      "basis": "exact_accrual",
+      "role": "intermediate",
+      "left": "maple_17_fee",
+      "right": "maple_17_rate",
+      "interval_fact": "maple_17",
+      "subject": "maple",
+      "currency": "USD"
+    },
+    {
+      "id": "maple_18",
+      "op": "fact",
+      "unit": "USD_minor",
+      "basis": "source_reported",
+      "role": "intermediate",
+      "key": "maple_18",
+      "interval_fact": "maple_18",
+      "subject": "maple",
+      "currency": "USD"
+    },
+    {
+      "id": "maple_18_annual",
+      "op": "accrue",
+      "unit": "USD_minor",
+      "basis": "exact_accrual",
+      "role": "intermediate",
+      "left": "maple_18",
+      "right": "r08",
+      "interval_fact": "maple_18",
+      "subject": "maple",
+      "currency": "USD"
+    },
+    {
+      "id": "maple_18_fee",
+      "op": "multiply",
+      "unit": "USD_minor",
+      "basis": "exact_accrual",
+      "role": "intermediate",
+      "left": "maple_18_annual",
+      "right": "day",
+      "interval_fact": "maple_18",
+      "subject": "maple",
+      "currency": "USD"
+    },
+    {
+      "id": "maple_18_rate",
+      "op": "select",
+      "unit": "scalar",
+      "basis": "scalar",
+      "role": "intermediate",
+      "candidates": [
+        {
+          "id": "standard",
+          "priority": 0,
+          "value": "s80"
+        },
+        {
+          "id": "promotion",
+          "priority": 1,
+          "value": "s85",
+          "from": "2026-09-10",
+          "to": "2026-09-21"
+        },
+        {
+          "id": "welcome",
+          "priority": 2,
+          "value": "s90",
+          "signup_fact": "signup",
+          "days": 10
+        }
+      ],
+      "date_fact": "maple_18",
+      "interval_fact": "maple_18",
+      "subject": "maple"
+    },
+    {
+      "id": "maple_18_share",
+      "op": "multiply",
+      "unit": "USD_minor",
+      "basis": "exact_accrual",
+      "role": "intermediate",
+      "left": "maple_18_fee",
+      "right": "maple_18_rate",
+      "interval_fact": "maple_18",
+      "subject": "maple",
+      "currency": "USD"
+    },
+    {
+      "id": "maple_19",
+      "op": "fact",
+      "unit": "USD_minor",
+      "basis": "source_reported",
+      "role": "intermediate",
+      "key": "maple_19",
+      "interval_fact": "maple_19",
+      "subject": "maple",
+      "currency": "USD"
+    },
+    {
+      "id": "maple_19_annual",
+      "op": "accrue",
+      "unit": "USD_minor",
+      "basis": "exact_accrual",
+      "role": "intermediate",
+      "left": "maple_19",
+      "right": "r08",
+      "interval_fact": "maple_19",
+      "subject": "maple",
+      "currency": "USD"
+    },
+    {
+      "id": "maple_19_fee",
+      "op": "multiply",
+      "unit": "USD_minor",
+      "basis": "exact_accrual",
+      "role": "intermediate",
+      "left": "maple_19_annual",
+      "right": "day",
+      "interval_fact": "maple_19",
+      "subject": "maple",
+      "currency": "USD"
+    },
+    {
+      "id": "maple_19_rate",
+      "op": "select",
+      "unit": "scalar",
+      "basis": "scalar",
+      "role": "intermediate",
+      "candidates": [
+        {
+          "id": "standard",
+          "priority": 0,
+          "value": "s80"
+        },
+        {
+          "id": "promotion",
+          "priority": 1,
+          "value": "s85",
+          "from": "2026-09-10",
+          "to": "2026-09-21"
+        },
+        {
+          "id": "welcome",
+          "priority": 2,
+          "value": "s90",
+          "signup_fact": "signup",
+          "days": 10
+        }
+      ],
+      "date_fact": "maple_19",
+      "interval_fact": "maple_19",
+      "subject": "maple"
+    },
+    {
+      "id": "maple_19_share",
+      "op": "multiply",
+      "unit": "USD_minor",
+      "basis": "exact_accrual",
+      "role": "intermediate",
+      "left": "maple_19_fee",
+      "right": "maple_19_rate",
+      "interval_fact": "maple_19",
+      "subject": "maple",
+      "currency": "USD"
+    },
+    {
+      "id": "maple_20",
+      "op": "fact",
+      "unit": "USD_minor",
+      "basis": "source_reported",
+      "role": "intermediate",
+      "key": "maple_20",
+      "interval_fact": "maple_20",
+      "subject": "maple",
+      "currency": "USD"
+    },
+    {
+      "id": "maple_20_annual",
+      "op": "accrue",
+      "unit": "USD_minor",
+      "basis": "exact_accrual",
+      "role": "intermediate",
+      "left": "maple_20",
+      "right": "r08",
+      "interval_fact": "maple_20",
+      "subject": "maple",
+      "currency": "USD"
+    },
+    {
+      "id": "maple_20_fee",
+      "op": "multiply",
+      "unit": "USD_minor",
+      "basis": "exact_accrual",
+      "role": "intermediate",
+      "left": "maple_20_annual",
+      "right": "day",
+      "interval_fact": "maple_20",
+      "subject": "maple",
+      "currency": "USD"
+    },
+    {
+      "id": "maple_20_rate",
+      "op": "select",
+      "unit": "scalar",
+      "basis": "scalar",
+      "role": "intermediate",
+      "candidates": [
+        {
+          "id": "standard",
+          "priority": 0,
+          "value": "s80"
+        },
+        {
+          "id": "promotion",
+          "priority": 1,
+          "value": "s85",
+          "from": "2026-09-10",
+          "to": "2026-09-21"
+        },
+        {
+          "id": "welcome",
+          "priority": 2,
+          "value": "s90",
+          "signup_fact": "signup",
+          "days": 10
+        }
+      ],
+      "date_fact": "maple_20",
+      "interval_fact": "maple_20",
+      "subject": "maple"
+    },
+    {
+      "id": "maple_20_share",
+      "op": "multiply",
+      "unit": "USD_minor",
+      "basis": "exact_accrual",
+      "role": "intermediate",
+      "left": "maple_20_fee",
+      "right": "maple_20_rate",
+      "interval_fact": "maple_20",
+      "subject": "maple",
+      "currency": "USD"
+    },
+    {
+      "id": "maple_21",
+      "op": "fact",
+      "unit": "USD_minor",
+      "basis": "source_reported",
+      "role": "intermediate",
+      "key": "maple_21",
+      "interval_fact": "maple_21",
+      "subject": "maple",
+      "currency": "USD"
+    },
+    {
+      "id": "maple_21_annual",
+      "op": "accrue",
+      "unit": "USD_minor",
+      "basis": "exact_accrual",
+      "role": "intermediate",
+      "left": "maple_21",
+      "right": "r08",
+      "interval_fact": "maple_21",
+      "subject": "maple",
+      "currency": "USD"
+    },
+    {
+      "id": "maple_21_fee",
+      "op": "multiply",
+      "unit": "USD_minor",
+      "basis": "exact_accrual",
+      "role": "intermediate",
+      "left": "maple_21_annual",
+      "right": "day",
+      "interval_fact": "maple_21",
+      "subject": "maple",
+      "currency": "USD"
+    },
+    {
+      "id": "maple_21_rate",
+      "op": "select",
+      "unit": "scalar",
+      "basis": "scalar",
+      "role": "intermediate",
+      "candidates": [
+        {
+          "id": "standard",
+          "priority": 0,
+          "value": "s80"
+        },
+        {
+          "id": "promotion",
+          "priority": 1,
+          "value": "s85",
+          "from": "2026-09-10",
+          "to": "2026-09-21"
+        },
+        {
+          "id": "welcome",
+          "priority": 2,
+          "value": "s90",
+          "signup_fact": "signup",
+          "days": 10
+        }
+      ],
+      "date_fact": "maple_21",
+      "interval_fact": "maple_21",
+      "subject": "maple"
+    },
+    {
+      "id": "maple_21_share",
+      "op": "multiply",
+      "unit": "USD_minor",
+      "basis": "exact_accrual",
+      "role": "intermediate",
+      "left": "maple_21_fee",
+      "right": "maple_21_rate",
+      "interval_fact": "maple_21",
+      "subject": "maple",
+      "currency": "USD"
+    },
+    {
+      "id": "maple_22",
+      "op": "fact",
+      "unit": "USD_minor",
+      "basis": "source_reported",
+      "role": "intermediate",
+      "key": "maple_22",
+      "interval_fact": "maple_22",
+      "subject": "maple",
+      "currency": "USD"
+    },
+    {
+      "id": "maple_22_annual",
+      "op": "accrue",
+      "unit": "USD_minor",
+      "basis": "exact_accrual",
+      "role": "intermediate",
+      "left": "maple_22",
+      "right": "r08",
+      "interval_fact": "maple_22",
+      "subject": "maple",
+      "currency": "USD"
+    },
+    {
+      "id": "maple_22_fee",
+      "op": "multiply",
+      "unit": "USD_minor",
+      "basis": "exact_accrual",
+      "role": "intermediate",
+      "left": "maple_22_annual",
+      "right": "day",
+      "interval_fact": "maple_22",
+      "subject": "maple",
+      "currency": "USD"
+    },
+    {
+      "id": "maple_22_rate",
+      "op": "select",
+      "unit": "scalar",
+      "basis": "scalar",
+      "role": "intermediate",
+      "candidates": [
+        {
+          "id": "standard",
+          "priority": 0,
+          "value": "s80"
+        },
+        {
+          "id": "promotion",
+          "priority": 1,
+          "value": "s85",
+          "from": "2026-09-10",
+          "to": "2026-09-21"
+        },
+        {
+          "id": "welcome",
+          "priority": 2,
+          "value": "s90",
+          "signup_fact": "signup",
+          "days": 10
+        }
+      ],
+      "date_fact": "maple_22",
+      "interval_fact": "maple_22",
+      "subject": "maple"
+    },
+    {
+      "id": "maple_22_share",
+      "op": "multiply",
+      "unit": "USD_minor",
+      "basis": "exact_accrual",
+      "role": "intermediate",
+      "left": "maple_22_fee",
+      "right": "maple_22_rate",
+      "interval_fact": "maple_22",
+      "subject": "maple",
+      "currency": "USD"
+    },
+    {
+      "id": "maple_23",
+      "op": "fact",
+      "unit": "USD_minor",
+      "basis": "source_reported",
+      "role": "intermediate",
+      "key": "maple_23",
+      "interval_fact": "maple_23",
+      "subject": "maple",
+      "currency": "USD"
+    },
+    {
+      "id": "maple_23_annual",
+      "op": "accrue",
+      "unit": "USD_minor",
+      "basis": "exact_accrual",
+      "role": "intermediate",
+      "left": "maple_23",
+      "right": "r08",
+      "interval_fact": "maple_23",
+      "subject": "maple",
+      "currency": "USD"
+    },
+    {
+      "id": "maple_23_fee",
+      "op": "multiply",
+      "unit": "USD_minor",
+      "basis": "exact_accrual",
+      "role": "intermediate",
+      "left": "maple_23_annual",
+      "right": "day",
+      "interval_fact": "maple_23",
+      "subject": "maple",
+      "currency": "USD"
+    },
+    {
+      "id": "maple_23_rate",
+      "op": "select",
+      "unit": "scalar",
+      "basis": "scalar",
+      "role": "intermediate",
+      "candidates": [
+        {
+          "id": "standard",
+          "priority": 0,
+          "value": "s80"
+        },
+        {
+          "id": "promotion",
+          "priority": 1,
+          "value": "s85",
+          "from": "2026-09-10",
+          "to": "2026-09-21"
+        },
+        {
+          "id": "welcome",
+          "priority": 2,
+          "value": "s90",
+          "signup_fact": "signup",
+          "days": 10
+        }
+      ],
+      "date_fact": "maple_23",
+      "interval_fact": "maple_23",
+      "subject": "maple"
+    },
+    {
+      "id": "maple_23_share",
+      "op": "multiply",
+      "unit": "USD_minor",
+      "basis": "exact_accrual",
+      "role": "intermediate",
+      "left": "maple_23_fee",
+      "right": "maple_23_rate",
+      "interval_fact": "maple_23",
+      "subject": "maple",
+      "currency": "USD"
+    },
+    {
+      "id": "maple_24",
+      "op": "fact",
+      "unit": "USD_minor",
+      "basis": "source_reported",
+      "role": "intermediate",
+      "key": "maple_24",
+      "interval_fact": "maple_24",
+      "subject": "maple",
+      "currency": "USD"
+    },
+    {
+      "id": "maple_24_annual",
+      "op": "accrue",
+      "unit": "USD_minor",
+      "basis": "exact_accrual",
+      "role": "intermediate",
+      "left": "maple_24",
+      "right": "r08",
+      "interval_fact": "maple_24",
+      "subject": "maple",
+      "currency": "USD"
+    },
+    {
+      "id": "maple_24_fee",
+      "op": "multiply",
+      "unit": "USD_minor",
+      "basis": "exact_accrual",
+      "role": "intermediate",
+      "left": "maple_24_annual",
+      "right": "day",
+      "interval_fact": "maple_24",
+      "subject": "maple",
+      "currency": "USD"
+    },
+    {
+      "id": "maple_24_rate",
+      "op": "select",
+      "unit": "scalar",
+      "basis": "scalar",
+      "role": "intermediate",
+      "candidates": [
+        {
+          "id": "standard",
+          "priority": 0,
+          "value": "s80"
+        },
+        {
+          "id": "promotion",
+          "priority": 1,
+          "value": "s85",
+          "from": "2026-09-10",
+          "to": "2026-09-21"
+        },
+        {
+          "id": "welcome",
+          "priority": 2,
+          "value": "s90",
+          "signup_fact": "signup",
+          "days": 10
+        }
+      ],
+      "date_fact": "maple_24",
+      "interval_fact": "maple_24",
+      "subject": "maple"
+    },
+    {
+      "id": "maple_24_share",
+      "op": "multiply",
+      "unit": "USD_minor",
+      "basis": "exact_accrual",
+      "role": "intermediate",
+      "left": "maple_24_fee",
+      "right": "maple_24_rate",
+      "interval_fact": "maple_24",
+      "subject": "maple",
+      "currency": "USD"
+    },
+    {
+      "id": "maple_25",
+      "op": "fact",
+      "unit": "USD_minor",
+      "basis": "source_reported",
+      "role": "intermediate",
+      "key": "maple_25",
+      "interval_fact": "maple_25",
+      "subject": "maple",
+      "currency": "USD"
+    },
+    {
+      "id": "maple_25_annual",
+      "op": "accrue",
+      "unit": "USD_minor",
+      "basis": "exact_accrual",
+      "role": "intermediate",
+      "left": "maple_25",
+      "right": "r08",
+      "interval_fact": "maple_25",
+      "subject": "maple",
+      "currency": "USD"
+    },
+    {
+      "id": "maple_25_fee",
+      "op": "multiply",
+      "unit": "USD_minor",
+      "basis": "exact_accrual",
+      "role": "intermediate",
+      "left": "maple_25_annual",
+      "right": "day",
+      "interval_fact": "maple_25",
+      "subject": "maple",
+      "currency": "USD"
+    },
+    {
+      "id": "maple_25_rate",
+      "op": "select",
+      "unit": "scalar",
+      "basis": "scalar",
+      "role": "intermediate",
+      "candidates": [
+        {
+          "id": "standard",
+          "priority": 0,
+          "value": "s80"
+        },
+        {
+          "id": "promotion",
+          "priority": 1,
+          "value": "s85",
+          "from": "2026-09-10",
+          "to": "2026-09-21"
+        },
+        {
+          "id": "welcome",
+          "priority": 2,
+          "value": "s90",
+          "signup_fact": "signup",
+          "days": 10
+        }
+      ],
+      "date_fact": "maple_25",
+      "interval_fact": "maple_25",
+      "subject": "maple"
+    },
+    {
+      "id": "maple_25_share",
+      "op": "multiply",
+      "unit": "USD_minor",
+      "basis": "exact_accrual",
+      "role": "intermediate",
+      "left": "maple_25_fee",
+      "right": "maple_25_rate",
+      "interval_fact": "maple_25",
+      "subject": "maple",
+      "currency": "USD"
+    },
+    {
+      "id": "maple_26",
+      "op": "fact",
+      "unit": "USD_minor",
+      "basis": "source_reported",
+      "role": "intermediate",
+      "key": "maple_26",
+      "interval_fact": "maple_26",
+      "subject": "maple",
+      "currency": "USD"
+    },
+    {
+      "id": "maple_26_annual",
+      "op": "accrue",
+      "unit": "USD_minor",
+      "basis": "exact_accrual",
+      "role": "intermediate",
+      "left": "maple_26",
+      "right": "r08",
+      "interval_fact": "maple_26",
+      "subject": "maple",
+      "currency": "USD"
+    },
+    {
+      "id": "maple_26_fee",
+      "op": "multiply",
+      "unit": "USD_minor",
+      "basis": "exact_accrual",
+      "role": "intermediate",
+      "left": "maple_26_annual",
+      "right": "day",
+      "interval_fact": "maple_26",
+      "subject": "maple",
+      "currency": "USD"
+    },
+    {
+      "id": "maple_26_rate",
+      "op": "select",
+      "unit": "scalar",
+      "basis": "scalar",
+      "role": "intermediate",
+      "candidates": [
+        {
+          "id": "standard",
+          "priority": 0,
+          "value": "s80"
+        },
+        {
+          "id": "promotion",
+          "priority": 1,
+          "value": "s85",
+          "from": "2026-09-10",
+          "to": "2026-09-21"
+        },
+        {
+          "id": "welcome",
+          "priority": 2,
+          "value": "s90",
+          "signup_fact": "signup",
+          "days": 10
+        }
+      ],
+      "date_fact": "maple_26",
+      "interval_fact": "maple_26",
+      "subject": "maple"
+    },
+    {
+      "id": "maple_26_share",
+      "op": "multiply",
+      "unit": "USD_minor",
+      "basis": "exact_accrual",
+      "role": "intermediate",
+      "left": "maple_26_fee",
+      "right": "maple_26_rate",
+      "interval_fact": "maple_26",
+      "subject": "maple",
+      "currency": "USD"
+    },
+    {
+      "id": "maple_27",
+      "op": "fact",
+      "unit": "USD_minor",
+      "basis": "source_reported",
+      "role": "intermediate",
+      "key": "maple_27",
+      "interval_fact": "maple_27",
+      "subject": "maple",
+      "currency": "USD"
+    },
+    {
+      "id": "maple_27_annual",
+      "op": "accrue",
+      "unit": "USD_minor",
+      "basis": "exact_accrual",
+      "role": "intermediate",
+      "left": "maple_27",
+      "right": "r08",
+      "interval_fact": "maple_27",
+      "subject": "maple",
+      "currency": "USD"
+    },
+    {
+      "id": "maple_27_fee",
+      "op": "multiply",
+      "unit": "USD_minor",
+      "basis": "exact_accrual",
+      "role": "intermediate",
+      "left": "maple_27_annual",
+      "right": "day",
+      "interval_fact": "maple_27",
+      "subject": "maple",
+      "currency": "USD"
+    },
+    {
+      "id": "maple_27_rate",
+      "op": "select",
+      "unit": "scalar",
+      "basis": "scalar",
+      "role": "intermediate",
+      "candidates": [
+        {
+          "id": "standard",
+          "priority": 0,
+          "value": "s80"
+        },
+        {
+          "id": "promotion",
+          "priority": 1,
+          "value": "s85",
+          "from": "2026-09-10",
+          "to": "2026-09-21"
+        },
+        {
+          "id": "welcome",
+          "priority": 2,
+          "value": "s90",
+          "signup_fact": "signup",
+          "days": 10
+        }
+      ],
+      "date_fact": "maple_27",
+      "interval_fact": "maple_27",
+      "subject": "maple"
+    },
+    {
+      "id": "maple_27_share",
+      "op": "multiply",
+      "unit": "USD_minor",
+      "basis": "exact_accrual",
+      "role": "intermediate",
+      "left": "maple_27_fee",
+      "right": "maple_27_rate",
+      "interval_fact": "maple_27",
+      "subject": "maple",
+      "currency": "USD"
+    },
+    {
+      "id": "maple_28",
+      "op": "fact",
+      "unit": "USD_minor",
+      "basis": "source_reported",
+      "role": "intermediate",
+      "key": "maple_28",
+      "interval_fact": "maple_28",
+      "subject": "maple",
+      "currency": "USD"
+    },
+    {
+      "id": "maple_28_annual",
+      "op": "accrue",
+      "unit": "USD_minor",
+      "basis": "exact_accrual",
+      "role": "intermediate",
+      "left": "maple_28",
+      "right": "r08",
+      "interval_fact": "maple_28",
+      "subject": "maple",
+      "currency": "USD"
+    },
+    {
+      "id": "maple_28_fee",
+      "op": "multiply",
+      "unit": "USD_minor",
+      "basis": "exact_accrual",
+      "role": "intermediate",
+      "left": "maple_28_annual",
+      "right": "day",
+      "interval_fact": "maple_28",
+      "subject": "maple",
+      "currency": "USD"
+    },
+    {
+      "id": "maple_28_rate",
+      "op": "select",
+      "unit": "scalar",
+      "basis": "scalar",
+      "role": "intermediate",
+      "candidates": [
+        {
+          "id": "standard",
+          "priority": 0,
+          "value": "s80"
+        },
+        {
+          "id": "promotion",
+          "priority": 1,
+          "value": "s85",
+          "from": "2026-09-10",
+          "to": "2026-09-21"
+        },
+        {
+          "id": "welcome",
+          "priority": 2,
+          "value": "s90",
+          "signup_fact": "signup",
+          "days": 10
+        }
+      ],
+      "date_fact": "maple_28",
+      "interval_fact": "maple_28",
+      "subject": "maple"
+    },
+    {
+      "id": "maple_28_share",
+      "op": "multiply",
+      "unit": "USD_minor",
+      "basis": "exact_accrual",
+      "role": "intermediate",
+      "left": "maple_28_fee",
+      "right": "maple_28_rate",
+      "interval_fact": "maple_28",
+      "subject": "maple",
+      "currency": "USD"
+    },
+    {
+      "id": "maple_29",
+      "op": "fact",
+      "unit": "USD_minor",
+      "basis": "source_reported",
+      "role": "intermediate",
+      "key": "maple_29",
+      "interval_fact": "maple_29",
+      "subject": "maple",
+      "currency": "USD"
+    },
+    {
+      "id": "maple_29_annual",
+      "op": "accrue",
+      "unit": "USD_minor",
+      "basis": "exact_accrual",
+      "role": "intermediate",
+      "left": "maple_29",
+      "right": "r08",
+      "interval_fact": "maple_29",
+      "subject": "maple",
+      "currency": "USD"
+    },
+    {
+      "id": "maple_29_fee",
+      "op": "multiply",
+      "unit": "USD_minor",
+      "basis": "exact_accrual",
+      "role": "intermediate",
+      "left": "maple_29_annual",
+      "right": "day",
+      "interval_fact": "maple_29",
+      "subject": "maple",
+      "currency": "USD"
+    },
+    {
+      "id": "maple_29_rate",
+      "op": "select",
+      "unit": "scalar",
+      "basis": "scalar",
+      "role": "intermediate",
+      "candidates": [
+        {
+          "id": "standard",
+          "priority": 0,
+          "value": "s80"
+        },
+        {
+          "id": "promotion",
+          "priority": 1,
+          "value": "s85",
+          "from": "2026-09-10",
+          "to": "2026-09-21"
+        },
+        {
+          "id": "welcome",
+          "priority": 2,
+          "value": "s90",
+          "signup_fact": "signup",
+          "days": 10
+        }
+      ],
+      "date_fact": "maple_29",
+      "interval_fact": "maple_29",
+      "subject": "maple"
+    },
+    {
+      "id": "maple_29_share",
+      "op": "multiply",
+      "unit": "USD_minor",
+      "basis": "exact_accrual",
+      "role": "intermediate",
+      "left": "maple_29_fee",
+      "right": "maple_29_rate",
+      "interval_fact": "maple_29",
+      "subject": "maple",
+      "currency": "USD"
+    },
+    {
+      "id": "maple_30",
+      "op": "fact",
+      "unit": "USD_minor",
+      "basis": "source_reported",
+      "role": "intermediate",
+      "key": "maple_30",
+      "interval_fact": "maple_30",
+      "subject": "maple",
+      "currency": "USD"
+    },
+    {
+      "id": "maple_30_annual",
+      "op": "accrue",
+      "unit": "USD_minor",
+      "basis": "exact_accrual",
+      "role": "intermediate",
+      "left": "maple_30",
+      "right": "r08",
+      "interval_fact": "maple_30",
+      "subject": "maple",
+      "currency": "USD"
+    },
+    {
+      "id": "maple_30_fee",
+      "op": "multiply",
+      "unit": "USD_minor",
+      "basis": "exact_accrual",
+      "role": "intermediate",
+      "left": "maple_30_annual",
+      "right": "day",
+      "interval_fact": "maple_30",
+      "subject": "maple",
+      "currency": "USD"
+    },
+    {
+      "id": "maple_30_rate",
+      "op": "select",
+      "unit": "scalar",
+      "basis": "scalar",
+      "role": "intermediate",
+      "candidates": [
+        {
+          "id": "standard",
+          "priority": 0,
+          "value": "s80"
+        },
+        {
+          "id": "promotion",
+          "priority": 1,
+          "value": "s85",
+          "from": "2026-09-10",
+          "to": "2026-09-21"
+        },
+        {
+          "id": "welcome",
+          "priority": 2,
+          "value": "s90",
+          "signup_fact": "signup",
+          "days": 10
+        }
+      ],
+      "date_fact": "maple_30",
+      "interval_fact": "maple_30",
+      "subject": "maple"
+    },
+    {
+      "id": "maple_30_share",
+      "op": "multiply",
+      "unit": "USD_minor",
+      "basis": "exact_accrual",
+      "role": "intermediate",
+      "left": "maple_30_fee",
+      "right": "maple_30_rate",
+      "interval_fact": "maple_30",
+      "subject": "maple",
+      "currency": "USD"
+    },
+    {
+      "id": "maple_fee_exact",
+      "op": "add",
+      "unit": "USD_minor",
+      "basis": "exact_accrual",
+      "role": "intermediate",
+      "inputs": [
+        "maple_11_fee",
+        "maple_12_fee",
+        "maple_13_fee",
+        "maple_14_fee",
+        "maple_15_fee",
+        "maple_16_fee",
+        "maple_17_fee",
+        "maple_18_fee",
+        "maple_19_fee",
+        "maple_20_fee",
+        "maple_21_fee",
+        "maple_22_fee",
+        "maple_23_fee",
+        "maple_24_fee",
+        "maple_25_fee",
+        "maple_26_fee",
+        "maple_27_fee",
+        "maple_28_fee",
+        "maple_29_fee",
+        "maple_30_fee"
+      ],
+      "currency": "USD"
+    },
+    {
+      "id": "maple_fee",
+      "op": "assess",
+      "unit": "USD_minor",
+      "basis": "assessed",
+      "role": "terminal",
+      "input": "maple_fee_exact",
+      "rounding": "half_up",
+      "currency": "USD",
+      "payer": "maple",
+      "payee": "firm-demo",
+      "output_class": "obligation",
+      "explanation": "The applicable annual rate applies to Maple’s daily billable balances during its verified service period. Applicable rates and dates are shown in Agreements."
+    },
+    {
+      "id": "maple_share_exact",
+      "op": "add",
+      "unit": "USD_minor",
+      "basis": "exact_accrual",
+      "role": "intermediate",
+      "inputs": [
+        "maple_11_share",
+        "maple_12_share",
+        "maple_13_share",
+        "maple_14_share",
+        "maple_15_share",
+        "maple_16_share",
+        "maple_17_share",
+        "maple_18_share",
+        "maple_19_share",
+        "maple_20_share",
+        "maple_21_share",
+        "maple_22_share",
+        "maple_23_share",
+        "maple_24_share",
+        "maple_25_share",
+        "maple_26_share",
+        "maple_27_share",
+        "maple_28_share",
+        "maple_29_share",
+        "maple_30_share"
+      ],
+      "currency": "USD"
+    },
+    {
+      "id": "maple_share",
+      "op": "assess",
+      "unit": "USD_minor",
+      "basis": "assessed",
+      "role": "terminal",
+      "input": "maple_share_exact",
+      "rounding": "half_up",
+      "currency": "USD",
+      "payer": "firm-demo",
+      "payee": "advisor-demo",
+      "subject": "advisor-demo",
+      "output_class": "obligation",
+      "explanation": "Advisor share of Maple’s earned daily advisory fees uses the terms in effect for each day."
+    },
+    {
+      "id": "fees",
+      "op": "add",
+      "unit": "USD_minor",
+      "basis": "assessed",
+      "role": "summary",
+      "inputs": [
+        "cedar_fee",
+        "maple_fee"
+      ],
+      "currency": "USD",
+      "output_class": "metric"
+    },
+    {
+      "id": "share_total",
+      "op": "add",
+      "unit": "USD_minor",
+      "basis": "assessed",
+      "role": "summary",
+      "inputs": [
+        "cedar_share",
+        "maple_share"
+      ],
+      "currency": "USD",
+      "output_class": "metric"
+    },
+    {
+      "id": "shortfall",
+      "op": "subtract",
+      "unit": "USD_minor",
+      "basis": "assessed",
+      "role": "intermediate",
+      "left": "floor",
+      "right": "guarantee_basis",
+      "currency": "USD"
+    },
+    {
+      "id": "topup",
+      "op": "max",
+      "unit": "USD_minor",
+      "basis": "assessed",
+      "role": "terminal",
+      "inputs": [
+        "shortfall",
+        "zero"
+      ],
+      "currency": "USD",
+      "payer": "firm-demo",
+      "payee": "advisor-demo",
+      "subject": "advisor-demo",
+      "output_class": "obligation"
+    },
+    {
+      "id": "compensation",
+      "op": "add",
+      "unit": "USD_minor",
+      "basis": "assessed",
+      "role": "summary",
+      "inputs": [
+        "share_total",
+        "topup",
+        "bonus_guarantee",
+        "bonus_outside"
+      ],
+      "currency": "USD",
+      "payer": "firm-demo",
+      "payee": "advisor-demo",
+      "subject": "advisor-demo",
+      "output_class": "obligation"
+    },
+    {
+      "id": "coverage",
+      "op": "min",
+      "unit": "USD_minor",
+      "basis": "assessed",
+      "role": "terminal",
+      "inputs": [
+        "advance",
+        "compensation"
+      ],
+      "currency": "USD",
+      "payer": "firm-demo",
+      "payee": "advisor-demo",
+      "subject": "advisor-demo",
+      "output_class": "obligation"
+    },
+    {
+      "id": "payable",
+      "op": "subtract",
+      "unit": "USD_minor",
+      "basis": "assessed",
+      "role": "summary",
+      "left": "compensation",
+      "right": "coverage",
+      "currency": "USD",
+      "payer": "firm-demo",
+      "payee": "advisor-demo",
+      "subject": "advisor-demo",
+      "output_class": "obligation"
+    },
+    {
+      "id": "cedar_standard_exact",
+      "op": "multiply",
+      "unit": "USD_minor",
+      "basis": "exact_accrual",
+      "role": "intermediate",
+      "left": "cedar_fee_exact",
+      "right": "s80",
+      "currency": "USD"
+    },
+    {
+      "id": "maple_standard_exact",
+      "op": "multiply",
+      "unit": "USD_minor",
+      "basis": "exact_accrual",
+      "role": "intermediate",
+      "left": "maple_fee_exact",
+      "right": "s80",
+      "currency": "USD"
+    },
+    {
+      "id": "cedar_standard",
+      "op": "assess",
+      "unit": "USD_minor",
+      "basis": "assessed",
+      "role": "intermediate",
+      "input": "cedar_standard_exact",
+      "rounding": "half_up",
+      "currency": "USD"
+    },
+    {
+      "id": "maple_standard",
+      "op": "assess",
+      "unit": "USD_minor",
+      "basis": "assessed",
+      "role": "intermediate",
+      "input": "maple_standard_exact",
+      "rounding": "half_up",
+      "currency": "USD"
+    },
+    {
+      "id": "standard_compensation",
+      "op": "add",
+      "unit": "USD_minor",
+      "basis": "assessed",
+      "role": "summary",
+      "inputs": [
+        "cedar_standard",
+        "maple_standard"
+      ],
+      "currency": "USD",
+      "output_class": "metric"
+    },
+    {
+      "id": "promotion_benefit",
+      "op": "subtract",
+      "unit": "USD_minor",
+      "basis": "assessed",
+      "role": "summary",
+      "left": "share_total",
+      "right": "standard_compensation",
+      "currency": "USD",
+      "output_class": "metric"
+    },
+    {
+      "id": "guarantee_benefit",
+      "op": "add",
+      "unit": "USD_minor",
+      "basis": "assessed",
+      "role": "summary",
+      "inputs": [
+        "topup"
+      ],
+      "currency": "USD",
+      "output_class": "metric"
+    },
+    {
+      "id": "total_benefit",
+      "op": "add",
+      "unit": "USD_minor",
+      "basis": "assessed",
+      "role": "summary",
+      "inputs": [
+        "promotion_benefit",
+        "guarantee_benefit"
+      ],
+      "currency": "USD",
+      "output_class": "metric"
+    },
+    {
+      "id": "bonus_guarantee",
+      "op": "sum_facts",
+      "unit": "USD_minor",
+      "basis": "assessed",
+      "role": "terminal",
+      "currency": "USD",
+      "collection": "approved_events",
+      "selector": {
+        "kind": "compensation_entitlement",
+        "group": "guarantee"
+      },
+      "allow_empty": true,
+      "period": "service",
+      "output_class": "metric"
+    },
+    {
+      "id": "bonus_outside",
+      "op": "sum_facts",
+      "unit": "USD_minor",
+      "basis": "assessed",
+      "role": "terminal",
+      "currency": "USD",
+      "collection": "approved_events",
+      "selector": {
+        "kind": "compensation_entitlement",
+        "group": "outside"
+      },
+      "allow_empty": true,
+      "period": "service",
+      "output_class": "metric"
+    },
+    {
+      "id": "guarantee_basis",
+      "op": "add",
+      "unit": "USD_minor",
+      "basis": "assessed",
+      "role": "intermediate",
+      "currency": "USD",
+      "inputs": [
+        "share_total",
+        "bonus_guarantee"
+      ]
+    },
+    {
+      "id": "comparison_baseline",
+      "op": "add",
+      "unit": "USD_minor",
+      "basis": "assessed",
+      "role": "summary",
+      "currency": "USD",
+      "inputs": [
+        "standard_compensation",
+        "bonus_guarantee",
+        "bonus_outside"
+      ],
+      "output_class": "metric"
+    },
+    {
+      "id": "comparison_selected",
+      "op": "add",
+      "unit": "USD_minor",
+      "basis": "assessed",
+      "role": "summary",
+      "currency": "USD",
+      "inputs": [
+        "compensation"
+      ],
+      "output_class": "metric"
+    }
+  ],
+  "rate_rows": {
+    "rate_r12": {
+      "unit": "scalar",
+      "basis": "scalar",
+      "value": "12/1000",
+      "component": "client_fee_first_band",
+      "broker_id": "advisor-demo",
+      "payer_id": "client",
+      "payee_id": "firm-demo"
+    },
+    "rate_r08": {
+      "unit": "scalar",
+      "basis": "scalar",
+      "value": "8/1000",
+      "component": "client_fee_next_band",
+      "broker_id": "advisor-demo",
+      "payer_id": "client",
+      "payee_id": "firm-demo"
+    },
+    "rate_s80": {
+      "unit": "scalar",
+      "basis": "scalar",
+      "value": "4/5",
+      "component": "advisor_share",
+      "broker_id": "advisor-demo",
+      "kind": "standard",
+      "payer_id": "firm-demo",
+      "payee_id": "advisor-demo"
+    },
+    "rate_s85": {
+      "unit": "scalar",
+      "basis": "scalar",
+      "value": "17/20",
+      "component": "advisor_share",
+      "broker_id": "advisor-demo",
+      "kind": "promotion",
+      "payer_id": "firm-demo",
+      "payee_id": "advisor-demo"
+    },
+    "rate_s90": {
+      "unit": "scalar",
+      "basis": "scalar",
+      "value": "9/10",
+      "component": "advisor_share",
+      "broker_id": "advisor-demo",
+      "kind": "targeted_promotion",
+      "payer_id": "firm-demo",
+      "payee_id": "advisor-demo"
+    }
+  }
+}

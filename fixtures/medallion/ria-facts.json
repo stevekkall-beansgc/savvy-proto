@@ -1,0 +1,99 @@
+{
+  "receipt": {
+    "unit": "USD_minor",
+    "basis": "source_reported",
+    "value": "30000",
+    "recorded_at": "2026-10-02T00:00:00Z",
+    "status": "confirmed",
+    "direction": "network_to_savvy",
+    "allocated_to": "harbor"
+  },
+  "cash_balance": {
+    "unit": "USD_minor",
+    "basis": "source_reported",
+    "value": "36500000"
+  },
+  "margin_balance": {
+    "unit": "USD_minor",
+    "basis": "source_reported",
+    "value": "3650000"
+  },
+  "lending_gross_report": {
+    "unit": "USD_minor",
+    "basis": "source_reported",
+    "value": "40000"
+  },
+  "lending_investor_report": {
+    "unit": "USD_minor",
+    "basis": "source_reported",
+    "value": "24000"
+  },
+  "lending_network_report": {
+    "unit": "USD_minor",
+    "basis": "source_reported",
+    "value": "10000"
+  },
+  "lending_savvy_report": {
+    "unit": "USD_minor",
+    "basis": "source_reported",
+    "value": "6000"
+  },
+  "reported_cash_savvy": {
+    "unit": "USD_minor",
+    "basis": "source_reported",
+    "value": "18000"
+  },
+  "reported_margin_savvy": {
+    "unit": "USD_minor",
+    "basis": "source_reported",
+    "value": "6000"
+  },
+  "reported_lending_savvy": {
+    "unit": "USD_minor",
+    "basis": "source_reported",
+    "value": "6000"
+  },
+  "assets": {
+    "unit": "USD_minor",
+    "basis": "source_reported",
+    "value": "365000000"
+  },
+  "rate_cash_ref": {
+    "unit": "scalar",
+    "basis": "scalar",
+    "value": "4/100"
+  },
+  "rate_cash_investor_rate": {
+    "unit": "scalar",
+    "basis": "scalar",
+    "value": "3/100"
+  },
+  "rate_margin_rate": {
+    "unit": "scalar",
+    "basis": "scalar",
+    "value": "8/100"
+  },
+  "rate_margin_funding_rate": {
+    "unit": "scalar",
+    "basis": "scalar",
+    "value": "6/100"
+  },
+  "netting_authority": {
+    "status": "authorized",
+    "debtor": "ria-harbor",
+    "creditor": "firm-demo",
+    "currency": "USD",
+    "valid_from": "2026-09-01",
+    "valid_to": "2026-10-01"
+  },
+  "account_months": {
+    "unit": "scalar",
+    "basis": "scalar",
+    "value": "30",
+    "measurement": "eligible_account_months",
+    "subject_id": "ria-harbor",
+    "period_start": "2026-09-01",
+    "period_end_exclusive": "2026-10-01",
+    "roster_id": "harbor-account-roster-2026-09"
+  }
+}

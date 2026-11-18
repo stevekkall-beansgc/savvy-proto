@@ -1,0 +1,12 @@
+{
+  "contract_version": "disclosure/v1",
+  "synthetic": true,
+  "id": "disclosure-loan-cash",
+  "amount_minor": 1200000,
+  "payer": "firm-demo",
+  "payee": "advisor-demo",
+  "currency": "USD",
+  "status": "confirmed",
+  "effective_at": "2027-02-01T00:00:00Z",
+  "received_at": "2027-02-01T00:00:00Z"
+}

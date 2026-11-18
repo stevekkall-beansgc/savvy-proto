@@ -1,0 +1,14 @@
+{
+  "synthetic": true,
+  "authority": {
+    "id": "netting-ria-1",
+    "revision": 1,
+    "status": "authorized",
+    "debtor": "ria-harbor",
+    "creditor": "firm-demo",
+    "currency": "USD",
+    "recorded_at": "2026-09-01T12:00:00Z",
+    "valid_from": "2026-09-01",
+    "valid_to": "2026-10-01"
+  }
+}

@@ -1,0 +1,13 @@
+{
+  "synthetic": true,
+  "payment": {
+    "id": "fixture-confirmed-payment",
+    "revision": 1,
+    "amount_minor": 50000,
+    "currency": "USD",
+    "debtor_id": "firm-demo",
+    "creditor_id": "advisor-demo",
+    "status": "confirmed",
+    "observed_at": "2026-10-03T00:00:00Z"
+  }
+}

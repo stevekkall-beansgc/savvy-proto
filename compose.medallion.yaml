@@ -1,0 +1,45 @@
+name: savvy-medallion
+services:
+  db:
+    restart: unless-stopped
+    image: postgres:17-alpine@sha256:d3244e8ce3f165ee3c93d9c4a4b1d0fe48b3a89e2287b717fdcbbde92d405065
+    environment:
+      POSTGRES_USER: savvy_demo
+      POSTGRES_DB: advisor_economics_synthetic
+      POSTGRES_HOST_AUTH_METHOD: trust
+    ports: ['127.0.0.1:55438:5432']
+    volumes:
+      - savvy_data:/var/lib/postgresql/data
+    networks: [synthetic, local_bridge]
+    healthcheck:
+      test: [CMD-SHELL, "pg_isready -U savvy_demo -d advisor_economics_synthetic"]
+      interval: 2s
+      timeout: 2s
+      retries: 30
+  api:
+    restart: unless-stopped
+    image: savvy-medallion-api
+    command: ["/bin/sh", "-c", "rm -f /tmp/savvy-medallion-api.pid && exec bundle exec rails server -b 0.0.0.0 -p 3101 -P /tmp/savvy-medallion-api.pid"]
+    build:
+      context: .
+      dockerfile: apps/api/Dockerfile
+    environment:
+      PGHOST: db
+      PGUSER: savvy_demo
+      RAILS_ENV: development
+      SYNTHETIC_DEMO: '1'
+    ports: ['127.0.0.1:3102:3101']
+    volumes: ['.:/work']
+    networks: [synthetic, local_bridge]
+    depends_on:
+      db:
+        condition: service_healthy
+networks:
+  local_bridge:
+    ipam:
+      config:
+        - subnet: 10.217.200.0/24
+  synthetic:
+    internal: true
+volumes:
+  savvy_data: {}

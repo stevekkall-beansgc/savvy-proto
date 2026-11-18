@@ -37,10 +37,37 @@ type DomainError {
   path: [String!]!
 }
 
+enum FinanceCommand {
+  FINANCE_ASSOCIATE
+  FINANCE_BOOTSTRAP
+  FINANCE_MOCK_ACKNOWLEDGE
+  FINANCE_REVERSE
+}
+
 """
 Represents untyped JSON
 """
 scalar JSON
+
+enum MedallionCommand {
+  APPLY_PAYMENT
+  ASSIGN_POLICY
+  BOOTSTRAP
+  COMPARE_POLICIES
+  EVALUATE_CASE
+  INGEST_DELIVERY
+  LOCK_POSTING_PERIOD
+  PUBLISH_POLICY
+  RECORD_PAYMENT
+  REVERSE_FUNDING
+  REVERSE_PAYMENT_APPLICATION
+  REVERSE_SOURCE_RECEIPT
+  REVIEW_EVENT
+  REVIEW_POLICY
+  SAVE_POLICY_VERSION
+  SEAL_STATEMENT
+  SUBMIT_EVENT
+}
 
 type Money {
   currency: String!
@@ -48,6 +75,9 @@ type Money {
 }
 
 type Mutation {
+  disclosureCommand(action: String!, idempotencyKey: String!, input: JSON!): Payload!
+  financeCommand(action: FinanceCommand!, idempotencyKey: String!, input: JSON!): Payload!
+  medallionCommand(action: MedallionCommand!, idempotencyKey: String!, input: JSON!): Payload!
   workbenchCommand(action: Command!, idempotencyKey: String!, input: JSON!): Payload!
 }
 
@@ -58,9 +88,18 @@ type Payload {
 }
 
 type Query {
+  disclosureWorkspace(audience: String!, caseId: ID!, limit: Int, offset: Int): JSON!
+  audienceClient(caseId: ID!, clientId: ID!, limit: Int, offset: Int): JSON!
+  audienceClients(caseId: ID!, limit: Int, offset: Int, search: String): JSON!
+  audienceStatement(caseId: ID!, limit: Int, offset: Int): JSON!
+  audienceSummary(caseId: ID!): JSON!
   brokerBook(brokerId: ID!, runId: ID): BrokerBook
   collections(customerId: ID, knowledgeCutoff: String): JSON!
   entitlementLedger(brokerId: ID): JSON!
+  financeWorkspace(caseId: ID!): JSON!
+  lineageRecord(caseId: ID!, limit: Int, offset: Int, recordId: ID!): JSON!
+  lineageRecords(caseId: ID!, limit: Int, offset: Int, search: String): JSON!
+  medallionWorkspace(caseId: ID!, runId: ID, scenarioId: ID, workspace: String!): JSON!
   productWorkspace(brokerId: ID, businessDate: String, workspace: String!): JSON!
   reconciliation(closeId: ID, periodEndExclusive: String!, periodStart: String!): JSON!
   reviewPacket(runId: ID!): JSON

@@ -1,0 +1,223 @@
+{
+  "synthetic": true,
+  "id": "harbor-account-roster-2026-09",
+  "revision": 1,
+  "subject": "ria-harbor",
+  "period": {
+    "start": "2026-09-01",
+    "end_exclusive": "2026-10-01"
+  },
+  "recorded_at": "2026-10-01T00:00:00Z",
+  "accounts": [
+    {
+      "id": "harbor-account-001",
+      "firm": "ria-harbor",
+      "active_from": "2026-09-01",
+      "active_to_exclusive": "2026-10-01",
+      "eligible": true
+    },
+    {
+      "id": "harbor-account-002",
+      "firm": "ria-harbor",
+      "active_from": "2026-09-01",
+      "active_to_exclusive": "2026-10-01",
+      "eligible": true
+    },
+    {
+      "id": "harbor-account-003",
+      "firm": "ria-harbor",
+      "active_from": "2026-09-01",
+      "active_to_exclusive": "2026-10-01",
+      "eligible": true
+    },
+    {
+      "id": "harbor-account-004",
+      "firm": "ria-harbor",
+      "active_from": "2026-09-01",
+      "active_to_exclusive": "2026-10-01",
+      "eligible": true
+    },
+    {
+      "id": "harbor-account-005",
+      "firm": "ria-harbor",
+      "active_from": "2026-09-01",
+      "active_to_exclusive": "2026-10-01",
+      "eligible": true
+    },
+    {
+      "id": "harbor-account-006",
+      "firm": "ria-harbor",
+      "active_from": "2026-09-01",
+      "active_to_exclusive": "2026-10-01",
+      "eligible": true
+    },
+    {
+      "id": "harbor-account-007",
+      "firm": "ria-harbor",
+      "active_from": "2026-09-01",
+      "active_to_exclusive": "2026-10-01",
+      "eligible": true
+    },
+    {
+      "id": "harbor-account-008",
+      "firm": "ria-harbor",
+      "active_from": "2026-09-01",
+      "active_to_exclusive": "2026-10-01",
+      "eligible": true
+    },
+    {
+      "id": "harbor-account-009",
+      "firm": "ria-harbor",
+      "active_from": "2026-09-01",
+      "active_to_exclusive": "2026-10-01",
+      "eligible": true
+    },
+    {
+      "id": "harbor-account-010",
+      "firm": "ria-harbor",
+      "active_from": "2026-09-01",
+      "active_to_exclusive": "2026-10-01",
+      "eligible": true
+    },
+    {
+      "id": "harbor-account-011",
+      "firm": "ria-harbor",
+      "active_from": "2026-09-01",
+      "active_to_exclusive": "2026-10-01",
+      "eligible": true
+    },
+    {
+      "id": "harbor-account-012",
+      "firm": "ria-harbor",
+      "active_from": "2026-09-01",
+      "active_to_exclusive": "2026-10-01",
+      "eligible": true
+    },
+    {
+      "id": "harbor-account-013",
+      "firm": "ria-harbor",
+      "active_from": "2026-09-01",
+      "active_to_exclusive": "2026-10-01",
+      "eligible": true
+    },
+    {
+      "id": "harbor-account-014",
+      "firm": "ria-harbor",
+      "active_from": "2026-09-01",
+      "active_to_exclusive": "2026-10-01",
+      "eligible": true
+    },
+    {
+      "id": "harbor-account-015",
+      "firm": "ria-harbor",
+      "active_from": "2026-09-01",
+      "active_to_exclusive": "2026-10-01",
+      "eligible": true
+    },
+    {
+      "id": "harbor-account-016",
+      "firm": "ria-harbor",
+      "active_from": "2026-09-01",
+      "active_to_exclusive": "2026-10-01",
+      "eligible": true
+    },
+    {
+      "id": "harbor-account-017",
+      "firm": "ria-harbor",
+      "active_from": "2026-09-01",
+      "active_to_exclusive": "2026-10-01",
+      "eligible": true
+    },
+    {
+      "id": "harbor-account-018",
+      "firm": "ria-harbor",
+      "active_from": "2026-09-01",
+      "active_to_exclusive": "2026-10-01",
+      "eligible": true
+    },
+    {
+      "id": "harbor-account-019",
+      "firm": "ria-harbor",
+      "active_from": "2026-09-01",
+      "active_to_exclusive": "2026-10-01",
+      "eligible": true
+    },
+    {
+      "id": "harbor-account-020",
+      "firm": "ria-harbor",
+      "active_from": "2026-09-01",
+      "active_to_exclusive": "2026-10-01",
+      "eligible": true
+    },
+    {
+      "id": "harbor-account-021",
+      "firm": "ria-harbor",
+      "active_from": "2026-09-01",
+      "active_to_exclusive": "2026-10-01",
+      "eligible": true
+    },
+    {
+      "id": "harbor-account-022",
+      "firm": "ria-harbor",
+      "active_from": "2026-09-01",
+      "active_to_exclusive": "2026-10-01",
+      "eligible": true
+    },
+    {
+      "id": "harbor-account-023",
+      "firm": "ria-harbor",
+      "active_from": "2026-09-01",
+      "active_to_exclusive": "2026-10-01",
+      "eligible": true
+    },
+    {
+      "id": "harbor-account-024",
+      "firm": "ria-harbor",
+      "active_from": "2026-09-01",
+      "active_to_exclusive": "2026-10-01",
+      "eligible": true
+    },
+    {
+      "id": "harbor-account-025",
+      "firm": "ria-harbor",
+      "active_from": "2026-09-01",
+      "active_to_exclusive": "2026-10-01",
+      "eligible": true
+    },
+    {
+      "id": "harbor-account-026",
+      "firm": "ria-harbor",
+      "active_from": "2026-09-01",
+      "active_to_exclusive": "2026-10-01",
+      "eligible": true
+    },
+    {
+      "id": "harbor-account-027",
+      "firm": "ria-harbor",
+      "active_from": "2026-09-01",
+      "active_to_exclusive": "2026-10-01",
+      "eligible": true
+    },
+    {
+      "id": "harbor-account-028",
+      "firm": "ria-harbor",
+      "active_from": "2026-09-01",
+      "active_to_exclusive": "2026-10-01",
+      "eligible": true
+    },
+    {
+      "id": "harbor-account-029",
+      "firm": "ria-harbor",
+      "active_from": "2026-09-01",
+      "active_to_exclusive": "2026-10-01",
+      "eligible": true
+    },
+    {
+      "id": "harbor-account-030",
+      "firm": "ria-harbor",
+      "active_from": "2026-09-01",
+      "active_to_exclusive": "2026-10-01",
+      "eligible": true
+    }
+  ]
+}

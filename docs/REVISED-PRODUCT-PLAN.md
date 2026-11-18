@@ -1,5 +1,11 @@
 # Revised product plan: broker earnings and commercial terms
 
+Current scope update — 15 November 2026: [Three audiences](THREE-AUDIENCE-PLAN.md)
+supersedes this plan's generic internal audience and blanket exclusion of Finance
+workflows. Focused cash matching and revenue-recognition visibility are now planned.
+Savvy billing ownership, mocked Campfire/CLM and the exclusion of a broad ERP/GL
+rebuild remain intact. The historical implementation record below is unchanged.
+
 14 November 2026. Prepared with Astra following the owner's UI walkthrough, then
 authorized by the owner for Terra implementation, independent review and stress
 testing. The bounded [final implementation contract](WORKSPACES-IMPLEMENTATION-CONTRACT.md)

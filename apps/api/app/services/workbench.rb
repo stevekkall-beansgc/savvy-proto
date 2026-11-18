@@ -7,7 +7,7 @@ class Workbench
   CUTOFF = "2026-11-13T23:00:00Z"
   DATE = "2026-11-13"
   FIXTURES = Rails.root.join("../../fixtures/synthetic").expand_path
-  ROLES = %w[operator finance legal advisor auditor].freeze
+  ROLES = %w[operator finance legal advisor ria auditor].freeze
   attr_reader :role, :tenant, :entity
 
   def initialize(role: "operator", tenant: TENANT, entity: ENTITY)
@@ -20,6 +20,7 @@ class Workbench
   end
 
   def records(kind)
+    raise Economics::Error.new("FORBIDDEN") if role == "ria"
     DemoRecord.where(**scope, kind: kind)
   end
 
@@ -28,6 +29,13 @@ class Workbench
     rows=rows.where('recorded_at <= ?',Economics::Engine.new.time!(cutoff)) if cutoff
     rows.select('DISTINCT ON (external_id) demo_records.*').order(:external_id,revision: :desc,id: :desc)
   end
+
+  def implementation_hash
+    files=[Rails.root.join('app/domains/economics/engine.rb'), Rails.root.join('app/domains/economics/program.rb'), Rails.root.join('app/services/commercial_engine.rb')]
+    Digest::SHA256.hexdigest(files.map { |path| "#{path.basename}:#{Digest::SHA256.file(path).hexdigest}" }.join("\n"))
+  end
+
+  def medallion = MedallionWorkbench.new(self)
 
   def product_workspace_service = ProductWorkspace.new(self)
   def product_workspace(workspace:, broker_id: nil, business_date: nil) = product_workspace_service.view(workspace: workspace, broker_id: broker_id, business_date: business_date)
@@ -178,7 +186,7 @@ class Workbench
       date = input.fetch("business_date", DATE); cutoff = input.fetch("knowledge_cutoff", CUTOFF)
       s=settlement_book.projection_snapshot(s,cutoff:cutoff)
       result = Economics::Engine.new.evaluate(s, p, date: date, cutoff: cutoff)
-      result["implementation_hash"] = Digest::SHA256.file(Rails.root.join("app/domains/economics/engine.rb")).hexdigest
+      result["implementation_hash"] = implementation_hash
       result.merge!("id" => "run-#{SecureRandom.uuid}", "policy_id" => p["id"], "snapshot_id" => s["id"], "inputs" => { "snapshot" => s, "policy" => p })
       write!("run", result)
     end
@@ -225,7 +233,7 @@ class Workbench
       raise Economics::Error.new("BLOCKED_REVIEW", "Resolve calculation exceptions first") unless examples["status"] == "completed"
       write!("review", { "id" => "review-#{SecureRandom.uuid}", "policy_id" => p["id"], "policy_hash" => input["policy_hash"],
         "document_hash" => Economics::Canonical.hash(p["clause_text"]), "examples_hash" => Economics::Canonical.hash(examples), "snapshot_hash" => Economics::Canonical.hash(review_snapshot),
-        "role" => role, "actor" => "simulated-#{role}", "decision" => "approved_for_demo", "contract_executed" => false })
+        "implementation_hash" => implementation_hash, "role" => role, "actor" => "simulated-#{role}", "decision" => "approved_for_demo", "contract_executed" => false })
     end
   end
 
@@ -236,7 +244,7 @@ class Workbench
       raise Economics::Error.new("HASH_CHANGED") unless input["policy_hash"] == hash
       s = settlement_book.projection_snapshot(snapshot,cutoff:CUTOFF)
       examples_hash = Economics::Canonical.hash(Economics::Engine.new.evaluate(s,p,date:DATE,cutoff:CUTOFF))
-      approvals = records("review").map(&:payload).select { |r| r["policy_hash"] == hash && r["snapshot_hash"] == Economics::Canonical.hash(s) && r["examples_hash"] == examples_hash }
+      approvals = records("review").map(&:payload).select { |r| r["policy_hash"] == hash && r["snapshot_hash"] == Economics::Canonical.hash(s) && r["examples_hash"] == examples_hash && r["implementation_hash"] == implementation_hash }
       raise Economics::Error.new("REVIEW_REQUIRED", "Legal and Finance must approve the current policy and examples") unless (%w[finance legal] - approvals.map { |r| r["role"] }).empty?
       write!("activation", { "id" => "activation-#{SecureRandom.uuid}", "policy_id" => p["id"], "policy_hash" => hash, "review_ids" => approvals.map { |a| a["id"] }, "contract_executed" => false })
     end

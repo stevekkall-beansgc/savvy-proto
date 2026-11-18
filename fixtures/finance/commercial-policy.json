@@ -1,0 +1,7 @@
+{
+  "version": "finance-commercial-v1",
+  "nodes": [
+    {"id":"service_charge","op":"literal","unit":"USD_minor","basis":"assessed","role":"terminal","value":"120000","currency":"USD","payer":"ria-harbor","payee":"firm-demo","subject":"ria-harbor","output_class":"obligation"},
+    {"id":"unbilled_service","op":"literal","unit":"USD_minor","basis":"assessed","role":"terminal","value":"10000","currency":"USD","payer":"ria-harbor","payee":"firm-demo","subject":"ria-harbor","output_class":"obligation"}
+  ]
+}

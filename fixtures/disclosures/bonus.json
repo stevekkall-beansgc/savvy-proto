@@ -1,0 +1,9 @@
+{
+  "id": "disclosure-bonus-event",
+  "amount_minor": 100000,
+  "approved": true,
+  "contract_version": "disclosure/v1",
+  "synthetic": true,
+  "fixture_type": "bonus",
+  "received_at": "2027-02-01T00:00:00Z"
+}

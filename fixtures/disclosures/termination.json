@@ -1,0 +1,10 @@
+{
+  "effective_at": "2027-02-15T00:00:00Z",
+  "received_at": "2027-02-16T00:00:00Z",
+  "approved": true,
+  "unused_days": 14,
+  "period_days": 28,
+  "contract_version": "disclosure/v1",
+  "synthetic": true,
+  "fixture_type": "termination"
+}

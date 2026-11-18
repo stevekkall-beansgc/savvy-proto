@@ -1,5 +1,10 @@
 # Savvy billing, compensation and accounting ownership
 
+Current audience scope — 15 November 2026: [Three audiences](THREE-AUDIENCE-PLAN.md)
+adds focused Internal Finance cash matching and revenue-recognition visibility.
+It supersedes blanket exclusions of reconciliation navigation below, while
+retaining this document's commercial ownership and mocked accounting/CLM boundaries.
+
 14 November 2026. Research and architecture proposal only. Reviewed with Astra.
 No application, database, service, provider or UI changes were made.
 

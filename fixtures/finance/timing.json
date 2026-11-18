@@ -1,0 +1,182 @@
+{
+  "synthetic": true,
+  "namespace": "finance_timing_2027",
+  "currency": "USD",
+  "debtor_id": "ria-harbor",
+  "creditor_id": "firm-demo",
+  "period_start": "2027-01-01",
+  "period_end_exclusive": "2027-04-01",
+  "treatment": {
+    "id": "fictional-three-period-v1",
+    "source": "fixture_authored_finance",
+    "version": 1,
+    "description": "Fictional supplied treatment; not an inferred recognition policy"
+  },
+  "schedule": {
+    "id": "schedule-advance-v1",
+    "source": "mock_accounting",
+    "classification": "supplied_schedule",
+    "input_id": "recognition-input-advance-v1",
+    "treatment_id": "fictional-three-period-v1",
+    "periods": [
+      {
+        "period": "2027-01",
+        "amount_minor": 40000
+      },
+      {
+        "period": "2027-02",
+        "amount_minor": 40000
+      },
+      {
+        "period": "2027-03",
+        "amount_minor": 40000
+      }
+    ]
+  },
+  "posted": {
+    "id": "journal-advance-2027-01-v1",
+    "source": "mock_accounting",
+    "status": "posted",
+    "period": "2027-01",
+    "recognized_minor": 40000,
+    "deferred_minor": 80000,
+    "schedule_id": "schedule-advance-v1"
+  },
+  "unbilled": {
+    "input_id": "recognition-input-unbilled-v1",
+    "treatment_id": "fictional-unbilled-v1",
+    "treatment_source": "fixture_authored_finance",
+    "amount_minor": 10000,
+    "outcomes": [
+      {
+        "id": "journal-unbilled-2027-01",
+        "period": "2027-01",
+        "recognized_minor": 10000,
+        "unbilled_minor": 10000,
+        "source": "mock_accounting",
+        "status": "posted"
+      },
+      {
+        "id": "journal-unbilled-reclass-2027-02",
+        "period": "2027-02",
+        "recognized_minor": 0,
+        "unbilled_minor": 0,
+        "billed_reclassification_minor": 10000,
+        "source": "mock_accounting",
+        "status": "posted"
+      }
+    ]
+  },
+  "invoice_issuance": [
+    {
+      "invoice_id": "finance-invoice-advance",
+      "invoice_line_id": "finance-line-advance",
+      "issued_at": "2027-01-01T00:00:00Z",
+      "effective_at": "2027-01-01T00:00:00Z",
+      "known_at": "2027-01-01T00:00:00Z",
+      "source": "savvy_billing",
+      "revision": 1
+    },
+    {
+      "invoice_id": "finance-invoice-unbilled",
+      "invoice_line_id": "finance-line-unbilled",
+      "issued_at": "2027-02-01T00:00:00Z",
+      "effective_at": "2027-02-01T00:00:00Z",
+      "known_at": "2027-02-01T00:00:00Z",
+      "source": "savvy_billing",
+      "revision": 1
+    }
+  ],
+  "cash_sources": [
+    {
+      "id": "finance-cash-900",
+      "source_id": "bank-fixture-900",
+      "amount_minor": 90000,
+      "gross_minor": 90000,
+      "fee_minor": 0,
+      "net_minor": 90000,
+      "observed_at": "2027-01-31T12:00:00Z",
+      "status": "confirmed"
+    },
+    {
+      "id": "finance-cash-200",
+      "source_id": "bank-fixture-200",
+      "amount_minor": 20000,
+      "gross_minor": 21000,
+      "fee_minor": 1000,
+      "net_minor": 20000,
+      "observed_at": "2027-02-03T12:00:00Z",
+      "status": "confirmed"
+    },
+    {
+      "id": "finance-cash-returned",
+      "source_id": "bank-fixture-returned",
+      "amount_minor": 5000,
+      "gross_minor": 5000,
+      "fee_minor": 0,
+      "net_minor": 5000,
+      "observed_at": "2027-02-04T12:00:00Z",
+      "status": "confirmed",
+      "return": {
+        "id": "finance-return-50",
+        "amount_minor": 5000,
+        "observed_at": "2027-02-05T12:00:00Z",
+        "source": "fixture_bank_return",
+        "status": "returned"
+      }
+    }
+  ],
+  "suggestions": [
+    {
+      "payment_id": "finance-cash-900",
+      "invoice_id": "finance-invoice-advance",
+      "source_identity": "ria-harbor-inbound-account",
+      "basis": "Explicit fictional remittance identifies this debtor and invoice; Finance must confirm allocation.",
+      "status": "suggested"
+    },
+    {
+      "payment_id": "finance-cash-900",
+      "invoice_id": "finance-invoice-unbilled",
+      "source_identity": "ria-harbor-inbound-account",
+      "basis": "Explicit fictional remittance identifies this debtor and invoice; Finance must confirm allocation.",
+      "status": "suggested"
+    },
+    {
+      "payment_id": "finance-cash-200",
+      "invoice_id": "finance-invoice-advance",
+      "source_identity": "ria-harbor-inbound-account",
+      "basis": "Explicit fictional remittance identifies this debtor and invoice; Finance must confirm allocation.",
+      "status": "suggested"
+    },
+    {
+      "payment_id": "finance-cash-200",
+      "invoice_id": "finance-invoice-unbilled",
+      "source_identity": "ria-harbor-inbound-account",
+      "basis": "Explicit fictional remittance identifies this debtor and invoice; Finance must confirm allocation.",
+      "status": "suggested"
+    }
+  ],
+  "mock_accounting_initial": {
+    "source": "mock_accounting",
+    "mocked": true,
+    "status": "posted",
+    "observed_at": "2027-01-31T23:59:59Z",
+    "applied_minor": 60000,
+    "ar_minor": 60000,
+    "recognized_minor": 40000,
+    "deferred_minor": 80000
+  },
+  "mock_accounting_acknowledgment": {
+    "source": "mock_accounting",
+    "mocked": true,
+    "status": "posted",
+    "invoice_id": "finance-invoice-advance",
+    "cash_id": "finance-cash-900",
+    "observed_at": "2027-02-01T00:00:00Z",
+    "applied_minor": 90000,
+    "ar_minor": 30000,
+    "recognized_minor": 40000,
+    "deferred_minor": 80000,
+    "supersedes": "finance-accounting-initial"
+  }
+}

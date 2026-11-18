@@ -1,0 +1,10 @@
+{
+  "id": "disclosure-forgiveness-event",
+  "amount_minor": 100000,
+  "approved": true,
+  "tax_treatment": "unknown",
+  "contract_version": "disclosure/v1",
+  "synthetic": true,
+  "fixture_type": "forgiveness",
+  "received_at": "2027-02-01T00:00:00Z"
+}

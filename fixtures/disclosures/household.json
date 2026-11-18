@@ -1,0 +1,102 @@
+{
+  "contract_version": "disclosure/v1",
+  "synthetic": true,
+  "id": "disclosure-source-v1",
+  "revision": 1,
+  "terms": {
+    "id": "disclosure-terms-v1",
+    "version": 1,
+    "rate": "3/250",
+    "basis": "ending_value",
+    "cadence": "monthly",
+    "service_start": "2027-02-01",
+    "service_end_exclusive": "2027-03-01",
+    "payer": "disclosure-alder-household",
+    "payee": "firm-demo",
+    "currency": "USD"
+  },
+  "members": [
+    {
+      "id": "disclosure-alder-a",
+      "holdings": [
+        "a-eligible",
+        "a-private"
+      ],
+      "membership_id": "disclosure-membership-a",
+      "revision": 1,
+      "group_id": "disclosure-alder-household",
+      "effective_from": "2027-02-01",
+      "effective_to": "2027-03-01",
+      "recorded_at": "2027-01-31T12:00:00Z",
+      "adb_holdings": [
+        "a-eligible"
+      ]
+    },
+    {
+      "id": "disclosure-alder-b",
+      "holdings": [
+        "b-eligible",
+        "b-held-away"
+      ],
+      "membership_id": "disclosure-membership-b",
+      "revision": 1,
+      "group_id": "disclosure-alder-household",
+      "effective_from": "2027-02-01",
+      "effective_to": "2027-03-01",
+      "recorded_at": "2027-01-31T12:00:00Z",
+      "adb_holdings": [
+        "b-eligible"
+      ]
+    }
+  ],
+  "observations": [
+    {
+      "id": "disclosure-a-eligible",
+      "revision": 1,
+      "member_id": "disclosure-alder-a",
+      "holding_id": "a-eligible",
+      "date": "2027-01-31",
+      "amount_minor": 60000000,
+      "eligible": true,
+      "reason": null,
+      "recorded_at": "2027-01-31T12:00:00Z",
+      "currency": "USD"
+    },
+    {
+      "id": "disclosure-a-private",
+      "revision": 1,
+      "member_id": "disclosure-alder-a",
+      "holding_id": "a-private",
+      "date": "2027-01-31",
+      "amount_minor": 15000000,
+      "eligible": false,
+      "reason": "Private assets excluded by fictional terms",
+      "recorded_at": "2027-01-31T12:00:00Z",
+      "currency": "USD"
+    },
+    {
+      "id": "disclosure-b-eligible",
+      "revision": 1,
+      "member_id": "disclosure-alder-b",
+      "holding_id": "b-eligible",
+      "date": "2027-01-31",
+      "amount_minor": 40000000,
+      "eligible": true,
+      "reason": null,
+      "recorded_at": "2027-01-31T12:00:00Z",
+      "currency": "USD"
+    },
+    {
+      "id": "disclosure-b-held-away",
+      "revision": 1,
+      "member_id": "disclosure-alder-b",
+      "holding_id": "b-held-away",
+      "date": "2027-01-31",
+      "amount_minor": 10000000,
+      "eligible": false,
+      "reason": "Held-away assets excluded by fictional terms",
+      "recorded_at": "2027-01-31T12:00:00Z",
+      "currency": "USD"
+    }
+  ]
+}

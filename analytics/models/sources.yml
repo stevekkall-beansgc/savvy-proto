@@ -14,7 +14,28 @@ sources:
       - name: billing_instruction_items
       - name: billing_accounting_facts
       - name: operational_matches
+      - name: medallion_evidence
 models:
+  - name: fct_medallion_rollup
+    description: Selected run x component x hourly/daily publication snapshot; never additive across publications, scenarios or parent/child components.
+    columns:
+      - name: rollup_key
+        data_tests: [unique, not_null]
+  - name: fct_medallion_result_detail
+    description: Retained run x logical detail with exact basis; alternative runs and summary/child components must never be added together.
+    columns:
+      - name: result_key
+        data_tests: [unique, not_null]
+  - name: fct_medallion_publication
+    description: Retained context snapshots plus currently publication-linked runs; exact publication proof, nullable legacy classification and explicit retained versus publication clocks. Never infer billing from a run.
+    columns:
+      - name: publication_key
+        data_tests: [unique, not_null]
+  - name: stg_medallion_evidence
+    description: Every immutable medallion evidence revision; no source bytes, pricing interpretation or operational writes.
+    columns:
+      - name: evidence_key
+        data_tests: [unique, not_null]
   - name: stg_evidence
     description: One accepted current immutable revision per tenant, entity, kind and external ID. Source history remains upstream.
     columns:

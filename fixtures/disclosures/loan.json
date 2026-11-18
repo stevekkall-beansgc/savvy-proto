@@ -1,0 +1,10 @@
+{
+  "id": "disclosure-loan-terms",
+  "amount_minor": 1200000,
+  "approved": true,
+  "cash_advance_minor": 1200000,
+  "contract_version": "disclosure/v1",
+  "synthetic": true,
+  "fixture_type": "loan",
+  "received_at": "2027-02-01T00:00:00Z"
+}
