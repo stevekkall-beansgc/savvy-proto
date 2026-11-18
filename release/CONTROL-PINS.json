@@ -1,0 +1,16 @@
+{
+  "release_version": "0.1.0",
+  "api_contract_version": "0.8.0",
+  "qa_manifest": {
+    "repository": "stevekkall-beansgc/qa-kit",
+    "tag": "v0.9.0",
+    "commit": "855184f98b55ed24c3542a0d1c27dc994628f736",
+    "sha256": "e35e1793c2703337aca5f732cac6a3668275589ebd1dbf73a0bd5cf1aac31397"
+  },
+  "compliance_workflow": {
+    "repository": "stevekkall-beansgc/gate-kit",
+    "tag": "v0.9.0",
+    "commit": "c72743a8baa7b8786d5f3fd7250ee1f08a8f98f9"
+  },
+  "scope": "Synthetic stakeholder review; Campfire and CLM mocked"
+}
