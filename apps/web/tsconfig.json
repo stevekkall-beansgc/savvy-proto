@@ -36,7 +36,9 @@
     ".next-evidence/types/**/*.ts",
     ".next-evidence/dev/types/**/*.ts",
     ".next-evidence-final/types/**/*.ts",
-    ".next-evidence-final/dev/types/**/*.ts"
+    ".next-evidence-final/dev/types/**/*.ts",
+    ".next-presentation/types/**/*.ts",
+    ".next-presentation/dev/types/**/*.ts"
   ],
   "exclude": [
     "node_modules"

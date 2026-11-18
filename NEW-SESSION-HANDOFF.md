@@ -1,5 +1,28 @@
 # Savvy execution handoff
 
+## Functional demo alignment — 18 November 2026
+
+The February 2027 household is now the default example across Client, Product and
+Finance. Broker compensation stays distinct from client billing. Product leads
+with the four-step engine explanation and linked record modals. The historical
+business book and operations examples remain under Demo identity rather than
+being appended to every page. Real disclosures and the empty agreement viewer
+are retained. No calculation, policy or retained-data behavior changed.
+
+Read `docs/DEMO-PREVIEW.md` for locations and the guarded preview activation. The
+new build slot is `.next-presentation`; do not rebuild a live slot.
+`deploy/activate-preview.py` requires clean source, remote main and green exact-
+commit CI, retains Cloudflare Access, and writes the actual activation commit to
+`.runtime/hosting/activation.json`. Verify that receipt before claiming a
+specific hosted version. Earlier deployment descriptions below are historical.
+
+Acceptance: 25 read-only desktop/mobile browser checks, 102 disclosure HTTP
+checks, 50 audience checks, 66 disclosure/document checks, optimized build and
+49 reference tests pass. Browser acceptance now runs in Prototype checks.
+Synthetic fresh setup explicitly installs presentation examples; page reads and
+preview activation never seed. Campfire and CLM remain mocked, and the original
+deployment/data are retained for rollback.
+
 ## Public architecture publication — 18 November 2026
 
 User requested GitHub-only code links, a public static walkthrough on

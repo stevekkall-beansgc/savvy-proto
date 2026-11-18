@@ -1,0 +1,147 @@
+#!/usr/bin/env python3
+"""Switch the owned preview and its existing Access-protected route; never touch data."""
+import argparse
+import copy
+import importlib.util
+import json
+import os
+from pathlib import Path
+import plistlib
+import subprocess
+import time
+import urllib.error
+import urllib.request
+
+ROOT = Path(__file__).resolve().parent.parent
+RUNTIME = ROOT / '.runtime/hosting'
+LABEL = 'com.beanlabs.savvy-clarity.preview'
+PLIST = Path.home() / f'Library/LaunchAgents/{LABEL}.plist'
+HOST = 'https://savvy-proto.beanshop.top'
+ORIGIN = 'http://127.0.0.1:3104'
+
+
+def run(*args):
+    return subprocess.check_output(args, cwd=ROOT, text=True).strip()
+
+
+def request(url, body=None, headers=None, method=None):
+    data = None if body is None else json.dumps(body).encode()
+    req = urllib.request.Request(url, data=data, headers=headers or {}, method=method)
+    with urllib.request.urlopen(req, timeout=30) as response:
+        return json.load(response)
+
+
+def probe():
+    with urllib.request.urlopen(ORIGIN, timeout=10) as response:
+        assert response.status == 200
+    body = {'query': '{disclosureWorkspace(caseId:"advisor",audience:"client")}'}
+    data = request(ORIGIN + '/api/graphql', body, {
+        'Content-Type': 'application/json', 'Origin': HOST, 'X-Demo-Role': 'advisor'})
+    assert not data.get('errors')
+    billing = data['data']['disclosureWorkspace']['sections']['billing']
+    charge = next(x for x in billing if x['id'] == 'disclosure-charge')
+    assert charge['amount_minor'] == '100000'
+    try:
+        request(ORIGIN + '/api/graphql', body, {
+            'Content-Type': 'application/json', 'Origin': 'https://unrelated.example'})
+    except urllib.error.HTTPError as error:
+        assert error.code == 403
+    else:
+        raise RuntimeError('Foreign origin was accepted')
+
+
+def restart():
+    target = f'gui/{os.getuid()}/{LABEL}'
+    loaded = subprocess.run(['launchctl', 'print', target], capture_output=True)
+    if loaded.returncode == 0:
+        subprocess.run(['launchctl', 'bootout', target], check=True, capture_output=True)
+    subprocess.run(['launchctl', 'bootstrap', f'gui/{os.getuid()}', str(PLIST)], check=True, capture_output=True)
+    for _ in range(20):
+        try:
+            probe()
+            return
+        except (OSError, AssertionError, ValueError, KeyError, StopIteration):
+            time.sleep(1)
+    raise RuntimeError('Preview did not pass readiness checks')
+
+
+def main(apply):
+    assert not run('git', 'status', '--porcelain'), 'Commit reviewed changes first'
+    sha = run('git', 'rev-parse', 'HEAD')
+    assert run('gh', 'api', 'user', '--jq', '.login') == 'stevekkall-beansgc'
+    remote = run('git', 'ls-remote', 'origin', 'refs/heads/main').split()[0]
+    assert remote == sha, 'Remote main differs from this candidate'
+    checks = json.loads(run('gh', 'api', f'repos/stevekkall-beansgc/savvy-proto/commits/{sha}/check-runs'))['check_runs']
+    assert any(c['name'] == 'check' and c['conclusion'] == 'success' and c['status'] == 'completed' for c in checks), 'Exact-commit prototype CI is required'
+    assert (ROOT / 'apps/web/.next-presentation/BUILD_ID').is_file()
+    build_proof = json.loads((RUNTIME / 'presentation-build.json').read_text())
+    assert build_proof['commit'] == sha, 'Build must be recorded against this commit'
+    assert build_proof['build_id'] == (ROOT / 'apps/web/.next-presentation/BUILD_ID').read_text().strip(), 'Build identity changed'
+    previous_bytes = PLIST.read_bytes()
+    previous = plistlib.loads(previous_bytes)
+    assert previous['Label'] == LABEL
+    assert previous['WorkingDirectory'] == str(ROOT / 'apps/web'), 'Unowned preview service'
+    args = previous['ProgramArguments']
+    assert args[-4:] == ['--hostname', '127.0.0.1', '--port', '3104']
+    next_plist = copy.deepcopy(previous)
+    env = next_plist['EnvironmentVariables']
+    env.update(SAVVY_API_URL='http://127.0.0.1:3102', SAVVY_BUILD_DIRECTORY='presentation', SAVVY_PUBLIC_ORIGIN=HOST)
+    spec = importlib.util.spec_from_file_location('savvy_tunnel', ROOT / 'deploy/run-tunnel.py')
+    tunnel = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(tunnel)
+    account = tunnel.secret('shared__CLOUDFLARE_ACCOUNT_ID')
+    token = tunnel.secret('shared__CLOUDFLARE_API_TOKEN')
+    cfg = json.loads((ROOT / 'deploy/device-host.json').read_text())
+    endpoint = f'https://api.cloudflare.com/client/v4/accounts/{account}/cfd_tunnel/{cfg["tunnel_id"]}/configurations'
+    auth = {'Authorization': f'Bearer {token}', 'Content-Type': 'application/json'}
+    before = request(endpoint, headers=auth)
+    assert before['success']
+    original = before['result']['config']
+    updated = copy.deepcopy(original)
+    routes = [r for r in updated['ingress'] if r.get('hostname') == cfg['hostname']]
+    assert len(routes) == 1
+    route = routes[0]
+    assert route['service'] in ['http://127.0.0.1:3100', ORIGIN]
+    access = route['originRequest']['access']
+    assert access['required'] is True and access['teamName'] == cfg['access_team'] and access['audTag'] == [cfg['access_aud']]
+    route['service'] = ORIGIN
+    print(json.dumps({'commit': sha, 'origin': ORIGIN, 'access_preserved': True, 'apply': apply}))
+    if not apply:
+        return
+    RUNTIME.mkdir(parents=True, exist_ok=True)
+    (RUNTIME / 'preview-before.plist').write_bytes(previous_bytes)
+    (RUNTIME / 'tunnel-before-activation.json').write_text(json.dumps(original, indent=2))
+    tunnel_attempted = False
+    try:
+        PLIST.write_bytes(plistlib.dumps(next_plist))
+        PLIST.chmod(0o600)
+        restart()
+        tunnel_attempted = True
+        outcome = request(endpoint, {'config': updated}, auth, 'PUT')
+        assert outcome['success']
+        after = request(endpoint, headers=auth)
+        assert after['success'] and after['result']['config'] == updated
+        with urllib.request.urlopen(HOST, timeout=30) as response:
+            assert response.url.startswith('https://' + cfg['access_team'] + '.cloudflareaccess.com/'), 'Access must still protect the app'
+        receipt = {'commit': sha, 'host': HOST, 'origin': ORIGIN, 'access_preserved': True,
+                   'data_mutations': 0, 'old_origin': next(r['service'] for r in original['ingress'] if r.get('hostname') == cfg['hostname'])}
+        (RUNTIME / 'activation.json').write_text(json.dumps(receipt, indent=2) + '\n')
+        print('Preview activated; hosted route verified; Access retained.')
+    except Exception:
+        if tunnel_attempted:
+            restored = request(endpoint, {'config': original}, auth, 'PUT')
+            assert restored['success'], 'Tunnel rollback failed'
+        PLIST.write_bytes(previous_bytes)
+        restart()
+        raise
+
+
+if __name__ == '__main__':
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument('--apply', action='store_true')
+    try:
+        main(parser.parse_args().apply)
+    except Exception as error:
+        # Do not print Cloudflare/credential response bodies.
+        print(f'Preview activation stopped: {type(error).__name__}: {str(error) if isinstance(error, AssertionError) else "see local preflight checks"}')
+        raise SystemExit(1)

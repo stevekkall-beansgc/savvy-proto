@@ -9,6 +9,7 @@ docker compose up -d db
 docker compose run --rm api bundle exec rails db:prepare
 docker compose run --rm api bundle exec rails db:seed
 docker compose run --rm api bundle exec rails runner 's=Workbench.new; if s.records("run").exists?; puts "Existing synthetic runs retained"; else; s.project({"policy_id"=>"policy-v1","snapshot_id"=>"source-20261113-r1"},"setup-baseline-v021"); puts "Initial synthetic projection retained"; end'
+docker compose run --rm api bundle exec rails runner script/seed_presentation.rb
 docker compose up -d api
 npm ci --prefix apps/web --cache "$PWD/.runtime/npm-cache" --no-audit --no-fund
 npm --prefix apps/web run build

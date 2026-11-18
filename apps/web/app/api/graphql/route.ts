@@ -8,6 +8,8 @@ export async function POST(request: Request) {
     "http://localhost:3103",
     "http://127.0.0.1:3104",
     "http://localhost:3104",
+    "http://127.0.0.1:3106",
+    "http://localhost:3106",
   ]);
   if (process.env.SAVVY_PUBLIC_ORIGIN) {
     allowedOrigins.add(new URL(process.env.SAVVY_PUBLIC_ORIGIN).origin);
