@@ -9,6 +9,7 @@ COPY apps/api/config/*.rb apps/api/config/database.yml ./config/
 COPY apps/api/config/environments/development.rb ./config/environments/development.rb
 COPY apps/api/config/initializers/filter_parameter_logging.rb ./config/initializers/filter_parameter_logging.rb
 COPY apps/api/bin ./bin
+COPY apps/api/script ./script
 COPY apps/api/config.ru apps/api/Rakefile ./
 COPY fixtures/finance /work/fixtures/finance
 COPY fixtures/synthetic /work/fixtures/synthetic

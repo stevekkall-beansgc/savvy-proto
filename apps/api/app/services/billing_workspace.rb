@@ -3,16 +3,19 @@ class BillingWorkspace
   def initialize(workbench,case_id)
     @p=BillingPlatform.new(workbench,case_id); @w=workbench
   end
-  def view(audience:,section:'overview',subject_id:nil,record_id:nil,service_start:nil,service_end_exclusive:nil,limit:20,offset:0,search:nil)
-    @p.error('VALIDATION_ERROR') unless %w[client product finance].include?(audience) && %w[overview clients statements terms pipeline queue calculations].include?(section)
+  def view(audience:,section:'overview',subject_id:nil,record_id:nil,service_start:nil,service_end_exclusive:nil,limit:20,offset:0,search:nil,purpose:'billing')
+    @p.error('VALIDATION_ERROR') unless %w[client product finance].include?(audience) && %w[overview clients statements terms pipeline queue calculations finance earnings].include?(section)
     if audience=='client'
       @p.error('FORBIDDEN') unless @w.role==@p.case_id || MedallionWorkbench::INTERNAL.include?(@w.role)
     else @w.guard!('operator','legal','finance','auditor') end
     @p.error('VALIDATION_ERROR') unless limit.is_a?(Integer) && limit.between?(1,100) && offset.is_a?(Integer) && offset>=0
     @p.error('VALIDATION_ERROR') if search && (!search.is_a?(String) || search.length>100)
+    @p.error('VALIDATION_ERROR') unless %w[billing earnings].include?(purpose)
+    @purpose=purpose
     @internal=audience!='client'; @limit,@offset,@search=limit,offset,search
     read=proc do
-      periods=@p.rows(@internal ? 'calculation' : 'document').select("DISTINCT payload->>'service_start' AS starts, payload->>'service_end_exclusive' AS ends").order(Arel.sql('starts DESC, ends DESC')).limit(1000).map { |r| {'start'=>r['starts'],'end_exclusive'=>r['ends']} }
+      period_source=@internal ? @p.rows('calculation') : @p.rows('document').or(@p.rows('payable'))
+      periods=period_source.select("DISTINCT payload->>'service_start' AS starts, payload->>'service_end_exclusive' AS ends").order(Arel.sql('starts DESC, ends DESC')).limit(1000).map { |r| {'start'=>r['starts'],'end_exclusive'=>r['ends']} }
       @start=service_start || periods.first&.fetch('start'); @finish=service_end_exclusive || periods.first&.fetch('end_exclusive')
       @p.interval!(@start,@finish) if @start && @finish
       body={'available'=>@p.rows('source').exists?,'case_id'=>@p.case_id,'audience'=>audience,'section'=>section,'periods'=>periods,'period'=>{'start'=>@start,'end_exclusive'=>@finish},'page'=>{'limit'=>limit,'offset'=>offset},'campfire'=>{'mocked'=>true,'connected'=>false},'clm'=>{'mocked'=>true,'connected'=>false}}
@@ -21,6 +24,18 @@ class BillingWorkspace
       case section
       when 'overview'
         body['activity']=document_rows.limit(5).map { |r| document(r) }
+      when 'finance'
+        @p.error('FORBIDDEN') unless @internal
+        relation=period_scope(@p.rows('document')).where("payload->>'original_document_id' IS NULL").order(id: :desc)
+        body['page']['total']=relation.count; body['claims']=relation.offset(offset).limit(limit).map { |r| BillingLifecycle.new(@p).evidence(r,internal:true).merge('service_start'=>r.payload['service_start'],'service_end_exclusive'=>r.payload['service_end_exclusive']) }
+      when 'earnings'
+        relation=period_scope(@p.rows('payable')).where("payload->>'original_payable_id' IS NULL").order(id: :desc)
+        estimates=period_scope(@p.rows('calculation')).where("payload->>'purpose'='earnings'").select("DISTINCT ON (payload->>'subject_id') medallion_evidence.*").order(Arel.sql("payload->>'subject_id',id DESC")).limit(20)
+        body['estimates']=estimates.map do |r|
+          current=begin @p.fresh_run!(r); true; rescue Economics::Error; false end
+          {'subject_id'=>r.payload['subject_id'],'amount_minor'=>r.payload.fetch('net_minor',r.payload['total_minor']),'current'=>current,'known_at'=>r.payload['knowledge_cutoff'],'service_start'=>r.payload['service_start'],'service_end_exclusive'=>r.payload['service_end_exclusive']}
+        end
+        body['page']['total']=relation.count; body['payables']=relation.offset(offset).limit(limit).map { |r| BillingLifecycle.new(@p).evidence(r,internal:@internal).merge('service_start'=>r.payload['service_start'],'service_end_exclusive'=>r.payload['service_end_exclusive'],'breakdown'=>earnings_breakdown(r),'run_id'=>@internal ? BillingPayables.new(@p).target(r).external_id : nil) }
       when 'clients' then body.merge!(clients(subject_id))
       when 'statements'
         relation=document_rows; relation=relation.where("payload->>'subject_id' = ?",subject_id) if subject_id
@@ -38,7 +53,7 @@ class BillingWorkspace
         body['page']['total']=relation.count
         body['failures']=@p.rows('calculation_attempt').order(id: :desc).limit(20).map { |r| serialize(r).merge('data'=>r.payload) }
         body['calculations']=relation.offset(offset).limit(limit).map do |r|
-          root=document_rows.where("payload->>'document_type' = 'invoice' AND payload->>'subject_id' = ?",r.payload['subject_id']).first
+          root=document_rows.where("payload->>'original_document_id' IS NULL AND payload->>'subject_id' = ?",r.payload['subject_id']).first
           serialize(r).merge('data'=>r.payload.except('segments'),'original_document_id'=>root&.external_id,'issued_target_run_id'=>root && BillingDocuments.new(@p).target(root).external_id)
         end
       end
@@ -57,13 +72,13 @@ class BillingWorkspace
     totals=relation.group(:document_type).sum(:amount_minor)
     # Aggregation of issued native records is not a price calculation.
     billed=totals.fetch('invoice',0)+totals.fetch('debit_note',0)-totals.fetch('credit_note',0)
-    roots=document_rows.reorder(nil).where("payload->>'document_type' = 'invoice'")
+    roots=document_rows.reorder(nil).where("payload->>'original_document_id' IS NULL")
     target_ids=roots.select("COALESCE((SELECT ci.payload->>'target_run_id' FROM medallion_evidence ci WHERE ci.tenant_id=medallion_evidence.tenant_id AND ci.entity_id=medallion_evidence.entity_id AND ci.case_id=medallion_evidence.case_id AND ci.scenario_id=medallion_evidence.scenario_id AND ci.kind='correction_issue' AND ci.parent_id=medallion_evidence.id ORDER BY ci.id DESC LIMIT 1), payload->>'run_id')")
     selected=@p.rows('calculation').where("external_id IN (#{target_ids.to_sql})")
     compensation=selected.where("payload->>'compensation_minor' IS NOT NULL").exists? ? selected.sum(Arel.sql("(payload->>'compensation_minor')::bigint")).to_i : nil
     payouts=selected.where("payload->>'additional_payout_minor' IS NOT NULL").exists? ? selected.sum(Arel.sql("(payload->>'additional_payout_minor')::bigint")).to_i : nil
     benefit=selected.sum(Arel.sql("(payload->>'pricing_benefit_minor')::bigint")).to_i
-    {'original_billed_minor'=>totals.fetch('invoice',0),'debit_minor'=>totals.fetch('debit_note',0),'credit_minor'=>totals.fetch('credit_note',0),'corrected_billed_minor'=>billed,'compensation_minor'=>@p.case_id=='advisor' ? compensation : nil,'additional_payout_minor'=>payouts,'pricing_benefit_minor'=>benefit,'document_count'=>relation.count,'billing_subject_count'=>relation.where(document_type:'invoice').distinct.count(:billing_subject_id),'cash_status'=>'Separate payment evidence','recognition_status'=>'Mock accounting handoff only'}
+    {'original_billed_minor'=>totals.fetch('invoice',0),'debit_minor'=>totals.fetch('debit_note',0),'credit_minor'=>totals.fetch('credit_note',0),'corrected_billed_minor'=>billed,'compensation_minor'=>@p.case_id=='advisor' ? compensation : nil,'additional_payout_minor'=>payouts,'pricing_benefit_minor'=>benefit,'document_count'=>relation.count,'billing_subject_count'=>relation.where(corrects_invoice_id:nil).distinct.count(:billing_subject_id),'cash_status'=>'Separate payment evidence','recognition_status'=>'Mock accounting handoff only'}
   end
   def serialize(row)
     {'id'=>row.external_id,'record_id'=>row.id.to_s,'kind'=>row.kind,'status'=>row.status,'hash'=>row.payload_hash,'recorded_at'=>row.recorded_at.iso8601(6)}
@@ -74,6 +89,8 @@ class BillingWorkspace
     lines=BillingInvoiceLine.where(**@w.scope,billing_invoice_id:invoice.id).order(:id)
     obligations=BillingObligation.where(**@w.scope,id:lines.select(:billing_obligation_id)).index_by(&:id)
     result={'id'=>invoice.external_id,'type'=>invoice.document_type,'amount_minor'=>invoice.amount_minor,'currency'=>invoice.currency,'payer'=>invoice.debtor_id,'payee'=>invoice.creditor_id,'subject_id'=>invoice.billing_subject_id,'service_start'=>row.payload['service_start'],'service_end_exclusive'=>row.payload['service_end_exclusive'],'issued_on'=>invoice.issued_on&.iso8601,'due_on'=>invoice.due_on&.iso8601,'posting_period'=>invoice.posting_period,'original_document_id'=>row.payload['original_document_id'],'status'=>invoice.status,'lines'=>lines.map { |line| o=obligations.fetch(line.billing_obligation_id); {'id'=>line.external_id,'account_id'=>o.account_id,'customer_id'=>o.customer_id,'description'=>invoice.document_type=='invoice' ? 'Agreed service charge' : 'Billing correction','amount_minor'=>line.amount_minor,'service_start'=>o.service_period_start.iso8601,'service_end_exclusive'=>o.service_period_end.iso8601} }}
+    root=row.payload['original_document_id'] ? @p.get('document',row.payload['original_document_id']) : row
+    result['position']=BillingLifecycle.new(@p).evidence(root,internal:@internal)
     result['run_id']=row.payload['run_id'] if @internal
     observations=BillingPipeline.new(@p).current(Time.current.iso8601(6),types:%w[cash accounting]).where("payload->'record'->>'document_id' = ?",invoice.external_id).order(:id).limit(100).to_a
     result['payment_evidence']=observations.select { |r| r.product_id=='cash' }.filter_map do |r|
@@ -97,12 +114,23 @@ class BillingWorkspace
       policy=@p.get('policy',segment['policy_id']); config=policy.payload['config']
       ids=config['graph'] ? ['charge'] : Array(config['components']).map { |c| "component_#{c['id']}" }
       trace=segment['result']['details'].select { |d| d['explanation'].present? && !d['id'].start_with?('allocation_') }.map { |d| {'label'=>d['explanation'],'basis'=>d['basis'],'exact_amount'=>d['exact_amount'],'amount_minor'=>d['assessed_minor'],'service_start'=>d['interval']['start'],'service_end_exclusive'=>d['interval']['end_exclusive'],'sources'=>d['source_refs'].map { |r| r.slice('id','revision','kind') }} }
-      {'policy_version'=>config['version'],'service_start'=>segment['service_start'],'service_end_exclusive'=>segment['service_end_exclusive'],'account_count'=>segment['manifest']['accounts'].size,'components'=>segment['result']['details'].select { |d| ids.include?(d['id']) }.map { |d| {'label'=>d['explanation'].presence || d['id'].delete_prefix('component_').tr('_',' '),'amount_minor'=>d['assessed_minor'],'exact_amount'=>d['exact_amount'],'basis'=>d['basis'],'included_in_bill'=>d['output_class']!='evidence'} },'trace'=>trace}
+      {'policy_version'=>config['version'],'service_start'=>segment['service_start'],'service_end_exclusive'=>segment['service_end_exclusive'],'account_count'=>segment['manifest']['accounts'].size,'components'=>segment['result']['details'].select { |d| ids.include?(d['id']) }.map { |d| {'label'=>d['explanation'].presence || d['id'].delete_prefix('component_').tr('_',' '),'amount_minor'=>d['assessed_minor'],'exact_amount'=>d['exact_amount'],'basis'=>d['basis'],'direction'=>Array(config['components']).any? { |c| 'component_'+c['id']==d['id'] && c['kind']=='events' && c['direction']=='credit' } ? 'credit' : 'charge','included_in_bill'=>d['output_class']!='evidence'} },'trace'=>trace}
     end
     result
   end
+  def earnings_breakdown(root)
+    run=BillingPayables.new(@p).target(root)
+    run.payload['segments'].flat_map do |segment|
+      config=@p.get('policy',segment['policy_id']).payload['config']
+      components=Array(config['components']).index_by { |c| "component_#{c['id']}" }
+      segment['result']['details'].filter_map do |detail|
+        component=components[detail['id']]; next unless component && component['kind']!='observation'
+        {'label'=>component['id'].tr('_',' '),'amount_minor'=>detail['assessed_minor'],'direction'=>component['kind']=='events' && component['direction']=='credit' ? 'deduction' : 'earning','items'=>segment['manifest']['engine']['facts'].values.select { |f| component['kind']=='events' && detail['source_refs'].any? { |ref| ref['id']==f['id'] } }.map { |f| {'label'=>f['category'].presence || f['reason'].presence || 'Approved event','amount_minor'=>f['value']} },'source_count'=>detail['source_refs'].size,'service_start'=>segment['service_start'],'service_end_exclusive'=>segment['service_end_exclusive']}
+      end
+    end
+  end
   def clients(subject)
-    accounts=BillingPipeline.new(@p).accounts
+    accounts=BillingPipeline.new(@p).accounts.where("COALESCE(payload->'record'->>'usage','client')<>'earnings'")
     accounts=accounts.where("payload->'record'->>'label' ILIKE ? OR payload->'record'->>'customer_id' ILIKE ?",'%'+ActiveRecord::Base.sanitize_sql_like(@search)+'%','%'+ActiveRecord::Base.sanitize_sql_like(@search)+'%') if @search.present?
     groups=accounts.group(Arel.sql("payload->'record'->>'customer_id'"))
     if subject
@@ -117,9 +145,9 @@ class BillingWorkspace
   end
   def terms(subject)
     assignments=@p.rows('assignment')
-    subjects=@p.rows('assignment').select(:subject_id).distinct.order(:subject_id).limit(100).pluck(:subject_id)
+    subjects=@p.rows('assignment').where("COALESCE(payload->>'purpose','billing')=?",@purpose).select(:subject_id).distinct.order(:subject_id).limit(100).pluck(:subject_id)
     subject ||= subjects.first
-    schedule=subject ? @p.schedule(subject) : []
+    schedule=subject ? @p.schedule(subject,purpose:@purpose) : []
     ids=schedule.map { |r| r.payload['policy_id'] }
     policies=@p.rows('policy').where(external_id:ids).order(:id).map do |p|
       config=p.payload['config']; {'id'=>p.external_id,'version'=>config['version'],'effective_from'=>p.starts_on&.iso8601,'effective_to'=>p.ends_on&.iso8601,'components'=>config['components'],'minimum_minor'=>config['minimum_minor'],'cap_minor'=>config['cap_minor'],'allocation'=>config['allocation'],'graph_configured'=>config.key?('graph')}.tap { |out| out['config']=config if @internal }
@@ -133,7 +161,7 @@ class BillingWorkspace
     {'stages'=>[{'title'=>'Original deliveries','service'=>'Source adapter','count'=>@p.rows('delivery').count},{'title'=>'Validated records','service'=>'BillingNormalizeJob','count'=>normalized.count},{'title'=>'Policy assignments','service'=>'BillingPlatform','count'=>@p.rows('assignment').count},{'title'=>'Calculated results','service'=>'Economics::Engine','count'=>@p.rows('calculation').count},{'title'=>'Issued documents','service'=>'BillingDocuments','count'=>@p.rows('document').count}].zip(%w[delivery normalized assignment calculation document]).map { |stage,kind| stage.merge('record_id'=>@p.rows(kind).order(id: :desc).first&.id&.to_s) },
       'sources'=>@p.rows('source').order(id: :desc).limit(50).map { |r| serialize(r).merge('data'=>r.payload) },
       'records'=>normalized.offset(@offset).limit(@limit).map { |r| serialize(r).merge('data'=>r.payload['record']) },
-      'deliveries'=>deliveries.map { |r| e=executions[r.id]; serialize(r).merge('data'=>r.payload,'execution'=>e && serialize(e).merge('data'=>e.payload)) },'page'=>{'limit'=>@limit,'offset'=>@offset,'total'=>[@p.rows('delivery').count,normalized.count].max},'worker'=>{'class'=>'BillingNormalizeJob','adapter'=>'inline','durable'=>false}}
+      'deliveries'=>deliveries.map { |r| e=executions[r.id]; serialize(r).merge('data'=>r.payload,'execution'=>e && serialize(e).merge('data'=>e.payload)) },'page'=>{'limit'=>@limit,'offset'=>@offset,'total'=>[@p.rows('delivery').count,normalized.count].max},'worker'=>{'class'=>'BillingNormalizeJob / BillingEvaluateJob','adapter'=>'postgresql','durable'=>true,'lease_seconds'=>BillingWorker::LEASE_SECONDS},'work_items'=>BillingWorkItem.where(**@w.scope,case_id:@p.case_id).order(id: :desc).offset(@offset).limit(@limit).map { |r| {'id'=>r.job_id,'class'=>r.job_class,'status'=>r.status,'attempts'=>r.attempts,'run_at'=>r.run_at.iso8601,'batch_id'=>r.batch_id,'error'=>r.last_error,'result'=>r.result,'attempt_record_id'=>@p.rows('work_attempt').where("payload->>'job_id'=?",r.job_id).order(:id).last&.external_id} },'batches'=>@p.rows('billing_batch').order(id: :desc).limit(20).map { |r| {'id'=>r.external_id,'groups'=>r.payload['subjects'].size,'states'=>BillingWorkItem.where(**@w.scope,case_id:@p.case_id,batch_id:r.external_id).group(:status).count} }}
   end
   def queue(audience)
     assigned=@p.rows('assignment').select("payload->>'policy_id'").to_sql
@@ -143,7 +171,8 @@ class BillingWorkspace
     corrections=MedallionEvidence.from("(#{latest}) medallion_evidence").where("external_id NOT IN (#{issued})").select(:id).to_sql
     reviewed=@p.rows('event_review').where.not(parent_id:nil).select(:parent_id).to_sql
     events=BillingPipeline.new(@p).current(Time.current.iso8601(6),types:['event']).where("id NOT IN (#{reviewed})").select(:id).to_sql
-    union="SELECT id FROM (#{draft}) policies UNION ALL SELECT id FROM (#{corrections}) corrections UNION ALL SELECT id FROM (#{events}) events"
+    payable_reviews=@p.rows('payable_review').where(status:'proposed').where("external_id NOT IN (#{@p.rows('payable_issue').select("payload->>'proposal_id'").to_sql})").select(:id).to_sql
+    union="SELECT id FROM (#{draft}) policies UNION ALL SELECT id FROM (#{corrections}) corrections UNION ALL SELECT id FROM (#{events}) events UNION ALL SELECT id FROM (#{payable_reviews}) payable_reviews"
     count=ActiveRecord::Base.connection.select_value("SELECT count(*) FROM (#{union}) requests").to_i
     ids=ActiveRecord::Base.connection.select_values("SELECT id FROM (#{union}) requests ORDER BY id DESC LIMIT #{@limit} OFFSET #{@offset}")
     items=MedallionEvidence.where(**@w.scope,case_id:@p.case_id,scenario_id:BillingPlatform::NS,id:ids).order(id: :desc).map do |r|
@@ -156,6 +185,10 @@ class BillingWorkspace
           reviews=@p.rows('policy_review').where(parent_id:c.id).select("DISTINCT ON (payload->>'role') medallion_evidence.*").order(Arel.sql("payload->>'role', id DESC"))
           out.merge!('comparison'=>serialize(c).merge('data'=>c.payload.except('manifest')),'reviews'=>reviews.map { |v| serialize(v).merge('data'=>v.payload) },'needs_refresh'=>stale)
         end
+      elsif r.kind=='payable_review'
+        review=@p.rows('payable_review').where(parent_id:r.id).order(:id).last
+        stale=begin BillingPayables.new(@p).current!(r); false; rescue Economics::Error; true end
+        out.merge!('review'=>review && serialize(review).merge('data'=>review.payload),'needs_refresh'=>stale)
       elsif r.kind=='correction_proposal'
         review=@p.rows('correction_review').where(parent_id:r.id).order(:id).last
         stale=begin BillingDocuments.new(@p).current!(r); false; rescue Economics::Error; true end
@@ -169,6 +202,11 @@ class BillingWorkspace
     @p.id!(id)
     doc=@p.rows('document').find_by(external_id:id)
     return document(doc) if doc
+    payable=@p.rows('payable').find_by(external_id:id)
+    if payable
+      root=payable.payload['original_payable_id'] ? @p.get('payable',payable.payload['original_payable_id']) : payable
+      return {'kind'=>'payable','id'=>payable.external_id,'data'=>payable.payload.except('native_hash','native_instruction_id'),'position'=>BillingLifecycle.new(@p).evidence(root,internal:@internal)}
+    end
     @p.error('FORBIDDEN') unless @internal
     relation=MedallionEvidence.where(**@w.scope,case_id:@p.case_id,scenario_id:BillingPlatform::NS)
     row=(id.match?(/\A\d{1,18}\z/) ? relation.find_by(id:Integer(id,10)) : relation.where(external_id:id).order(revision: :desc).first) || @p.error('NOT_FOUND')

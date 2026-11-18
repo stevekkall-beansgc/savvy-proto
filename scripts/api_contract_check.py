@@ -59,6 +59,10 @@ def check(live=False):
     platform=(ROOT/'apps/api/app/services/billing_platform.rb').read_text()
     actions=re.search(r'ACTIONS = (.*?)\.freeze',platform,re.S).group(1)
     assert set(spec['x-command-families']['billingCommand'])==set(re.findall(r"'([A-Z_]+)'=>",actions))
+    inputs=re.search(r'INPUTS=(.*?)\.freeze',platform,re.S).group(1)
+    for action,keys in re.findall(r"'([A-Z_]+)'=>%w\[(.*?)\]",inputs):
+        entry=next(e for e in spec['x-command-examples'] if e['family']=='billingCommand' and e['action']==action)
+        assert set(spec['components']['schemas'][entry['schema']]['properties'])==set(keys.split()),action+' input fields drift'
     controller=(ROOT/'apps/api/app/controllers/graphql_controller.rb').read_text()
     assert 'contract_version: "'+spec['info']['version']+'"' in controller
     assert spec['x-contract-sources']['graphql_sdl_sha256']==sha256(sdl.encode()).hexdigest()

@@ -16,7 +16,7 @@ class BillingDocuments
   end
   def root!(id)
     record=@p.get('document',id); invoice=native(record)
-    @p.error('VALIDATION_ERROR','Select the original invoice') unless invoice.document_type=='invoice'
+    @p.error('VALIDATION_ERROR','Select the original invoice') unless invoice.corrects_invoice_id.nil?
     @p.error('HASH_CHANGED') unless record.payload['native_hash']==native_hash(invoice)
     [record,invoice]
   end
@@ -26,32 +26,36 @@ class BillingDocuments
   end
   def issue(input)
     @p.w.guard!('operator'); run=@p.fresh_run!(@p.get('calculation',input.fetch('run_id'))); body=run.payload
+    @p.error('INVALID_POLICY','Use the earnings payable workflow') if body['purpose']=='earnings'
     body['segments'].each do |segment|
       policy=@p.get('policy',segment['policy_id'])
       @p.error('SERVICE_NOT_FINISHED','Arrears billing requires completed service dates') if policy.payload['config'].fetch('invoice_timing','arrears')=='arrears' && @p.date!(body['service_end_exclusive'])>Time.current.to_date
     end
     open!(input.fetch('posting_period')); due=@p.date!(input.fetch('due_on')); @p.error('INVALID_INTERVAL') if due<Time.current.to_date
-    prior=@p.rows('document').where("payload->>'subject_id' = ? AND payload->>'service_start' = ? AND payload->>'service_end_exclusive' = ? AND payload->>'document_type' = 'invoice'",body['subject_id'],body['service_start'],body['service_end_exclusive']).first
+    prior=@p.rows('document').where("payload->>'subject_id' = ? AND payload->>'service_start' = ? AND payload->>'service_end_exclusive' = ? AND payload->>'original_document_id' IS NULL",body['subject_id'],body['service_start'],body['service_end_exclusive']).first
     if prior
       @p.error('CORRECTION_REQUIRED','This period is already billed; propose a correction') unless prior.payload['run_id']==run.external_id
       return {'document_id'=>prior.external_id,'status'=>'issued','duplicate'=>true}
     end
-    overlap=@p.rows('document').where("payload->>'subject_id' = ? AND payload->>'document_type' = 'invoice' AND payload->>'service_start' < ? AND payload->>'service_end_exclusive' > ?",body['subject_id'],body['service_end_exclusive'],body['service_start']).exists?
+    overlap=@p.rows('document').where("payload->>'subject_id' = ? AND payload->>'original_document_id' IS NULL AND payload->>'service_start' < ? AND payload->>'service_end_exclusive' > ?",body['subject_id'],body['service_end_exclusive'],body['service_start']).exists?
     @p.error('CORRECTION_REQUIRED','Overlapping service dates are already billed; correct the issued interval') if overlap
-    @p.error('NO_CHARGE','A zero charge does not create a positive invoice') unless body['total_minor']>0
-    document=persist(run,body.fetch('allocations'),'invoice',input['posting_period'],due:due)
+    allocations=body.fetch('settlement_allocations',body.fetch('allocations'))
+    positives=allocations.select { |_,amount| amount>0 }; negatives=allocations.select { |_,amount| amount<0 }.transform_values { |amount| -amount }
+    @p.error('NO_CHARGE','No net billing claim is due') if positives.empty? && negatives.empty?
+    document=persist(run,positives.empty? ? negatives : positives,positives.empty? ? 'credit_note' : 'invoice',input['posting_period'],due:positives.empty? ? nil : due)
+    persist(run,negatives,'credit_note',input['posting_period'],root:document) if positives.any? && negatives.any?
     {'document_id'=>document.external_id,'amount_minor'=>native(document).amount_minor,'status'=>'issued'}
   end
   def persist(run,allocations,type,posting,root:nil,due:nil)
     allocations=allocations.select { |_,amount| amount>0 }; @p.error('NO_CHARGE') if allocations.empty?
     body=run.payload; a,b=@p.interval!(body['service_start'],body['service_end_exclusive'])
     amount=@p.engine_sum(allocations.values,a,b); external=@p.uid('doc')
-    original=root && native(root); debtor=type=='credit_note' ? original.creditor_id : body['subject_id']; creditor=type=='credit_note' ? original.debtor_id : 'firm-demo'
+    original=root && native(root); debtor=type=='credit_note' ? 'firm-demo' : body['subject_id']; creditor=type=='credit_note' ? body['subject_id'] : 'firm-demo'
     invoice=BillingInvoice.create!(**@p.w.scope,external_id:external,revision:1,debtor_id:debtor,creditor_id:creditor,currency:'USD',amount_minor:amount,status:'issued',document_type:type,corrects_invoice_id:original&.id,billing_case_id:@p.case_id,billing_subject_id:body['subject_id'],issued_on:Time.current.to_date,due_on:due,posting_period:posting,calculation_ref:run.external_id)
     lines=allocations.sort.map do |account,value|
       source=body.fetch('segments').flat_map { |s| s['manifest']['accounts'] }.find { |r| r['account_id']==account }
       # Closed account corrections still use the original account identity.
-      parent_documents=original && BillingInvoice.where(**@p.w.scope,document_type:%w[invoice debit_note]).where('id = ? OR corrects_invoice_id = ?',original.id,original.id).select(:id)
+      parent_documents=original && BillingInvoice.where(**@p.w.scope,).where('id = ? OR corrects_invoice_id = ?',original.id,original.id).select(:id)
       old_line=original && BillingInvoiceLine.joins('JOIN billing_obligations o ON o.id=billing_invoice_lines.billing_obligation_id AND o.tenant_id=billing_invoice_lines.tenant_id AND o.entity_id=billing_invoice_lines.entity_id').where(**@p.w.scope,billing_invoice_id:parent_documents).where('o.account_id = ?',account).order(:id).first
       old_obligation=old_line && BillingObligation.find_by!(**@p.w.scope,id:old_line.billing_obligation_id)
       @p.error('INCOMPLETE_SOURCE','Account identity is absent from current and original billing') unless source || old_obligation
@@ -64,13 +68,13 @@ class BillingDocuments
     @p.w.guard!('operator'); root,invoice=root!(input.fetch('document_id')); run=@p.fresh_run!(@p.get('calculation',input.fetch('run_id'))); previous=target(root)
     %w[subject_id service_start service_end_exclusive].each { |key| @p.error('SCOPE_MISMATCH') unless run.payload[key]==root.payload[key] }
     open!(input.fetch('posting_period')); @p.m.reason!(input['reason'])
-    old=previous.payload.fetch('allocations'); new=run.payload.fetch('allocations')
+    old=previous.payload.fetch('settlement_allocations',previous.payload.fetch('allocations')); new=run.payload.fetch('settlement_allocations',run.payload.fetch('allocations'))
     changes=(old.keys+new.keys).uniq.sort.to_h do |account|
       value=Economics::Engine.new.primitive_binary('subtract',new.fetch(account,0),old.fetch(account,0)).to_i
       [account,value]
     end
-    proposal=@p.store('correction_proposal',{'root_document_id'=>root.external_id,'native_hash'=>native_hash(invoice),'previous_run_id'=>previous.external_id,'previous_run_hash'=>previous.payload_hash,'target_run_id'=>run.external_id,'target_run_hash'=>run.payload_hash,'implementation_hash'=>@p.implementation_hash,'posting_period'=>input['posting_period'],'reason'=>input['reason'],'changes'=>changes,'before_minor'=>previous.payload['total_minor'],'after_minor'=>run.payload['total_minor']},status:'proposed',parent:root)
-    {'proposal_id'=>proposal.external_id,'changes'=>changes,'before_minor'=>previous.payload['total_minor'],'after_minor'=>run.payload['total_minor']}
+    proposal=@p.store('correction_proposal',{'root_document_id'=>root.external_id,'native_hash'=>native_hash(invoice),'previous_run_id'=>previous.external_id,'previous_run_hash'=>previous.payload_hash,'target_run_id'=>run.external_id,'target_run_hash'=>run.payload_hash,'implementation_hash'=>@p.implementation_hash,'posting_period'=>input['posting_period'],'reason'=>input['reason'],'changes'=>changes,'before_minor'=>previous.payload.fetch('net_minor',previous.payload['total_minor']),'after_minor'=>run.payload.fetch('net_minor',run.payload['total_minor'])},status:'proposed',parent:root)
+    {'proposal_id'=>proposal.external_id,'changes'=>changes,'before_minor'=>previous.payload.fetch('net_minor',previous.payload['total_minor']),'after_minor'=>run.payload.fetch('net_minor',run.payload['total_minor'])}
   end
   def current!(proposal)
     body=proposal.payload; root,invoice=root!(body['root_document_id']); previous=target(root)

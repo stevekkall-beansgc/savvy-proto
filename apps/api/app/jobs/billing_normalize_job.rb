@@ -3,7 +3,8 @@ class BillingNormalizeJob < ActiveJob::Base
     service=BillingPlatform.new(Workbench.new(role:'operator',tenant:tenant,entity:entity),case_id)
     DemoScope.transaction do
       DemoScope.where(**service.w.scope).lock.first!
-      BillingPipeline.new(service).normalize(delivery_id,source_id)
+      BillingPipeline.new(service).normalize(delivery_id,source_id,adapter:provider_job_id ? 'postgresql' : 'inline')
     end
   end
 end
+BillingNormalizeJob.queue_adapter=BillingWorker::Adapter.new

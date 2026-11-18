@@ -1,7 +1,7 @@
 class GraphqlController < ActionController::API
   MAX_BYTES = 1_048_576
   def health
-    render json: { status: "ok", synthetic: true, connected: false, contract_version: "0.7.0", engine_version: Economics::Engine::VERSION, source_revision: ENV.fetch("SAVVY_SOURCE_REVISION", "unknown"), immutable_preview: ENV["SAVVY_IMMUTABLE_PREVIEW"] == "1", eager_load: Rails.configuration.eager_load, reloading_enabled: Rails.configuration.enable_reloading }
+    render json: { status: "ok", synthetic: true, connected: false, contract_version: "0.8.0", engine_version: Economics::Engine::VERSION, source_revision: ENV.fetch("SAVVY_SOURCE_REVISION", "unknown"), immutable_preview: ENV["SAVVY_IMMUTABLE_PREVIEW"] == "1", eager_load: Rails.configuration.eager_load, reloading_enabled: Rails.configuration.enable_reloading }
   end
   def execute
     raise Economics::Error.new("SYNTHETIC_ONLY") unless ENV["SYNTHETIC_DEMO"] == "1"

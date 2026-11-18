@@ -5,12 +5,12 @@ require 'bigdecimal'
 # Source mapping, identity, normalization and completeness. No fee calculation.
 class BillingPipeline
   TYPES=%w[account balance time event cash cost accounting measure].freeze
-  FIELDS=%w[id revision type observed_at billing_subject_id customer_id account_id active_from active_to eligible dimensions label date amount_minor currency quantity direction reason status document_id payer_id payee_id withdrawn provider reported_status recognized_minor deferred_minor journal_id unit basis value collection attributes billing_subject_label].freeze
+  FIELDS=%w[id revision type observed_at billing_subject_id customer_id account_id active_from active_to eligible dimensions label date amount_minor currency quantity direction reason status document_id payer_id payee_id withdrawn provider reported_status recognized_minor deferred_minor journal_id unit basis value collection attributes billing_subject_label category package_id package_hash reported_ar_minor schedule replaces_record_id reverses_hash reversal_journal_id usage].freeze
   def initialize(platform) = @p=platform
   def original_bytes(delivery) = @p.get('artifact',delivery.payload.fetch('artifact_id')).original_bytes
   def register(input)
     @p.w.guard!('operator'); name=@p.id!(input.fetch('name')); config=input.fetch('mapping')
-    @p.error('VALIDATION_ERROR') unless config.is_a?(Hash) && config['fields'].is_a?(Hash) && config['fields'].size.between?(1,40) && %w[json ndjson].include?(config['format'])
+    @p.error('VALIDATION_ERROR') unless config.is_a?(Hash) && config['fields'].is_a?(Hash) && config['fields'].size.between?(1,64) && %w[json ndjson].include?(config['format'])
     @p.error('VALIDATION_ERROR') unless (config.keys-%w[format records_path fields coercions constants]).empty? && (config['fields'].keys-FIELDS).empty?
     @p.error('VALIDATION_ERROR') unless config['fields'].values.all? { |path| path.is_a?(String) && path.match?(/\A[a-zA-Z0-9_.]{1,100}\z/) }
     conversions=config.fetch('coercions',{}); defaults=config.fetch('constants',{})
@@ -35,6 +35,14 @@ class BillingPipeline
     end
     artifact=@p.store('artifact',{'source_id'=>source.external_id,'sha256'=>Digest::SHA256.hexdigest(raw),'media_type'=>source.payload.dig('mapping','format')},status:'retained',parent:source,bytes:raw)
     delivery=@p.store('delivery',{'source_id'=>source.external_id,'source_name'=>source.payload['name'],'artifact_id'=>artifact.external_id,'mapping_hash'=>source.payload_hash,'sha256'=>Digest::SHA256.hexdigest(raw),'media_type'=>source.payload.dig('mapping','format')},id:identity,status:'retained',parent:artifact)
+    if input['defer']==true
+      at=input['run_at'] ? @p.clock(input['run_at']) : Time.current
+      @p.error('INVALID_INTERVAL') if at>Time.current+366.days
+      job=BillingNormalizeJob.new(@p.w.tenant,@p.w.entity,@p.case_id,delivery.external_id,source.external_id)
+      item=BillingWorker.enqueue(job,at:at)
+      return {'delivery_id'=>delivery.external_id,'job_id'=>item.job_id,'status'=>'queued'}
+    end
+    @p.error('VALIDATION_ERROR') if input.key?('defer') && input['defer']!=false
     outcome=BillingNormalizeJob.perform_now(@p.w.tenant,@p.w.entity,@p.case_id,delivery.external_id,source.external_id)
     {'delivery_id'=>delivery.external_id,**outcome}
   end
@@ -67,7 +75,7 @@ class BillingPipeline
   rescue ArgumentError,TypeError
     @p.error('INVALID_SOURCE','Source value does not match its configured representation')
   end
-  def normalize(delivery_id,source_id)
+  def normalize(delivery_id,source_id,adapter:'inline')
     delivery=@p.get('delivery',delivery_id); source=@p.get('source',source_id)
     @p.error('SCOPE_MISMATCH','Replay must use a version of the original source mapping') unless delivery.payload['source_name']==source.payload['name']
     mapping=source.payload.fetch('mapping'); errors=[]; normalized=[]
@@ -115,7 +123,7 @@ class BillingPipeline
     rescue Economics::Error => e
       errors << {'code'=>e.code,'message'=>e.message}
     end
-    result=@p.store('normalization',{'service'=>'BillingNormalizeJob','adapter'=>'inline','delivery_id'=>delivery.external_id,'source_id'=>source.external_id,'mapping_hash'=>source.payload_hash,'records'=>normalized,'errors'=>errors},status:errors.empty? ? 'completed' : 'quarantined',parent:delivery)
+    result=@p.store('normalization',{'service'=>'BillingNormalizeJob','adapter'=>adapter,'delivery_id'=>delivery.external_id,'source_id'=>source.external_id,'mapping_hash'=>source.payload_hash,'records'=>normalized,'errors'=>errors},status:errors.empty? ? 'completed' : 'quarantined',parent:delivery)
     {'execution_id'=>result.external_id,'status'=>result.status,'record_count'=>normalized.size,'errors'=>errors}
   end
   def canonical!(row)
@@ -133,6 +141,7 @@ class BillingPipeline
       @p.error('INVALID_INTERVAL') if finish && @p.date!(row['active_from'])>=@p.date!(finish)
       @p.error('INVALID_SOURCE','Eligibility must be a Boolean') unless [true,false].include?(row['eligible'])
       @p.error('INVALID_SOURCE') unless row.fetch('dimensions',{}).is_a?(Hash) && row.fetch('dimensions',{}).size<=20
+      @p.error('INVALID_SOURCE') if row['usage'] && !%w[client earnings].include?(row['usage'])
       row['label']=row['label'].to_s.presence || row['customer_id']; @p.error('RESOURCE_LIMIT') if row['label'].length>120
     else
       @p.date!(row.fetch('date')); @p.error('UNIT_MISMATCH') unless type=='time' || row['currency']=='USD'
@@ -155,7 +164,7 @@ class BillingPipeline
         @p.m.reason!(row.fetch('reason'))
         @p.error('INVALID_SOURCE','Unknown cost must not supply an amount') if row['amount_minor']
       else
-        Economics::Engine.integer!(row.fetch('amount_minor'),'source amount',max:10**15)
+        Economics::Engine.integer!(row.fetch('amount_minor'),'source amount',min:type=='accounting' ? -(10**15) : 0,max:10**15)
       end
       if type=='event'
         @p.error('INVALID_SOURCE') unless %w[charge credit payout].include?(row['direction'])
@@ -168,8 +177,18 @@ class BillingPipeline
       if type=='accounting'
         @p.id!(row.fetch('document_id'))
         @p.error('INVALID_SOURCE') unless row['provider']=='mock_campfire' && %w[received posted rejected].include?(row['reported_status'])
-        %w[recognized_minor deferred_minor].each { |key| Economics::Engine.integer!(row[key],key) unless row[key].nil? }
+        %w[recognized_minor deferred_minor reported_ar_minor].each { |key| Economics::Engine.integer!(row[key],key,min:-(10**15)) unless row[key].nil? }
         @p.id!(row.fetch('journal_id')) if row['reported_status']=='posted'
+        if row['package_id']
+          @p.id!(row['package_id']); @p.error('INVALID_SOURCE') unless row['package_hash'].is_a?(String) && row['package_hash'].match?(/\A[0-9a-f]{64}\z/)
+          if row['schedule']
+            @p.error('INVALID_SOURCE') unless row['schedule'].is_a?(Array) && row['schedule'].size.between?(1,100)
+            row['schedule'].each do |entry|
+              @p.error('INVALID_SOURCE') unless entry.is_a?(Hash) && entry.keys.sort==%w[amount_minor period].sort && entry['period'].is_a?(String) && entry['period'].match?(/\A\d{4}-(0[1-9]|1[0-2])\z/)
+              Economics::Engine.integer!(entry['amount_minor'],'schedule amount',min:-(10**15))
+            end
+          end
+        end
       end
     end
     row
@@ -198,20 +217,20 @@ class BillingPipeline
     @p.error('INCOMPLETE_SOURCE','No active accounts in this service interval') if roster.empty?
     accounts=roster.map { |row| row.payload['record'] }; ids=accounts.map { |r| r['account_id'] }
     @p.error('RULE_CONFLICT','More than one account membership claims an account') unless ids.uniq.size==ids.size
-    mode=requirements.fetch('balances'); @p.error('INVALID_SOURCE') unless %w[daily ending none].include?(mode)
+    mode=requirements.fetch('balances'); @p.error('INVALID_SOURCE') unless %w[daily ending opening daily_opening ending_opening none].include?(mode)
+    opening=mode.include?('opening'); normal=mode.delete_suffix('_opening'); normal='none' if mode=='opening'
     records=current(cutoff,types:%w[balance time event measure]).where(subject_id:subject,status:'accepted')
-      .where("payload->'record'->>'date' >= ? AND payload->'record'->>'date' < ?",a.iso8601,b.iso8601).limit(5001).to_a
+      .where("payload->'record'->>'date' >= ? AND payload->'record'->>'date' < ?",(opening ? a-1 : a).iso8601,b.iso8601).limit(5001).to_a
     @p.error('RESOURCE_LIMIT') if records.size>5000
-    records.select! { |row| r=row.payload['record']; (ids.include?(r['account_id']) || (r['type']=='measure' && r['account_id']==subject)) && a<=@p.date!(r['date']) && @p.date!(r['date'])<b }
+    records.select! { |row| r=row.payload['record']; (ids.include?(r['account_id']) || (r['type']=='measure' && r['account_id']==subject)) && (opening && r['type']=='balance' ? a-1 : a)<=@p.date!(r['date']) && @p.date!(r['date'])<b }
     balances=records.select { |row| row.product_id=='balance' }
-    balances.select! { |row| row.payload.dig('record','date')==(b-1).iso8601 } if mode=='ending'
-    balances=[] if mode=='none'
+    balances.select! { |row| d=row.payload.dig('record','date'); (opening && d==(a-1).iso8601) || (normal=='daily' && d>=a.iso8601) || (normal=='ending' && d==(b-1).iso8601) }
     records.reject! { |row| row.product_id=='balance' && !balances.include?(row) }
     index=balances.group_by { |row| r=row.payload['record']; [r['account_id'],r['date']] }
     expected=accounts.flat_map do |account|
-      days=mode=='daily' ? (a...b).to_a : mode=='ending' ? [b-1] : []
+      days=(normal=='daily' ? (a...b).to_a : normal=='ending' ? [b-1] : [])+(opening ? [a-1] : [])
       days.filter_map do |day|
-        next if day<@p.date!(account['active_from']) || (account['active_to'] && day>=@p.date!(account['active_to']))
+        next if day!=a-1 && (day<@p.date!(account['active_from']) || (account['active_to'] && day>=@p.date!(account['active_to'])))
         matches=index[[account['account_id'],day.iso8601]] || []
         @p.error(matches.empty? ? 'INCOMPLETE_SOURCE' : 'RULE_CONFLICT',"Expected exactly one balance for #{account['account_id']} on #{day}") unless matches.one?
         [account,day,matches.first]
@@ -223,7 +242,7 @@ class BillingPipeline
     facts={}
     expected.each do |account,day,row|
       key="balance_#{Digest::SHA256.hexdigest(row.external_id)[0,24]}"
-      facts[key]=base.merge('id'=>row.external_id,'revision'=>row.revision,'recorded_at'=>row.recorded_at.iso8601(6),'unit'=>'USD_minor','basis'=>'source_reported','value'=>row.payload['record']['amount_minor'].to_s,'collection'=>'balances','account_id'=>account['account_id'],'eligible'=>account['eligible'],'economic_date'=>day.iso8601,'date'=>day.iso8601,'dimensions'=>account.fetch('dimensions',{}),'evidence_refs'=>[row.parent_id.to_s])
+      facts[key]=base.merge('id'=>row.external_id,'revision'=>row.revision,'recorded_at'=>row.recorded_at.iso8601(6),'unit'=>'USD_minor','basis'=>'source_reported','value'=>row.payload['record']['amount_minor'].to_s,'collection'=>(opening && day==a-1 ? 'opening_balances' : 'balances'),'account_id'=>account['account_id'],'eligible'=>account['eligible'],'economic_date'=>(opening && day==a-1 ? a : day).iso8601,'valuation_date'=>day.iso8601,'date'=>day.iso8601,'dimensions'=>account.fetch('dimensions',{}),'evidence_refs'=>[row.parent_id.to_s])
     end
     records.reject { |row| row.product_id=='balance' }.each do |row|
       r=row.payload['record']; next if %w[cash cost].include?(r['type'])
@@ -235,7 +254,7 @@ class BillingPipeline
         decision=@p.rows('event_review').where(parent_id:row.id).where('recorded_at <= ?',@p.clock(cutoff)).order(:id).last
         next unless decision && decision.status=='approved' && decision.payload['record_hash']==row.payload_hash
       end
-      facts["record_#{row.id}"]=base.merge('id'=>row.external_id,'revision'=>row.revision,'recorded_at'=>row.recorded_at.iso8601(6),'unit'=>r['type']=='time' ? 'scalar' : 'USD_minor','basis'=>r['type']=='time' ? 'scalar' : 'assessed','value'=>r['type']=='time' ? r['quantity'] : r['amount_minor'].to_s,'collection'=>r['type']=='time' ? 'hours' : 'events','direction'=>r['direction'],'account_id'=>r['account_id'],'economic_date'=>r['date'],'evidence_refs'=>[row.parent_id.to_s])
+      facts["record_#{row.id}"]=base.merge('id'=>row.external_id,'revision'=>row.revision,'recorded_at'=>row.recorded_at.iso8601(6),'unit'=>r['type']=='time' ? 'scalar' : 'USD_minor','basis'=>r['type']=='time' ? 'scalar' : 'assessed','value'=>r['type']=='time' ? r['quantity'] : r['amount_minor'].to_s,'collection'=>r['type']=='time' ? 'hours' : 'events','direction'=>r['direction'],'category'=>r['category'],'reason'=>r['reason'],'account_id'=>r['account_id'],'economic_date'=>r['date'],'evidence_refs'=>[row.parent_id.to_s])
     end
     {'subject_id'=>subject,'requirements'=>requirements,'accounts'=>accounts.sort_by { |r| r['account_id'] },'records'=>refs.map { |r| {'id'=>r.external_id,'revision'=>r.revision,'hash'=>r.payload_hash,'kind'=>r.product_id,'record_id'=>r.id.to_s} }.sort_by { |r| r['id'] },'engine'=>{'facts'=>facts}}
   end

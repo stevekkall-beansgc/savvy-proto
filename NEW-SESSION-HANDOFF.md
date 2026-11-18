@@ -1,5 +1,21 @@
 # Savvy execution handoff
 
+## Four-capability closure — current work
+
+The user explicitly reopened the four priorities: the shared invoice foundation
+was not full completion. `docs/FOUR-CAPABILITY-CLOSURE.md` is the acceptance contract.
+New services cover a signed claim ledger, independent cash/refund associations,
+versioned mock accounting packages/replacements, same-engine earnings and native
+payables, and a PostgreSQL leased ActiveJob queue. The architecture must reflect
+actual executed cases after acceptance. Campfire and CLM remain mocked.
+
+Migrations 006/007 add operational queue state, native payable metadata/guards and
+scoped lifecycle evidence. Never migrate the active retained database in place.
+Verify `.runtime/hosting/activation.json` for the actual active pair; development
+uses disposable 55439, while deployment must use a newly restored retained clone.
+Do not assume source completion or documentation means activation succeeded.
+
+
 ## Shared billing milestone — 18 November 2026
 
 Read `docs/FOUR-CAPABILITY-PLAN.md` and `docs/FOUR-CAPABILITY-VALIDATION.md`.

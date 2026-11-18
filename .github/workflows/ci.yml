@@ -39,6 +39,7 @@ jobs:
           docker compose up -d api
           docker compose run --rm api bundle exec rails runner script/seed_presentation.rb
           docker compose run --rm api bundle exec rails runner script/seed_billing_platform.rb
+          docker compose run --rm api bundle exec rails runner script/seed_billing_closure.rb
           SAVVY_PUBLIC_ORIGIN=https://savvy-proto.beanshop.top npm --prefix apps/web run start > /tmp/savvy-web.log 2>&1 &
           savvy_web_pid=$!
           trap 'kill "$savvy_web_pid" 2>/dev/null || true' EXIT

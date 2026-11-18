@@ -61,6 +61,7 @@ module DemoGraph
   end
   class Query < GraphQL::Schema::Object
     field :billing_workspace, GraphQL::Types::JSON, null: false do
+      argument :purpose, String, required: false
       argument :case_id, ID, required: true
       argument :audience, String, required: true
       argument :section, String, required: false

@@ -6,15 +6,23 @@ class BillingPlatform
     'PUBLISH_POLICY'=>:publish_policy,'ASSIGN_POLICY'=>:assign_policy,'EVALUATE'=>:evaluate,
     'ISSUE_INVOICE'=>:issue_invoice,'PROPOSE_CORRECTION'=>:propose_correction,
     'REVIEW_CORRECTION'=>:review_correction,'ISSUE_CORRECTION'=>:issue_correction,
-    'REVIEW_EVENT'=>:review_event,'CLOSE_PERIOD'=>:close_period}.freeze
+    'REVIEW_EVENT'=>:review_event,'CLOSE_PERIOD'=>:close_period,'APPLY_CASH'=>:apply_cash,'REVERSE_CASH'=>:reverse_cash,'REQUEST_REFUND'=>:request_refund,'CANCEL_REFUND'=>:cancel_refund,'PACKAGE_ACCOUNTING'=>:package_accounting,'ACCEPT_ACCOUNTING'=>:accept_accounting,'PROPOSE_PAYABLE'=>:propose_payable,'REVIEW_PAYABLE'=>:review_payable,'ISSUE_PAYABLE'=>:issue_payable,'QUEUE_BATCH'=>:queue_batch,'RETRY_WORK'=>:retry_work}.freeze
   INPUTS={
-    'REGISTER_SOURCE'=>%w[name mapping],'INGEST'=>%w[source_id delivery_key raw raw_base64],'REPLAY'=>%w[delivery_id source_id],
+    'REGISTER_SOURCE'=>%w[name mapping],'INGEST'=>%w[source_id delivery_key raw raw_base64 defer run_at],'REPLAY'=>%w[delivery_id source_id],
     'SAVE_POLICY'=>%w[policy effective_from effective_to reason],'COMPARE_POLICY'=>%w[policy_id baseline_policy_id subject_id service_start service_end_exclusive],
     'REVIEW_POLICY'=>%w[comparison_id decision reason document_ref],'PUBLISH_POLICY'=>%w[comparison_id],
     'ASSIGN_POLICY'=>%w[policy_id subject_id effective_from effective_to reason expected_schedule_hash],
-    'EVALUATE'=>%w[subject_id service_start service_end_exclusive],'ISSUE_INVOICE'=>%w[run_id posting_period due_on],
+    'EVALUATE'=>%w[subject_id service_start service_end_exclusive purpose],'ISSUE_INVOICE'=>%w[run_id posting_period due_on],
     'PROPOSE_CORRECTION'=>%w[document_id run_id posting_period reason],'REVIEW_CORRECTION'=>%w[proposal_id decision reason],
-    'ISSUE_CORRECTION'=>%w[proposal_id],'REVIEW_EVENT'=>%w[record_id expected_hash decision reason],'CLOSE_PERIOD'=>%w[posting_period reason]
+    'ISSUE_CORRECTION'=>%w[proposal_id],'REVIEW_EVENT'=>%w[record_id expected_hash decision reason],'CLOSE_PERIOD'=>%w[posting_period reason],
+    'APPLY_CASH'=>%w[target_id record_id expected_hash expected_ledger_hash amount_minor posting_period reason request_id],
+    'REVERSE_CASH'=>%w[application_id expected_hash posting_period reason],
+    'CANCEL_REFUND'=>%w[request_id expected_hash posting_period reason],
+    'REQUEST_REFUND'=>%w[target_id expected_ledger_hash amount_minor posting_period reason],
+    'PACKAGE_ACCOUNTING'=>%w[target_id expected_ledger_hash treatment_ref posting_period reason],
+    'ACCEPT_ACCOUNTING'=>%w[record_id expected_hash],
+    'PROPOSE_PAYABLE'=>%w[run_id posting_period reason],'REVIEW_PAYABLE'=>%w[proposal_id decision reason],'ISSUE_PAYABLE'=>%w[proposal_id],
+    'QUEUE_BATCH'=>%w[subjects service_start service_end_exclusive run_at reason purpose],'RETRY_WORK'=>%w[job_id source_id reason]
   }.freeze
   attr_reader :w,:m,:case_id
   def initialize(workbench,case_id)
@@ -39,7 +47,7 @@ class BillingPlatform
     [a,b]
   end
   def implementation_hash
-    paths=%w[billing_platform billing_policy billing_pipeline billing_documents].map { |name| Rails.root.join("app/services/#{name}.rb").to_s }+Dir[Rails.root.join('app/jobs/billing_*.rb')]+Dir[Rails.root.join('app/domains/economics/*.rb')]
+    paths=%w[billing_platform billing_policy billing_pipeline billing_documents billing_lifecycle billing_payables billing_worker].map { |name| Rails.root.join("app/services/#{name}.rb").to_s }+Dir[Rails.root.join('app/jobs/billing_*.rb')]+Dir[Rails.root.join('app/domains/economics/*.rb')]
     hash(paths.sort.to_h { |path| [File.basename(path),Digest::SHA256.file(path).hexdigest] })
   end
   def command(action,input,key)
@@ -87,7 +95,7 @@ class BillingPlatform
     p=store('policy',{'config'=>config,'reason'=>input['reason'],'effective_from'=>a.iso8601,'effective_to'=>b&.iso8601},status:'draft',starts_on:a,ends_on:b)
     BillingPolicy.rates(config).each do |rate|
       number=Rational(rate['value']); start=rate['from'] ? date!(rate['from']) : a; finish=rate['to'] ? date!(rate['to']) : b
-      CommercialRate.create!(**w.scope,configuration_id:p.external_id,external_id:rate['id'],broker_id:case_id=='advisor' ? 'advisor-demo' : 'ria-harbor',component:rate['component'],kind:rate['kind'],name:rate['id'].tr('-_','  '),numerator:number.numerator,denominator:number.denominator,starts_on:start,ends_on:finish,selector:rate['selector'],priority:rate['priority'],unit:rate['unit'],payer_id:case_id=='advisor' ? 'client' : 'ria-harbor',payee_id:'firm-demo',recorded_at:Time.current)
+      CommercialRate.create!(**w.scope,configuration_id:p.external_id,external_id:rate['id'],broker_id:case_id=='advisor' ? 'advisor-demo' : 'ria-harbor',component:rate['component'],kind:rate['kind'],name:rate['id'].tr('-_','  '),numerator:number.numerator,denominator:number.denominator,starts_on:start,ends_on:finish,selector:rate['selector'],priority:rate['priority'],unit:rate['unit'],payer_id:config['purpose']=='earnings' ? 'firm-demo' : case_id=='advisor' ? 'client' : 'ria-harbor',payee_id:config['purpose']=='earnings' ? 'subject' : 'firm-demo',recorded_at:Time.current)
     end
     {'policy_id'=>p.external_id,'policy_hash'=>p.payload_hash,'status'=>'draft'}
   end
@@ -97,18 +105,20 @@ class BillingPlatform
   def compare_policy(input)
     w.guard!('operator'); proposed=get('policy',input.fetch('policy_id'))
     base=input['baseline_policy_id'] && get('policy',input['baseline_policy_id'])
+    error('UNRELATED_POLICY','Compare policies with the same commercial purpose') if base && base.payload['config'].fetch('purpose','billing')!=proposed.payload['config'].fetch('purpose','billing')
     error('UNAPPROVED_POLICY') if base && !published?(base)
     a,b=interval!(input.fetch('service_start'),input.fetch('service_end_exclusive'))
     subject=id!(input.fetch('subject_id')); cutoff=Time.current.iso8601(6)
     needs=[proposed,base].compact.map { |p| BillingPolicy.requirements(p.payload['config'])['balances'] }
-    requirements={'balances'=>needs.include?('daily') ? 'daily' : needs.include?('ending') ? 'ending' : 'none'}
-    manifest=BillingPipeline.new(self).manifest(subject,a,b,cutoff,requirements:requirements)
+    parts=needs.flat_map { |v| v.split('_') }; mode=parts.include?('daily') ? 'daily' : parts.include?('ending') ? 'ending' : 'none'; mode=mode=='none' ? 'opening' : mode+'_opening' if parts.include?('opening')
+    requirements={'balances'=>mode}
+    manifest=billing_manifest(subject,a,b,cutoff,requirements:requirements,purpose:proposed.payload['config']['purpose'])
     after=calculate(proposed,manifest,a,b,cutoff,hypothetical:true)
     before=base ? calculate(base,manifest,a,b,cutoff,hypothetical:true) : nil
     binding={'policy_id'=>proposed.external_id,'policy_hash'=>proposed.payload_hash,'baseline_policy_id'=>base&.external_id,'baseline_hash'=>base&.payload_hash,
-      'subject_id'=>subject,'service_start'=>a.iso8601,'service_end_exclusive'=>b.iso8601,'requirements'=>requirements,'manifest_hash'=>hash(manifest),'implementation_hash'=>implementation_hash}
+      'purpose'=>proposed.payload['config']['purpose'],'subject_id'=>subject,'service_start'=>a.iso8601,'service_end_exclusive'=>b.iso8601,'requirements'=>requirements,'manifest_hash'=>hash(manifest),'implementation_hash'=>implementation_hash}
     c=store('comparison',{'binding'=>binding,'manifest'=>manifest,'before'=>before,'after'=>after,'cutoff'=>cutoff},status:'completed',parent:proposed)
-    {'comparison_id'=>c.external_id,'comparison_hash'=>c.payload_hash,'before_minor'=>before&.fetch('total_minor'),'after_minor'=>after.fetch('total_minor')}
+    {'comparison_id'=>c.external_id,'comparison_hash'=>c.payload_hash,'before_minor'=>before && before.fetch('net_minor',before['total_minor']),'after_minor'=>after.fetch('net_minor',after['total_minor'])}
   end
   def comparison_current!(comparison)
     binding=comparison.payload.fetch('binding'); policy=get('policy',binding.fetch('policy_id'))
@@ -117,7 +127,7 @@ class BillingPlatform
       base=get('policy',binding['baseline_policy_id']); error('HASH_CHANGED') unless published?(base) && base.payload_hash==binding['baseline_hash']
     end
     a,b=interval!(binding['service_start'],binding['service_end_exclusive'])
-    current=BillingPipeline.new(self).manifest(binding['subject_id'],a,b,Time.current.iso8601(6),requirements:binding['requirements'])
+    current=billing_manifest(binding['subject_id'],a,b,Time.current.iso8601(6),requirements:binding['requirements'],purpose:binding['purpose'])
     error('HASH_CHANGED','Source evidence changed; compare again') unless hash(current)==binding['manifest_hash']
     policy
   end
@@ -138,8 +148,8 @@ class BillingPlatform
     publication=prior || store('policy_publication',{'policy_id'=>p.external_id,'policy_hash'=>p.payload_hash,'comparison_id'=>c.external_id,'comparison_hash'=>c.payload_hash,'reviews'=>pair.map(&:external_id)},status:'published',parent:p)
     {'publication_id'=>publication.external_id,'policy_id'=>p.external_id}
   end
-  def schedule(subject)
-    relation=rows('assignment').where(subject_id:subject)
+  def schedule(subject,purpose:'billing')
+    relation=rows('assignment').where(subject_id:subject).where("COALESCE(payload->>'purpose','billing')=?",purpose)
     version=relation.maximum(:schedule_version)
     version ? relation.where(schedule_version:version).order(:starts_on).to_a : []
   end
@@ -147,7 +157,7 @@ class BillingPlatform
     w.guard!('operator'); p=get('policy',input.fetch('policy_id')); error('UNAPPROVED_POLICY') unless published?(p)
     subject=id!(input.fetch('subject_id')); a,b=interval!(input.fetch('effective_from'),input.fetch('effective_to'))
     error('INVALID_INTERVAL','Assignment must fit policy validity') unless p.starts_on<=a && (!p.ends_on || b<=p.ends_on)
-    m.reason!(input['reason']); old=schedule(subject)
+    m.reason!(input['reason']); purpose=p.payload['config'].fetch('purpose','billing'); old=schedule(subject,purpose:purpose)
     expected=hash(old.map { |r| [r.external_id,r.payload_hash] }); error('HASH_CHANGED','Assignment schedule changed') unless input.fetch('expected_schedule_hash')==expected
     version=(old.map(&:schedule_version).max || 0)+1
     segments=old.flat_map do |r|
@@ -158,7 +168,7 @@ class BillingPlatform
     end
     segments << [a,b,p]; error('RESOURCE_LIMIT') if segments.size>100
     created=segments.sort_by(&:first).map do |x,y,policy|
-      store('assignment',{'policy_id'=>policy.external_id,'policy_hash'=>policy.payload_hash,'subject_id'=>subject,'reason'=>input['reason'],'superseded'=>old.map(&:external_id)},status:'published',parent:policy,subject_id:subject,product_id:case_id,starts_on:x,ends_on:y,schedule_version:version)
+      store('assignment',{'purpose'=>purpose,'policy_id'=>policy.external_id,'policy_hash'=>policy.payload_hash,'subject_id'=>subject,'reason'=>input['reason'],'superseded'=>old.map(&:external_id)},status:'published',parent:policy,subject_id:subject,product_id:purpose=='earnings' ? case_id+'-earnings' : case_id,starts_on:x,ends_on:y,schedule_version:version)
     end
     {'assignment_ids'=>created.map(&:external_id),'schedule_hash'=>hash(created.map { |r| [r.external_id,r.payload_hash] })}
   end
@@ -171,35 +181,62 @@ class BillingPlatform
     context['hypothetical']=true if hypothetical
     result=Economics::Engine.new.evaluate(policy_bundle:{'policy'=>graph,'policy_id'=>policy.external_id,'policy_hash'=>policy.payload_hash,'approved'=>published?(policy)},input_manifest:compiler.engine_manifest,context:context)
     error('INCOMPLETE_SOURCE','The policy could not complete; no bill was created') unless %w[completed partial].include?(result['status'])
-    details=result['details'].index_by { |d| d['id'] }; charge=details['charge'] || error('INCOMPLETE_SOURCE','The mandatory charge output is blocked')
-    error('INVALID_PROGRAM','Charge must be a bounded nonnegative assessed obligation') unless charge['assessed_minor'].is_a?(Integer) && charge['assessed_minor'].between?(0,10**15) && charge['output_class']=='obligation' && charge['payer']==manifest['subject_id'] && charge['payee']=='firm-demo' && charge['currency']=='USD'
+    purpose=policy.payload['config'].fetch('purpose','billing')
+    details=result['details'].index_by { |d| d['id'] }; charge=details[purpose=='earnings' ? 'compensation' : 'charge'] || error('INCOMPLETE_SOURCE','The mandatory charge output is blocked')
+    error('INVALID_PROGRAM','Charge must be a bounded nonnegative assessed obligation') unless charge['assessed_minor'].is_a?(Integer) && charge['assessed_minor'].between?(0,10**15) && charge['output_class']=='obligation' && charge['payer']==(purpose=='earnings' ? 'firm-demo' : manifest['subject_id']) && charge['payee']==(purpose=='earnings' ? manifest['subject_id'] : 'firm-demo') && charge['currency']=='USD'
     allocations=manifest.fetch('accounts').to_h do |account|
       output=details["allocation_#{Digest::SHA256.hexdigest(account['account_id'])[0,16]}"] || error('INCOMPLETE_SOURCE','A mandatory invoice allocation is blocked')
       error('INVALID_ALLOCATION') unless output['assessed_minor'].is_a?(Integer) && output['assessed_minor']>=0
       [account['account_id'],output['assessed_minor']]
     end
     error('INVALID_ALLOCATION') unless allocations.values.sum==charge['assessed_minor']
-    {'result'=>result,'graph'=>graph,'total_minor'=>charge['assessed_minor'],'allocations'=>allocations,'manifest'=>manifest,'policy_id'=>policy.external_id,'policy_hash'=>policy.payload_hash}
+    credit=details['credit_balance']
+    error('INVALID_PROGRAM') if credit && (!credit['assessed_minor'].is_a?(Integer) || !credit['assessed_minor'].between?(0,10**15) || credit['output_class']!='obligation' || credit['currency']!='USD' || credit['payer']!=(purpose=='earnings' ? manifest['subject_id'] : 'firm-demo') || credit['payee']!=(purpose=='earnings' ? 'firm-demo' : manifest['subject_id']))
+    credit_allocations=manifest.fetch('accounts').to_h do |account|
+      value=details["credit_allocation_#{Digest::SHA256.hexdigest(account['account_id'])[0,16]}"]
+      amount=value ? value['assessed_minor'] : 0; error('INVALID_ALLOCATION') unless amount.is_a?(Integer) && amount>=0
+      [account['account_id'],amount]
+    end
+    error('INVALID_ALLOCATION') unless credit_allocations.values.sum==(credit ? credit['assessed_minor'] : 0)
+    settlement=allocations.to_h { |account,amount| [account,Economics::Engine.new.primitive_binary('subtract',amount,credit_allocations.fetch(account)).to_i] }
+    {'purpose'=>purpose,'net_minor'=>engine_sum(settlement.values,a,b),'credit_minor'=>credit_allocations.values.sum,'settlement_allocations'=>settlement,'result'=>result,'graph'=>graph,'total_minor'=>charge['assessed_minor'],'allocations'=>allocations,'manifest'=>manifest,'policy_id'=>policy.external_id,'policy_hash'=>policy.payload_hash}
   end
   def evaluate(input)
     w.guard!('operator'); subject=id!(input.fetch('subject_id')); a,b=interval!(input.fetch('service_start'),input.fetch('service_end_exclusive'))
-    cutoff=Time.current.iso8601(6); assignments=schedule(subject).select { |r| r.starts_on<b && a<r.ends_on }
+    purpose=input.fetch('purpose','billing'); error('VALIDATION_ERROR') unless %w[billing earnings].include?(purpose)
+    cutoff=Time.current.iso8601(6); assignments=schedule(subject,purpose:purpose).select { |r| r.starts_on<b && a<r.ends_on }
     bounds=([a,b]+assignments.flat_map { |r| [[r.starts_on,a].max,[r.ends_on,b].min] }).uniq.sort
     segments=bounds.each_cons(2).map do |x,y|
       eligible=assignments.select { |r| r.starts_on<=x && y<=r.ends_on }; error('UNRESOLVED_MAPPING','Assign reviewed terms for every service day') unless eligible.one?
       assignment=eligible.first; policy=get('policy',assignment.payload['policy_id']); error('HASH_CHANGED') unless published?(policy) && policy.payload_hash==assignment.payload['policy_hash'] && policy.starts_on<=x && (!policy.ends_on || y<=policy.ends_on)
-      manifest=BillingPipeline.new(self).manifest(subject,x,y,cutoff,requirements:BillingPolicy.requirements(policy.payload['config']))
+      manifest=billing_manifest(subject,x,y,cutoff,requirements:BillingPolicy.requirements(policy.payload['config']),purpose:policy.payload['config']['purpose'])
       calculate(policy,manifest,x,y,cutoff,billing_start:a,billing_end:b).merge('assignment_id'=>assignment.external_id,'service_start'=>x.iso8601,'service_end_exclusive'=>y.iso8601)
     end
     amounts=segments.flat_map { |segment| segment['allocations'].map { |id,amount| [id,amount] } }.group_by(&:first)
     allocations=amounts.to_h { |id,parts| [id,engine_sum(parts.map(&:last),a,b)] }
+    purposes=segments.map { |s| s['purpose'] }.uniq; error('INVALID_POLICY','A service interval cannot mix billing and earnings policies') unless purposes.one?
+    settlement=segments.flat_map { |s| s['settlement_allocations'].to_a }.group_by(&:first).to_h { |id,parts| [id,engine_sum(parts.map(&:last),a,b)] }
     total=engine_sum(allocations.values,a,b)
     extras=segments.map { |s| s['result']['details'].index_by { |d| d['id'] } }
     compensation=extras.filter_map { |d| d['compensation'] && d['compensation']['assessed_minor'] }
     payouts=extras.filter_map { |d| d['additional_payout'] && d['additional_payout']['assessed_minor'] }
     benefits=extras.filter_map { |d| d['pricing_benefit'] && d['pricing_benefit']['assessed_minor'] }
-    run=store('calculation',{'subject_id'=>subject,'service_start'=>a.iso8601,'service_end_exclusive'=>b.iso8601,'knowledge_cutoff'=>cutoff,'segments'=>segments,'allocations'=>allocations,'total_minor'=>total,'compensation_minor'=>compensation.empty? ? nil : engine_sum(compensation,a,b),'additional_payout_minor'=>payouts.empty? ? nil : engine_sum(payouts,a,b),'pricing_benefit_minor'=>benefits.empty? ? nil : engine_sum(benefits,a,b),'implementation_hash'=>implementation_hash},status:'completed')
+    run=store('calculation',{'purpose'=>purposes.first,'net_minor'=>engine_sum(settlement.values,a,b),'settlement_allocations'=>settlement,'subject_id'=>subject,'service_start'=>a.iso8601,'service_end_exclusive'=>b.iso8601,'knowledge_cutoff'=>cutoff,'segments'=>segments,'allocations'=>allocations,'total_minor'=>total,'compensation_minor'=>compensation.empty? ? nil : engine_sum(compensation,a,b),'additional_payout_minor'=>payouts.empty? ? nil : engine_sum(payouts,a,b),'pricing_benefit_minor'=>benefits.empty? ? nil : engine_sum(benefits,a,b),'implementation_hash'=>implementation_hash},status:'completed')
     {'run_id'=>run.external_id,'amount_minor'=>total,'allocations'=>allocations}
+  end
+  def billing_manifest(subject,a,b,cutoff,requirements:,purpose:nil)
+    manifest=BillingPipeline.new(self).manifest(subject,a,b,cutoff,requirements:requirements)
+    if purpose=='earnings'
+      roots=rows('document').where("payload->>'original_document_id' IS NULL AND payload->>'service_start' = ? AND payload->>'service_end_exclusive' = ?",a.iso8601,b.iso8601)
+      roots.order(:id).limit(1001).each_with_index do |root,index|
+        error('RESOURCE_LIMIT','Page earnings by service group') if index>=1000
+        run=BillingDocuments.new(self).target(root); amount=run.payload['compensation_minor']; next if amount.nil?
+        key="issued_compensation_#{root.id}"
+        manifest['engine']['facts'][key]={'id'=>key,'revision'=>run.revision,'tenant_id'=>w.tenant,'entity_id'=>w.entity,'approved'=>true,'recorded_at'=>run.recorded_at.iso8601(6),'unit'=>'USD_minor','basis'=>'assessed','currency'=>'USD','value'=>amount.to_s,'collection'=>'issued_compensation','economic_date'=>a.iso8601,'evidence_refs'=>[root.id.to_s,run.id.to_s]}
+        manifest['records'] << {'id'=>run.external_id,'revision'=>run.revision,'hash'=>run.payload_hash,'kind'=>'issued_compensation','record_id'=>run.id.to_s}
+      end
+    end
+    manifest
   end
   def engine_sum(amounts,a,b)
     amounts=[0] if amounts.empty?
@@ -211,9 +248,9 @@ class BillingPlatform
     error('HASH_CHANGED','Billing implementation changed; evaluate again') unless run.payload['implementation_hash']==implementation_hash
     run.payload.fetch('segments').each do |s|
       x,y=interval!(s['service_start'],s['service_end_exclusive'])
-      current=BillingPipeline.new(self).manifest(run.payload['subject_id'],x,y,Time.current.iso8601(6),requirements:s['manifest']['requirements'])
+      current=billing_manifest(run.payload['subject_id'],x,y,Time.current.iso8601(6),requirements:s['manifest']['requirements'],purpose:run.payload['purpose'])
       error('HASH_CHANGED','Source evidence changed; evaluate again') unless hash(current)==hash(s['manifest'])
-      assignment=schedule(run.payload['subject_id']).find { |r| r.starts_on<=x && y<=r.ends_on }
+      assignment=schedule(run.payload['subject_id'],purpose:run.payload.fetch('purpose','billing')).find { |r| r.starts_on<=x && y<=r.ends_on }
       error('HASH_CHANGED','Assigned policy changed; evaluate again') unless assignment && assignment.payload['policy_id']==s['policy_id'] && assignment.payload['policy_hash']==s['policy_hash']
     end
     run
@@ -222,6 +259,36 @@ class BillingPlatform
   def propose_correction(input) = BillingDocuments.new(self).propose(input)
   def review_correction(input) = BillingDocuments.new(self).review(input)
   def issue_correction(input) = BillingDocuments.new(self).correct(input)
+  def apply_cash(input) = BillingLifecycle.new(self).apply(input)
+  def reverse_cash(input) = BillingLifecycle.new(self).reverse(input)
+  def request_refund(input) = BillingLifecycle.new(self).request_refund(input)
+  def cancel_refund(input) = BillingLifecycle.new(self).cancel_refund(input)
+  def package_accounting(input) = BillingLifecycle.new(self).package(input)
+  def accept_accounting(input) = BillingLifecycle.new(self).accept_accounting(input)
+  def propose_payable(input) = BillingPayables.new(self).propose(input)
+  def review_payable(input) = BillingPayables.new(self).review(input)
+  def issue_payable(input) = BillingPayables.new(self).issue(input)
+  def queue_batch(input)
+    w.guard!('operator'); a,b=interval!(input.fetch('service_start'),input.fetch('service_end_exclusive')); m.reason!(input['reason'])
+    purpose=input.fetch('purpose','billing'); error('VALIDATION_ERROR') unless %w[billing earnings].include?(purpose)
+    subjects=input['subjects'] || rows('assignment').where("COALESCE(payload->>'purpose','billing')=? AND starts_on<? AND ends_on>?",purpose,b,a).distinct.order(:subject_id).limit(1001).pluck(:subject_id)
+    error('RESOURCE_LIMIT','Submit at most 1,000 groups per batch') unless subjects.is_a?(Array) && subjects.size.between?(1,1000) && subjects.uniq==subjects
+    subjects.each { |id| id!(id) }; at=input['run_at'] ? clock(input['run_at']) : Time.current
+    error('INVALID_INTERVAL') if at>Time.current+366.days
+    batch=store('billing_batch',{'subjects'=>subjects,'service_start'=>a.iso8601,'service_end_exclusive'=>b.iso8601,'run_at'=>at.iso8601(6),'reason'=>input['reason']},status:'pending')
+    subjects.each { |subject| BillingWorker.enqueue(BillingEvaluateJob.new(w.tenant,w.entity,case_id,subject,a.iso8601,b.iso8601,input.fetch('purpose','billing')),at:at,batch_id:batch.external_id) }
+    {'batch_id'=>batch.external_id,'groups'=>subjects.size,'status'=>'queued'}
+  end
+  def retry_work(input)
+    w.guard!('operator'); m.reason!(input['reason'])
+    old=BillingWorkItem.find_by!(**w.scope,case_id:case_id,job_id:input.fetch('job_id'))
+    error('INVALID_JOB') unless %w[failed quarantined].include?(old.status) && BillingWorker::CLASSES.include?(old.job_class)
+    args=copy(old.job_data['arguments']); args[-1]=input['source_id'] if input['source_id'] && old.job_class=='BillingNormalizeJob'
+    error('INVALID_JOB') if input['source_id'] && old.job_class!='BillingNormalizeJob'
+    job=old.job_class.constantize.new(*args); item=BillingWorker.enqueue(job,batch_id:old.batch_id)
+    store('work_attempt',{'job_id'=>old.job_id,'retry_job_id'=>item.job_id,'reason'=>input['reason'],'outcome'=>'manual_retry'},status:'retained')
+    {'job_id'=>item.job_id,'status'=>'queued'}
+  end
   def close_period(input)
     w.guard!('finance'); BillingDocuments.new(self).period!(input.fetch('posting_period')); m.reason!(input['reason'])
     row=rows('period_close').find_by(external_id:"closed-#{input['posting_period']}") || store('period_close',{'posting_period'=>input['posting_period'],'reason'=>input['reason']},id:"closed-#{input['posting_period']}",status:'closed')

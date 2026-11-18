@@ -93,7 +93,7 @@ type Query {
   audienceClients(caseId: ID!, limit: Int, offset: Int, search: String): JSON!
   audienceStatement(caseId: ID!, limit: Int, offset: Int): JSON!
   audienceSummary(caseId: ID!): JSON!
-  billingWorkspace(audience: String!, caseId: ID!, limit: Int, offset: Int, recordId: ID, search: String, section: String, serviceEndExclusive: String, serviceStart: String, subjectId: ID): JSON!
+  billingWorkspace(audience: String!, caseId: ID!, limit: Int, offset: Int, purpose: String, recordId: ID, search: String, section: String, serviceEndExclusive: String, serviceStart: String, subjectId: ID): JSON!
   brokerBook(brokerId: ID!, runId: ID): BrokerBook
   collections(customerId: ID, knowledgeCutoff: String): JSON!
   disclosureWorkspace(audience: String!, caseId: ID!, limit: Int, offset: Int, pageChanges: Boolean): JSON!

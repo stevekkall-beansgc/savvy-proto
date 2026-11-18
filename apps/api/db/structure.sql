@@ -66,11 +66,11 @@ DECLARE original billing_invoices%ROWTYPE;
 BEGIN
   IF NEW.external_id LIKE 'bp-doc-%' THEN
     IF NEW.billing_case_id IS NULL OR NEW.billing_case_id NOT IN ('advisor','ria') OR NEW.billing_subject_id IS NULL OR length(NEW.billing_subject_id)=0 OR NEW.calculation_ref IS NULL OR NEW.issued_on IS NULL OR NEW.posting_period IS NULL OR NEW.posting_period !~ '^[0-9]{4}-(0[1-9]|1[0-2])$' OR NEW.debtor_id=NEW.creditor_id OR (NEW.due_on IS NOT NULL AND NEW.due_on<NEW.issued_on) THEN RAISE EXCEPTION 'Invalid native document metadata'; END IF;
-    IF NEW.document_type<>'invoice' THEN
+    IF (NEW.document_type='credit_note' AND (NEW.debtor_id<>'firm-demo' OR NEW.creditor_id<>NEW.billing_subject_id)) OR (NEW.document_type<>'credit_note' AND (NEW.debtor_id<>NEW.billing_subject_id OR NEW.creditor_id<>'firm-demo')) THEN RAISE EXCEPTION 'Invalid native direction'; END IF;
+    IF NEW.corrects_invoice_id IS NOT NULL THEN
       SELECT * INTO STRICT original FROM billing_invoices WHERE tenant_id=NEW.tenant_id AND entity_id=NEW.entity_id AND id=NEW.corrects_invoice_id;
-      IF original.document_type<>'invoice' OR original.currency<>NEW.currency OR original.billing_case_id IS DISTINCT FROM NEW.billing_case_id OR original.billing_subject_id IS DISTINCT FROM NEW.billing_subject_id THEN RAISE EXCEPTION 'Invalid correction scope'; END IF;
-      IF (NEW.document_type='credit_note' AND (NEW.debtor_id<>original.creditor_id OR NEW.creditor_id<>original.debtor_id)) OR (NEW.document_type='debit_note' AND (NEW.debtor_id<>original.debtor_id OR NEW.creditor_id<>original.creditor_id)) THEN RAISE EXCEPTION 'Invalid correction direction'; END IF;
-    ELSIF NEW.corrects_invoice_id IS NOT NULL THEN RAISE EXCEPTION 'An invoice cannot correct another invoice'; END IF;
+      IF original.corrects_invoice_id IS NOT NULL OR original.currency<>NEW.currency OR original.billing_case_id IS DISTINCT FROM NEW.billing_case_id OR original.billing_subject_id IS DISTINCT FROM NEW.billing_subject_id OR NEW.document_type='invoice' THEN RAISE EXCEPTION 'Invalid correction scope'; END IF;
+    ELSIF NEW.document_type='debit_note' THEN RAISE EXCEPTION 'Debit note requires an original claim'; END IF;
   END IF;
   RETURN NEW;
 END $_$;
@@ -90,10 +90,30 @@ BEGIN
     SELECT h.* INTO STRICT previous FROM billing_invoice_lines l JOIN billing_invoices h ON h.tenant_id=l.tenant_id AND h.entity_id=l.entity_id AND h.id=l.billing_invoice_id WHERE l.tenant_id=NEW.tenant_id AND l.entity_id=NEW.entity_id AND l.id=NEW.corrects_line_id;
     SELECT o.account_id INTO STRICT old_account FROM billing_invoice_lines l JOIN billing_obligations o ON o.tenant_id=l.tenant_id AND o.entity_id=l.entity_id AND o.id=l.billing_obligation_id WHERE l.tenant_id=NEW.tenant_id AND l.entity_id=NEW.entity_id AND l.id=NEW.corrects_line_id;
     SELECT account_id INTO STRICT new_account FROM billing_obligations WHERE tenant_id=NEW.tenant_id AND entity_id=NEW.entity_id AND id=NEW.billing_obligation_id;
-    IF document.document_type='invoice' OR previous.document_type='credit_note' OR (previous.id IS DISTINCT FROM document.corrects_invoice_id AND previous.corrects_invoice_id IS DISTINCT FROM document.corrects_invoice_id) OR old_account<>new_account THEN RAISE EXCEPTION 'Correction line must reference its original claim and account'; END IF;
+    IF document.corrects_invoice_id IS NULL OR (previous.id IS DISTINCT FROM document.corrects_invoice_id AND previous.corrects_invoice_id IS DISTINCT FROM document.corrects_invoice_id) OR old_account<>new_account THEN RAISE EXCEPTION 'Correction line must reference its original claim and account'; END IF;
   END IF;
   RETURN NEW;
 END $$;
+
+
+--
+-- Name: validate_native_payable(); Type: FUNCTION; Schema: public; Owner: -
+--
+
+CREATE FUNCTION public.validate_native_payable() RETURNS trigger
+    LANGUAGE plpgsql
+    AS $_$
+DECLARE original billing_instructions%ROWTYPE;
+BEGIN
+  IF NEW.external_id LIKE 'bp-payable-%' THEN
+    IF NEW.billing_case_id IS NULL OR NEW.billing_case_id NOT IN ('advisor','ria') OR NEW.billing_subject_id IS NULL OR NEW.currency IS DISTINCT FROM 'USD' OR NEW.calculation_ref IS NULL OR NEW.posting_period IS NULL OR NEW.posting_period !~ '^[0-9]{4}-(0[1-9]|1[0-2])$' OR NEW.execution_status IS DISTINCT FROM 'not_sent' OR NOT ((NEW.debtor_id='firm-demo' AND NEW.creditor_id=NEW.billing_subject_id) OR (NEW.creditor_id='firm-demo' AND NEW.debtor_id=NEW.billing_subject_id)) OR NEW.debtor_id=NEW.creditor_id THEN RAISE EXCEPTION 'Invalid native payable metadata'; END IF;
+    IF NEW.corrects_instruction_id IS NOT NULL THEN
+      SELECT * INTO STRICT original FROM billing_instructions WHERE tenant_id=NEW.tenant_id AND entity_id=NEW.entity_id AND id=NEW.corrects_instruction_id;
+      IF original.corrects_instruction_id IS NOT NULL OR original.billing_case_id IS DISTINCT FROM NEW.billing_case_id OR original.billing_subject_id IS DISTINCT FROM NEW.billing_subject_id OR original.currency IS DISTINCT FROM NEW.currency THEN RAISE EXCEPTION 'Invalid payable correction scope'; END IF;
+    END IF;
+  END IF;
+  RETURN NEW;
+END $_$;
 
 
 --
@@ -162,8 +182,8 @@ CREATE TABLE public.medallion_evidence (
     ends_on date,
     schedule_version integer DEFAULT 1 NOT NULL,
     CONSTRAINT medallion_assignment_interval CHECK ((((kind)::text <> 'assignment'::text) OR ((subject_id IS NOT NULL) AND (product_id IS NOT NULL) AND (starts_on IS NOT NULL) AND ((ends_on IS NULL) OR (starts_on < ends_on))))),
-    CONSTRAINT medallion_evidence_kind CHECK ((((kind)::text = ANY (ARRAY[('artifact'::character varying)::text, ('delivery'::character varying)::text, ('fact'::character varying)::text, ('policy'::character varying)::text, ('assignment'::character varying)::text, ('comparison'::character varying)::text, ('review'::character varying)::text, ('publication'::character varying)::text, ('event'::character varying)::text, ('event_review'::character varying)::text, ('payment'::character varying)::text, ('application'::character varying)::text, ('application_reversal'::character varying)::text, ('run'::character varying)::text, ('statement'::character varying)::text, ('period_lock'::character varying)::text, ('funding'::character varying)::text, ('coverage_right'::character varying)::text, ('receipt'::character varying)::text, ('receipt_allocation'::character varying)::text, ('netting_authority'::character varying)::text, ('receipt_reversal'::character varying)::text, ('funding_reversal'::character varying)::text, ('adjustment_intent'::character varying)::text])) OR (((scenario_id)::text = 'billing_platform'::text) AND ((kind)::text = ANY (ARRAY[('source'::character varying)::text, ('normalized'::character varying)::text, ('normalization'::character varying)::text, ('policy_review'::character varying)::text, ('policy_publication'::character varying)::text, ('calculation'::character varying)::text, ('document'::character varying)::text, ('correction_proposal'::character varying)::text, ('correction_review'::character varying)::text, ('correction_issue'::character varying)::text, ('period_close'::character varying)::text]))) OR (((scenario_id)::text = 'billing_platform'::text) AND ((kind)::text = 'calculation_attempt'::text)))),
-    CONSTRAINT medallion_evidence_status CHECK ((((status)::text = ANY ((ARRAY['retained'::character varying, 'accepted'::character varying, 'draft'::character varying, 'approved'::character varying, 'rejected'::character varying, 'published'::character varying, 'confirmed'::character varying, 'pending'::character varying, 'reversed'::character varying, 'completed'::character varying, 'blocked'::character varying, 'sealed'::character varying, 'locked'::character varying])::text[])) OR (((scenario_id)::text = 'billing_platform'::text) AND ((status)::text = ANY ((ARRAY['active'::character varying, 'quarantined'::character varying, 'issued'::character varying, 'closed'::character varying, 'proposed'::character varying, 'unchanged'::character varying])::text[]))))),
+    CONSTRAINT medallion_evidence_kind CHECK ((((kind)::text = ANY (ARRAY[('artifact'::character varying)::text, ('delivery'::character varying)::text, ('fact'::character varying)::text, ('policy'::character varying)::text, ('assignment'::character varying)::text, ('comparison'::character varying)::text, ('review'::character varying)::text, ('publication'::character varying)::text, ('event'::character varying)::text, ('event_review'::character varying)::text, ('payment'::character varying)::text, ('application'::character varying)::text, ('application_reversal'::character varying)::text, ('run'::character varying)::text, ('statement'::character varying)::text, ('period_lock'::character varying)::text, ('funding'::character varying)::text, ('coverage_right'::character varying)::text, ('receipt'::character varying)::text, ('receipt_allocation'::character varying)::text, ('netting_authority'::character varying)::text, ('receipt_reversal'::character varying)::text, ('funding_reversal'::character varying)::text, ('adjustment_intent'::character varying)::text])) OR (((scenario_id)::text = 'billing_platform'::text) AND ((kind)::text = ANY (ARRAY[('source'::character varying)::text, ('normalized'::character varying)::text, ('normalization'::character varying)::text, ('policy_review'::character varying)::text, ('policy_publication'::character varying)::text, ('calculation'::character varying)::text, ('document'::character varying)::text, ('correction_proposal'::character varying)::text, ('correction_review'::character varying)::text, ('correction_issue'::character varying)::text, ('period_close'::character varying)::text]))) OR (((scenario_id)::text = 'billing_platform'::text) AND ((kind)::text = 'calculation_attempt'::text)) OR (((scenario_id)::text = 'billing_platform'::text) AND ((kind)::text = ANY ((ARRAY['cash_application'::character varying, 'cash_reversal'::character varying, 'refund_request'::character varying, 'accounting_package'::character varying, 'accounting_acceptance'::character varying, 'payable'::character varying, 'payable_review'::character varying, 'payable_issue'::character varying, 'work_attempt'::character varying, 'billing_batch'::character varying])::text[]))))),
+    CONSTRAINT medallion_evidence_status CHECK ((((status)::text = ANY (ARRAY[('retained'::character varying)::text, ('accepted'::character varying)::text, ('draft'::character varying)::text, ('approved'::character varying)::text, ('rejected'::character varying)::text, ('published'::character varying)::text, ('confirmed'::character varying)::text, ('pending'::character varying)::text, ('reversed'::character varying)::text, ('completed'::character varying)::text, ('blocked'::character varying)::text, ('sealed'::character varying)::text, ('locked'::character varying)::text])) OR (((scenario_id)::text = 'billing_platform'::text) AND ((status)::text = ANY (ARRAY[('active'::character varying)::text, ('quarantined'::character varying)::text, ('issued'::character varying)::text, ('closed'::character varying)::text, ('proposed'::character varying)::text, ('unchanged'::character varying)::text]))))),
     CONSTRAINT medallion_original_bytes CHECK (((((kind)::text = 'artifact'::text) AND (original_bytes IS NOT NULL)) OR (((kind)::text <> 'artifact'::text) AND (original_bytes IS NULL)))),
     CONSTRAINT medallion_scenario_body CHECK ((((scenario_id)::text ~ '^[a-zA-Z0-9_-]{1,100}$'::text) AND (jsonb_typeof(payload) = 'object'::text))),
     CONSTRAINT medallion_schedule_version CHECK ((schedule_version > 0)),
@@ -271,6 +291,14 @@ CREATE TABLE public.billing_instructions (
     amount_minor bigint NOT NULL,
     status character varying NOT NULL,
     execution_status character varying,
+    debtor_id character varying,
+    creditor_id character varying,
+    billing_case_id character varying,
+    billing_subject_id character varying,
+    currency character varying,
+    calculation_ref character varying,
+    posting_period character varying,
+    corrects_instruction_id bigint,
     CONSTRAINT billing_instruction_values CHECK (((amount_minor > 0) AND (revision > 0)))
 );
 
@@ -354,7 +382,7 @@ CREATE TABLE public.billing_invoices (
     due_on date,
     posting_period character varying,
     calculation_ref character varying,
-    CONSTRAINT billing_document_type CHECK (((document_type)::text = ANY ((ARRAY['invoice'::character varying, 'credit_note'::character varying, 'debit_note'::character varying])::text[]))),
+    CONSTRAINT billing_document_type CHECK (((document_type)::text = ANY (ARRAY[('invoice'::character varying)::text, ('credit_note'::character varying)::text, ('debit_note'::character varying)::text]))),
     CONSTRAINT billing_invoice_values CHECK (((amount_minor > 0) AND ((currency)::text = 'USD'::text) AND (revision > 0)))
 );
 
@@ -426,6 +454,52 @@ ALTER SEQUENCE public.billing_obligations_id_seq OWNED BY public.billing_obligat
 
 
 --
+-- Name: billing_work_items; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.billing_work_items (
+    id bigint NOT NULL,
+    tenant_id character varying NOT NULL,
+    entity_id character varying NOT NULL,
+    case_id character varying NOT NULL,
+    job_id character varying NOT NULL,
+    job_class character varying NOT NULL,
+    status character varying NOT NULL,
+    job_data jsonb NOT NULL,
+    result jsonb DEFAULT '{}'::jsonb NOT NULL,
+    attempts integer DEFAULT 0 NOT NULL,
+    max_attempts integer DEFAULT 3 NOT NULL,
+    run_at timestamp(6) without time zone NOT NULL,
+    leased_until timestamp(6) without time zone,
+    lease_token character varying,
+    batch_id character varying,
+    last_error character varying,
+    created_at timestamp(6) without time zone NOT NULL,
+    updated_at timestamp(6) without time zone NOT NULL,
+    CONSTRAINT billing_work_state CHECK ((((status)::text = ANY ((ARRAY['queued'::character varying, 'running'::character varying, 'completed'::character varying, 'quarantined'::character varying, 'failed'::character varying])::text[])) AND (attempts >= 0) AND ((max_attempts >= 1) AND (max_attempts <= 10)) AND ((case_id)::text = ANY ((ARRAY['advisor'::character varying, 'ria'::character varying])::text[]))))
+);
+
+
+--
+-- Name: billing_work_items_id_seq; Type: SEQUENCE; Schema: public; Owner: -
+--
+
+CREATE SEQUENCE public.billing_work_items_id_seq
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+--
+-- Name: billing_work_items_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: -
+--
+
+ALTER SEQUENCE public.billing_work_items_id_seq OWNED BY public.billing_work_items.id;
+
+
+--
 -- Name: commercial_rates; Type: TABLE; Schema: public; Owner: -
 --
 
@@ -451,7 +525,7 @@ CREATE TABLE public.commercial_rates (
     payer_id character varying,
     payee_id character varying,
     commercial_group character varying,
-    CONSTRAINT valid_commercial_rate_v2 CHECK (((length((component)::text) > 0) AND ((kind)::text = ANY ((ARRAY['standard'::character varying, 'promotion'::character varying, 'targeted_promotion'::character varying])::text[])) AND (numerator >= 0) AND (denominator >= 1) AND ((unit)::text = ANY ((ARRAY['ratio'::character varying, 'USD_minor'::character varying, 'unit_price'::character varying])::text[])) AND ((ends_on IS NULL) OR (starts_on < ends_on)) AND ((signup_within_days IS NULL) OR ((signup_within_days >= 1) AND (signup_within_days <= 365))) AND (jsonb_typeof(selector) = 'object'::text) AND ((((configuration_id)::text ~~ 'bp-policy-%'::text) AND (numerator <= '1000000000000000'::bigint) AND (denominator <= '1000000000000000'::bigint)) OR ((denominator <= 1000000) AND (((unit)::text <> 'ratio'::text) OR (numerator <= denominator))))))
+    CONSTRAINT valid_commercial_rate_v2 CHECK (((length((component)::text) > 0) AND ((kind)::text = ANY (ARRAY[('standard'::character varying)::text, ('promotion'::character varying)::text, ('targeted_promotion'::character varying)::text])) AND (numerator >= 0) AND (denominator >= 1) AND ((unit)::text = ANY (ARRAY[('ratio'::character varying)::text, ('USD_minor'::character varying)::text, ('unit_price'::character varying)::text])) AND ((ends_on IS NULL) OR (starts_on < ends_on)) AND ((signup_within_days IS NULL) OR ((signup_within_days >= 1) AND (signup_within_days <= 365))) AND (jsonb_typeof(selector) = 'object'::text) AND ((((configuration_id)::text ~~ 'bp-policy-%'::text) AND (numerator <= '1000000000000000'::bigint) AND (denominator <= '1000000000000000'::bigint)) OR ((denominator <= 1000000) AND (((unit)::text <> 'ratio'::text) OR (numerator <= denominator))))))
 );
 
 
@@ -746,6 +820,13 @@ ALTER TABLE ONLY public.billing_obligations ALTER COLUMN id SET DEFAULT nextval(
 
 
 --
+-- Name: billing_work_items id; Type: DEFAULT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.billing_work_items ALTER COLUMN id SET DEFAULT nextval('public.billing_work_items_id_seq'::regclass);
+
+
+--
 -- Name: commercial_rates id; Type: DEFAULT; Schema: public; Owner: -
 --
 
@@ -855,6 +936,14 @@ ALTER TABLE ONLY public.billing_invoices
 
 ALTER TABLE ONLY public.billing_obligations
     ADD CONSTRAINT billing_obligations_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: billing_work_items billing_work_items_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.billing_work_items
+    ADD CONSTRAINT billing_work_items_pkey PRIMARY KEY (id);
 
 
 --
@@ -1045,6 +1134,20 @@ CREATE UNIQUE INDEX billing_obligations_scoped_pk ON public.billing_obligations 
 
 
 --
+-- Name: billing_work_ready; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX billing_work_ready ON public.billing_work_items USING btree (status, run_at, leased_until);
+
+
+--
+-- Name: billing_work_scope_batch; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX billing_work_scope_batch ON public.billing_work_items USING btree (tenant_id, entity_id, case_id, batch_id);
+
+
+--
 -- Name: commercial_rate_identity; Type: INDEX; Schema: public; Owner: -
 --
 
@@ -1063,6 +1166,13 @@ CREATE INDEX entitlement_grant_scope ON public.demo_entitlement_entries USING bt
 --
 
 CREATE UNIQUE INDEX entitlement_scoped_id ON public.demo_entitlement_entries USING btree (tenant_id, entity_id, id);
+
+
+--
+-- Name: index_billing_work_items_on_job_id; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE UNIQUE INDEX index_billing_work_items_on_job_id ON public.billing_work_items USING btree (job_id);
 
 
 --
@@ -1157,10 +1267,24 @@ CREATE TRIGGER billing_document_metadata BEFORE INSERT ON public.billing_invoice
 
 
 --
+-- Name: billing_instruction_items billing_instruction_items_append_only; Type: TRIGGER; Schema: public; Owner: -
+--
+
+CREATE TRIGGER billing_instruction_items_append_only BEFORE DELETE OR UPDATE ON public.billing_instruction_items FOR EACH ROW EXECUTE FUNCTION public.native_billing_append_only();
+
+
+--
 -- Name: billing_instruction_items billing_instruction_items_conservation; Type: TRIGGER; Schema: public; Owner: -
 --
 
 CREATE CONSTRAINT TRIGGER billing_instruction_items_conservation AFTER INSERT OR DELETE OR UPDATE ON public.billing_instruction_items DEFERRABLE INITIALLY DEFERRED FOR EACH ROW EXECUTE FUNCTION public.validate_synthetic_billing_conservation();
+
+
+--
+-- Name: billing_instructions billing_instructions_append_only; Type: TRIGGER; Schema: public; Owner: -
+--
+
+CREATE TRIGGER billing_instructions_append_only BEFORE DELETE OR UPDATE ON public.billing_instructions FOR EACH ROW EXECUTE FUNCTION public.native_billing_append_only();
 
 
 --
@@ -1234,6 +1358,13 @@ CREATE TRIGGER medallion_no_update_delete BEFORE DELETE OR UPDATE ON public.meda
 
 
 --
+-- Name: billing_instructions native_payable_metadata; Type: TRIGGER; Schema: public; Owner: -
+--
+
+CREATE TRIGGER native_payable_metadata BEFORE INSERT ON public.billing_instructions FOR EACH ROW EXECUTE FUNCTION public.validate_native_payable();
+
+
+--
 -- Name: billing_invoices billing_document_parent; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -1247,6 +1378,14 @@ ALTER TABLE ONLY public.billing_invoices
 
 ALTER TABLE ONLY public.billing_invoice_lines
     ADD CONSTRAINT billing_line_parent FOREIGN KEY (tenant_id, entity_id, corrects_line_id) REFERENCES public.billing_invoice_lines(tenant_id, entity_id, id);
+
+
+--
+-- Name: billing_instructions billing_payable_scoped_original; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.billing_instructions
+    ADD CONSTRAINT billing_payable_scoped_original FOREIGN KEY (tenant_id, entity_id, corrects_instruction_id) REFERENCES public.billing_instructions(tenant_id, entity_id, id);
 
 
 --
@@ -1432,6 +1571,8 @@ ALTER TABLE ONLY public.medallion_evidence
 SET search_path TO "$user", public;
 
 INSERT INTO "schema_migrations" (version) VALUES
+('20261118000700'),
+('20261118000600'),
 ('20261118000500'),
 ('20261118000400'),
 ('20261118000300'),

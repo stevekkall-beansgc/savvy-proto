@@ -2,29 +2,34 @@
 class BillingPolicy
   attr_reader :engine_manifest
   def self.validate!(config)
-    fail! unless config.is_a?(Hash) && (config.keys-%w[version components graph allocation minimum_minor cap_minor compensation input_requirements invoice_timing]).empty? && config['version'].is_a?(String) && config['version'].length.between?(1,100)
+    fail! unless config.is_a?(Hash) && (config.keys-%w[version components graph allocation minimum_minor cap_minor compensation input_requirements invoice_timing purpose]).empty? && config['version'].is_a?(String) && config['version'].length.between?(1,100)
     fail! unless %w[equal balance].include?(config.fetch('allocation','equal'))
+    fail! unless %w[billing earnings].include?(config.fetch('purpose','billing'))
     fail! unless %w[advance arrears].include?(config.fetch('invoice_timing','arrears'))
     if config['input_requirements']
-      fail! unless config['input_requirements'].is_a?(Hash) && config['input_requirements'].keys==['balances'] && %w[daily ending none].include?(config['input_requirements']['balances'])
+      fail! unless config['input_requirements'].is_a?(Hash) && config['input_requirements'].keys==['balances'] && %w[daily ending opening daily_opening ending_opening none].include?(config['input_requirements']['balances'])
     end
     if config['graph']
       fail! if config['components'] || config['minimum_minor'] || config['cap_minor'] || config['compensation']
       Economics::Engine.new.validate(policy:config['graph'])
-      fail! unless config['graph']['nodes'].any? { |n| n['id']=='charge' }
+      fail! unless config['graph']['nodes'].any? { |n| n['id']==(config['purpose']=='earnings' ? 'compensation' : 'charge') }
       fail! if config['graph']['nodes'].any? { |n| n['id'].start_with?('allocation_','weight_') }
       fail! if config['graph']['nodes'].any? { |n| n.key?('explanation') && (!n['explanation'].is_a?(String) || n['explanation'].length>500) }
-      fail! unless config['graph']['nodes'].find { |n| n['id']=='charge' }['explanation'].to_s.length.between?(1,500)
+      fail! unless config['graph']['nodes'].find { |n| n['id']==(config['purpose']=='earnings' ? 'compensation' : 'charge') }['explanation'].to_s.length.between?(1,500)
     else
       fail! if config['input_requirements']
       components=config['components']; fail! unless components.is_a?(Array) && components.size.between?(1,20)
       fail! unless components.map { |c| c['id'] }.uniq.size==components.size
+      fail! if config['purpose']=='earnings' && config['compensation']
       components.each do |component|
-        fail! unless component.is_a?(Hash) && component['id'].is_a?(String) && component['id'].match?(/\A[a-z][a-z0-9_]{0,30}\z/) && %w[aum flat per_account hourly events observation].include?(component['kind'])
-        allowed={'aum'=>%w[id kind basis rate rates tiers day_basis period_factor],'flat'=>%w[id kind amount_minor proration],'per_account'=>%w[id kind amount_minor proration],'hourly'=>%w[id kind rate_minor],'events'=>%w[id kind direction],'observation'=>%w[id kind collection selector label]}.fetch(component['kind'])
+        fail! unless component.is_a?(Hash) && component['id'].is_a?(String) && component['id'].match?(/\A[a-z][a-z0-9_]{0,30}\z/) && %w[aum flat per_account hourly events observation earned_share].include?(component['kind'])
+        fail! if component['kind']=='earned_share' && config['purpose']!='earnings'
+        allowed={'aum'=>%w[id kind basis rate rates tiers day_basis period_factor valuation],'flat'=>%w[id kind amount_minor proration],'per_account'=>%w[id kind amount_minor proration],'hourly'=>%w[id kind rate_minor],'events'=>%w[id kind direction],'observation'=>%w[id kind collection selector label],'earned_share'=>%w[id kind]}.fetch(component['kind'])
         fail! unless (component.keys-allowed).empty?
         case component['kind']
         when 'aum'
+          fail! unless %w[service_end prior_period_end].include?(component.fetch('valuation','service_end'))
+          fail! if component['valuation']=='prior_period_end' && component.fetch('basis','daily')!='ending_value'
           fail! unless %w[daily ending_value].include?(component.fetch('basis','daily'))
           fail! unless [360,365,366].include?(component.fetch('day_basis',365))
           ratio!(component['period_factor']) if component['period_factor']
@@ -100,8 +105,11 @@ class BillingPolicy
   def self.requirements(config)
     return config['input_requirements'] if config['graph'] && config['input_requirements']
     return {'balances'=>'daily'} if config['graph']
-    bases=config.fetch('components').select { |c| c['kind']=='aum' }.map { |c| c.fetch('basis','daily') }
-    {'balances'=>bases.include?('daily') ? 'daily' : (bases.any? || config['allocation']=='balance') ? 'ending' : 'none'}
+    components=config.fetch('components'); opening=components.any? { |c| c['valuation']=='prior_period_end' }
+    bases=components.select { |c| c['kind']=='aum' && c['valuation']!='prior_period_end' }.map { |c| c.fetch('basis','daily') }
+    mode=bases.include?('daily') ? 'daily' : (bases.any? || config['allocation']=='balance') && !opening ? 'ending' : 'none'
+    mode=mode=='none' ? 'opening' : mode+'_opening' if opening
+    {'balances'=>mode}
   end
   def initialize(platform,config,manifest,a,b,billing_start,billing_end)
     @p,@config,@manifest,@a,@b,@bill_a,@bill_b=platform,config,manifest,a,b,billing_start,billing_end
@@ -116,11 +124,12 @@ class BillingPolicy
   end
   def add(id,inputs,basis='assessed') = node(id,'add','USD_minor',basis,{'inputs'=>inputs.empty? ? [literal("#{id}_zero",0,'USD_minor',basis)] : inputs})
   def metadata(value)
-    {'role'=>'terminal','output_class'=>'obligation','payer'=>@manifest['subject_id'],'payee'=>'firm-demo','subject'=>@manifest['subject_id'],'currency'=>'USD','explanation'=>value}
+    {'role'=>'terminal','output_class'=>'obligation','payer'=>earnings? ? 'firm-demo' : @manifest['subject_id'],'payee'=>earnings? ? @manifest['subject_id'] : 'firm-demo','subject'=>@manifest['subject_id'],'currency'=>'USD','explanation'=>value}
   end
   def active_days(account)
     (@a...@b).select { |d| @p.date!(account['active_from'])<=d && (!account['active_to'] || d<@p.date!(account['active_to'])) }
   end
+  def earnings? = @config['purpose']=='earnings'
   def compile
     accounts=@manifest.fetch('accounts')
     if @config['graph']
@@ -146,6 +155,7 @@ class BillingPolicy
           factor=literal("#{id}_measured_units",units)
           exact=node("#{id}_exact",'multiply','USD_minor','exact_accrual',{'left'=>amount,'right'=>factor})
           node(id,'assess','USD_minor','assessed',{'input'=>exact,'rounding'=>'half_up'})
+        when 'earned_share' then sum(id,'issued_compensation',{},basis:'assessed')
         when 'hourly'
           quantity=sum("#{id}_hours",'hours',{},unit:'scalar',basis:'scalar'); @nodes.last['allow_empty']=false; rate=literal("#{id}_rate",component['rate_minor'],'USD_minor','exact_accrual')
           exact=node("#{id}_exact",'multiply','USD_minor','exact_accrual',{'left'=>quantity,'right'=>rate})
@@ -158,7 +168,7 @@ class BillingPolicy
         end
         if kind=='observation' then next
         elsif kind=='events' && component['direction']=='credit' then credits << output
-        elsif kind=='events' && component['direction']=='payout' then payouts << output
+        elsif kind=='events' && component['direction']=='payout' && !earnings? then payouts << output
         else charges << output end
       end
       gross=add('gross_charge',charges); selected=gross
@@ -176,9 +186,14 @@ class BillingPolicy
         credit=add('approved_credit',credits)
         selected=node('after_credit','subtract','USD_minor','assessed',{'left'=>selected,'right'=>credit})
       end
-      node('charge','add','USD_minor','assessed',{'inputs'=>[selected]}.merge(metadata('Client or platform charge under assigned terms')))
+      zero=literal('billing_zero',0,'USD_minor','assessed')
+      selected=node('net_charge','add','USD_minor','assessed',{'inputs'=>[selected]})
+      positive=node('positive_charge','max','USD_minor','assessed',{'inputs'=>[selected,zero]})
+      credit_delta=node('credit_delta','subtract','USD_minor','assessed',{'left'=>zero,'right'=>selected})
+      node('credit_balance','max','USD_minor','assessed',{'inputs'=>[credit_delta,zero],'role'=>'summary','output_class'=>'obligation','payer'=>earnings? ? @manifest['subject_id'] : 'firm-demo','payee'=>earnings? ? 'firm-demo' : @manifest['subject_id'],'currency'=>'USD','explanation'=>'Excess credit carried as a separate claim'})
+      node(earnings? ? 'compensation' : 'charge','add','USD_minor','assessed',{'inputs'=>[positive]}.merge(metadata('Client or platform charge under assigned terms')))
       node('pricing_benefit','subtract','USD_minor','assessed',{'left'=>gross,'right'=>selected,'role'=>'summary','output_class'=>'metric','explanation'=>'Difference between component charges and the final charge'})
-      if @config['compensation']
+      if @config['compensation'] && !earnings?
         share=literal('compensation_share',@config['compensation']['share'])
         exact=node('compensation_exact_charge','exact','USD_minor','exact_accrual',{'input'=>'charge'})
         node('compensation_exact','multiply','USD_minor','exact_accrual',{'left'=>exact,'right'=>share})
@@ -200,27 +215,30 @@ class BillingPolicy
     weights=accounts.to_h do |account|
       key=Digest::SHA256.hexdigest(account['account_id'])[0,16]
       value=if @config.fetch('allocation','equal')=='balance'
-        sum("weight_#{key}",'balances',{'account_id'=>account['account_id']})
+        sum("weight_#{key}",@manifest['requirements']['balances']=='opening' ? 'opening_balances' : 'balances',{'account_id'=>account['account_id']})
       else literal("weight_#{key}",1,'USD_minor','source_reported') end
       [account['account_id'],value]
     end
     accounts.each do |account|
       key=Digest::SHA256.hexdigest(account['account_id'])[0,16]
-      node("allocation_#{key}",'allocate_by','USD_minor','assessed',{'input'=>'charge','weights'=>weights,'recipient'=>account['account_id']}.merge(metadata('Conserved allocation of the same charge')))
+      if @nodes.any? { |n| n['id']=='credit_balance' }
+        node("credit_allocation_#{key}",'allocate_by','USD_minor','assessed',{'input'=>'credit_balance','weights'=>weights,'recipient'=>account['account_id']}.merge(metadata('Conserved excess credit allocation')).merge('role'=>'intermediate'))
+      end
+      node("allocation_#{key}",'allocate_by','USD_minor','assessed',{'input'=>earnings? ? 'compensation' : 'charge','weights'=>weights,'recipient'=>account['account_id']}.merge(metadata('Conserved allocation of the same charge')))
     end
     Economics::Engine.new.validate(policy:graph)
     graph
   end
   def aum(component,id)
-    days=component.fetch('basis','daily')=='ending_value' ? [@b-1] : (@a...@b).to_a
-    targeted=component.fetch('rates',[]).any? { |r| r.fetch('selector',{}).any? }
-    points=targeted ? days.flat_map { |d| @manifest['accounts'].select { |a| a['eligible'] && active_days(a).include?(d) }.map { |a| [d,a] } } : days.map { |d| [d,nil] }
+    days=component.fetch('basis','daily')=='ending_value' ? [component['valuation']=='prior_period_end' ? @a : @b-1] : (@a...@b).to_a
+    targeted=component.fetch('basis','daily')=='ending_value' || component.fetch('rates',[]).any? { |r| r.fetch('selector',{}).any? }
+    points=targeted ? days.flat_map { |d| @manifest['accounts'].select { |a| a['eligible'] && (component.fetch('basis','daily')=='ending_value' ? active_days(a).any? : active_days(a).include?(d)) }.map { |a| [d,a] } } : days.map { |d| [d,nil] }
     parts=points.map.with_index do |(day,account),index|
       calendar="calendar_#{day.strftime('%Y%m%d')}"
       known=@engine_manifest['facts'].values.map { |f| f['recorded_at'] }.max || '1970-01-01T00:00:00Z'
       @engine_manifest['facts'][calendar]={'id'=>calendar,'revision'=>1,'tenant_id'=>@p.w.tenant,'entity_id'=>@p.w.entity,'recorded_at'=>known,'approved'=>true,'unit'=>'scalar','basis'=>'scalar','value'=>'1','date'=>day.iso8601,'derivation'=>'ISO service calendar'}
       key="#{id}_#{index}"; selector={'eligible'=>true,'economic_date'=>day.iso8601}; selector['account_id']=account['account_id'] if account
-      source=sum("#{key}_balance",'balances',selector)
+      source=sum("#{key}_balance",component['valuation']=='prior_period_end' ? 'opening_balances' : 'balances',selector)
       exact=if component['tiers']
         rates=component['tiers'].each_with_index.map { |tier,i| {'upper'=>tier['upper_minor'],'rate'=>literal("#{key}_band_#{i}",tier['rate'])} }
         node("#{key}_tiered",'bands','USD_minor','exact_accrual',{'input'=>source,'bands'=>rates})
@@ -239,9 +257,9 @@ class BillingPolicy
         else literal("#{key}_rate",component.fetch('rate')) end
         node("#{key}_rated",'accrue','USD_minor','exact_accrual',{'left'=>source,'right'=>rate})
       end
-      factor=component.fetch('basis','daily')=='daily' ? Rational(1,component.fetch('day_basis',365)) : Rational((@b-@a).to_i,(@bill_b-@bill_a).to_i)*Rational(component.fetch('period_factor','1/12'))
+      factor=component.fetch('basis','daily')=='daily' ? Rational(1,component.fetch('day_basis',365)) : Rational(account ? active_days(account).size : (@b-@a).to_i,(@bill_b-@bill_a).to_i)*Rational(component.fetch('period_factor','1/12'))
       scalar=literal("#{key}_calendar",factor)
-      node("#{key}_exact",'multiply','USD_minor','exact_accrual',{'left'=>exact,'right'=>scalar,'interval_fact'=>calendar,'component'=>component['id'],'explanation'=>"Accrual for #{day}"})
+      node("#{key}_exact",'multiply','USD_minor','exact_accrual',{'left'=>exact,'right'=>scalar,'component'=>component['id'],'explanation'=>component.fetch('basis','daily')=='daily' ? "Accrual for #{day}" : "Valuation as of #{component['valuation']=='prior_period_end' ? @a-1 : @b-1}",**(component.fetch('basis','daily')=='daily' ? {'interval_fact'=>calendar} : {})})
     end
     exact=add("#{id}_accrual",parts,'exact_accrual')
     node(id,'assess','USD_minor','assessed',{'input'=>exact,'rounding'=>'half_up'})
