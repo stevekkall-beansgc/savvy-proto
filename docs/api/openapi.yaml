@@ -11,7 +11,7 @@ servers:
   description: Device-hosted full application; Cloudflare Access browser login required.
 externalDocs:
   description: Authoritative GraphQL SDL in the repository
-  url: https://github.com/stevekkall-beansgc/savvy-proto/blob/56b9d90349b2d839f041320239aab6872c3f5eb1/contracts/schema.graphql
+  url: https://github.com/stevekkall-beansgc/savvy-proto/blob/7d4fca40522c3846b23c0ead4f5cf5190d7a6e9a/contracts/schema.graphql
 tags:
 - name: GraphQL transport
 - name: Local service
@@ -52,14 +52,15 @@ paths:
               householdRead:
                 summary: Read February household billing
                 value: &id005
-                  query: 'query DisclosureWorkspace($audience: String!, $caseId: ID!, $limit: Int, $offset: Int)
-                    { disclosureWorkspace(audience: $audience, caseId: $caseId, limit: $limit, offset: $offset)
-                    }'
+                  query: 'query DisclosureWorkspace($audience: String!, $caseId: ID!, $limit: Int, $offset: Int,
+                    $pageChanges: Boolean) { disclosureWorkspace(audience: $audience, caseId: $caseId, limit: $limit,
+                    offset: $offset, pageChanges: $pageChanges) }'
                   variables:
                     audience: client
                     caseId: advisor
                     limit: 100
                     offset: 0
+                    pageChanges: true
               saveDraftPolicy:
                 summary: Save a draft; does not activate or bill
                 value: &id006
@@ -156,8 +157,10 @@ paths:
         graphql_max_complexity: 150
   /graphql:
     servers:
-    - url: http://127.0.0.1:3102
-      description: Loopback Rails API only; this path is not exposed on the hosted frontend.
+    - url: http://127.0.0.1:3108
+      description: Current candidate Rails API; loopback only.
+    - url: http://127.0.0.1:3109
+      description: Alternate inactive Rails API slot; loopback only.
     post:
       summary: Execute GraphQL directly on the loopback Rails API
       operationId: executeLocalGraphQL
@@ -193,14 +196,15 @@ paths:
               householdRead:
                 summary: Read February household billing
                 value:
-                  query: 'query DisclosureWorkspace($audience: String!, $caseId: ID!, $limit: Int, $offset: Int)
-                    { disclosureWorkspace(audience: $audience, caseId: $caseId, limit: $limit, offset: $offset)
-                    }'
+                  query: 'query DisclosureWorkspace($audience: String!, $caseId: ID!, $limit: Int, $offset: Int,
+                    $pageChanges: Boolean) { disclosureWorkspace(audience: $audience, caseId: $caseId, limit: $limit,
+                    offset: $offset, pageChanges: $pageChanges) }'
                   variables:
                     audience: client
                     caseId: advisor
                     limit: 100
                     offset: 0
+                    pageChanges: true
               saveDraftPolicy:
                 summary: Save a draft; does not activate or bill
                 value:
@@ -296,8 +300,10 @@ paths:
         graphql_max_complexity: 150
   /health:
     servers:
-    - url: http://127.0.0.1:3102
-      description: Loopback Rails health; not a hosted frontend route.
+    - url: http://127.0.0.1:3108
+      description: Current candidate Rails health; loopback only.
+    - url: http://127.0.0.1:3109
+      description: Alternate inactive Rails health slot; loopback only.
     get:
       operationId: localHealth
       summary: Inspect local synthetic service health
@@ -322,6 +328,14 @@ paths:
                     type: string
                   engine_version:
                     type: string
+                  source_revision:
+                    type: string
+                  immutable_preview:
+                    type: boolean
+                  eager_load:
+                    type: boolean
+                  reloading_enabled:
+                    type: boolean
                 required:
                 - status
                 - synthetic
@@ -527,6 +541,7 @@ components:
       - base_policy_id
       - policy
       - effective_from
+      - effective_to
       - reason
       additionalProperties: false
     ComparePolicyInput:
@@ -586,10 +601,7 @@ components:
         subject_id:
           const: disclosure-alder-household
         effective_from: *id002
-        effective_to:
-          anyOf:
-          - *id002
-          - type: 'null'
+        effective_to: *id002
         reason:
           type: string
         supersedes_assignment_id:
@@ -599,6 +611,7 @@ components:
       - policy_id
       - subject_id
       - effective_from
+      - effective_to
       - reason
       additionalProperties: false
     EvaluateInput:
@@ -773,6 +786,9 @@ x-graphql-operations:
     required: false
   - name: offset
     type: Int
+    required: false
+  - name: pageChanges
+    type: Boolean
     required: false
   returns: JSON!
   request: *id005
@@ -1001,6 +1017,12 @@ x-graphql-operations:
   - name: caseId
     type: ID!
     required: true
+  - name: limit
+    type: Int
+    required: false
+  - name: offset
+    type: Int
+    required: false
   - name: runId
     type: ID
     required: false
@@ -1012,10 +1034,13 @@ x-graphql-operations:
     required: true
   returns: JSON!
   request:
-    query: 'query MedallionWorkspace($caseId: ID!, $runId: ID, $scenarioId: ID, $workspace: String!) { medallionWorkspace(caseId:
-      $caseId, runId: $runId, scenarioId: $scenarioId, workspace: $workspace) }'
+    query: 'query MedallionWorkspace($caseId: ID!, $limit: Int, $offset: Int, $runId: ID, $scenarioId: ID, $workspace:
+      String!) { medallionWorkspace(caseId: $caseId, limit: $limit, offset: $offset, runId: $runId, scenarioId:
+      $scenarioId, workspace: $workspace) }'
     variables:
       caseId: advisor
+      limit: 20
+      offset: 0
       runId: REPLACE_WITH_RUN_ID
       scenarioId: baseline
       workspace: advisor
@@ -1393,8 +1418,8 @@ x-command-examples:
       idempotencyKey: docs-finance-reverse-001
 x-contract-sources:
   graphql_sdl: contracts/schema.graphql
-  graphql_sdl_sha256: e2995891e6601bf983f4d0eb619950bd8ad0c4b3f83e7f6df6ba264441978425
-  source_commit: 56b9d90349b2d839f041320239aab6872c3f5eb1
+  graphql_sdl_sha256: 8a4a3a22a74060f17ef4aea2ce801c7ed771cf561f2b0cfd9b7700cf354dfdb1
+  source_commit: 7d4fca40522c3846b23c0ead4f5cf5190d7a6e9a
   controller: apps/api/app/controllers/graphql_controller.rb
   proxy: apps/web/app/api/graphql/route.ts
 x-agent-interfaces:

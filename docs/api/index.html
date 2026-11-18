@@ -10,13 +10,14 @@
 <section id="overview"><span class="eyebrow">Savvy billing · API contract 0.6.0</span><h1>API reference.</h1><p class="intro">The current Rails API, described in OpenAPI 3.1.1 with its GraphQL operations and command examples.</p><div class="stats"><span>17 queries</span><span>4 mutation families</span><span>One billing engine</span><span>Campfire & CLM mocked</span></div><div class="downloads"><a class="button primary" href="openapi.yaml" download>Download OpenAPI YAML ↓</a><a class="button" href="schema.graphql" download>Download GraphQL SDL ↓</a></div><div class="notice"><strong>Implemented API</strong><p>The application uses GraphQL. OpenAPI describes its HTTP transport; the GraphQL schema defines its operations. All examples use fictional records. The reference displays examples and schemas without sending requests or collecting credentials.</p></div></section>
 <section id="transport"><h2>HTTP endpoints</h2><div class="scroll"><table class="endpoints"><thead><tr><th>Method</th><th>Path</th><th>Availability</th></tr></thead><tbody><tr><td>POST</td><td><code>/api/graphql</code></td><td>Hosted frontend proxy at <code>https://savvy-proto.beanshop.top</code>; existing Cloudflare Access login.</td></tr><tr><td>POST</td><td><code>/graphql</code></td><td>Direct Rails API, loopback only on port 3102. This is not a hosted frontend route.</td></tr><tr><td>GET</td><td><code>/health</code></td><td>Local Rails service metadata, loopback only on port 3102.</td></tr></tbody></table></div><p>Send an <code>application/json</code> body with <code>query</code>, optional <code>variables</code> and optional <code>operationName</code>. A single endpoint carries the named queries and mutations below.</p><p class="meta">The proxy accepts at most 1,048,576 characters; Rails accepts at most 1,048,576 UTF-8 body bytes and 50,000 query bytes. GraphQL depth is bounded at 10 and complexity at 150. The hosted frontend enforces an origin allowlist.</p></section>
 <section id="identity"><h2>Identity & permissions</h2><p>The hosted demo has an existing Cloudflare Access gate. Within the prototype, <code>X-Demo-Role</code> selects a simulated identity; it is not a production authentication credential. Omitting it currently selects <code>operator</code>.</p><div class="scroll"><table><thead><tr><th>Simulated role</th><th>Relevant scope</th></tr></thead><tbody><tr><td><code>advisor</code> / <code>ria</code></td><td>Client reads for their own case. They cannot elevate access by requesting an internal audience.</td></tr><tr><td><code>operator</code></td><td>Internal reads, draft/compare/publish/assign/evaluate household policies. Publication requires the exact current Legal and Finance approvals.</td></tr><tr><td><code>legal</code></td><td>Permitted internal reads and independent policy review.</td></tr><tr><td><code>finance</code></td><td>Permitted finance reads, independent policy/event review and scoped cash-association commands.</td></tr><tr><td><code>auditor</code></td><td>Permitted internal read projections; command-specific guards still apply.</td></tr></tbody></table></div><p>Tenant and entity scope are supplied by the server. Each command also enforces its own role, relationship, evidence and period rules. Read visibility does not grant write permission.</p></section>
-<section id="operations"><h2>GraphQL operations</h2><p>Open an operation for its arguments and request shape. Fields returning <code>JSON</code> have operation-specific projections; the transport does not promise a universal invoice or statement response shape.</p><div class="filters"><div><label for="operation-search">Search operations</label><input type="search" id="operation-search" placeholder="Statement, policy, finance…"></div><div><label for="operation-group">Area</label><select id="operation-group"><option value="">All areas</option><option>Household billing</option><option>Client experience</option><option>Earlier workspaces</option><option>Internal Finance</option><option>Internal evidence</option><option>Internal Product</option><option>Household policies</option><option>Billing events and policies</option></select></div></div><p id="operation-count" class="meta" aria-live="polite"></p><div id="operation-list"><details class="operation" id="disclosureWorkspace" data-group="Household billing"><summary><span class="badge query">QUERY</span><strong>disclosureWorkspace</strong><span class="group">Household billing</span></summary><div class="operation-body"><p>Selected household invoice, account allocations, valuation, terms, credit/refund, compensation and cost evidence. Internal audiences also receive policy and recognition records. The RIA case reports a separately observed cost; it does not infer a platform fee.</p><p class="meta">Returns <code>JSON!</code></p><div class="scroll"><table><thead><tr><th>Argument</th><th>Type</th><th>Presence</th></tr></thead><tbody><tr><td><code>audience</code></td><td><code>String!</code></td><td>Required</td></tr><tr><td><code>caseId</code></td><td><code>ID!</code></td><td>Required</td></tr><tr><td><code>limit</code></td><td><code>Int</code></td><td>Optional</td></tr><tr><td><code>offset</code></td><td><code>Int</code></td><td>Optional</td></tr></tbody></table></div><p class="meta">Replace identifiers prefixed REPLACE_WITH using IDs from a preceding read.</p><pre>{
-  &quot;query&quot;: &quot;query DisclosureWorkspace($audience: String!, $caseId: ID!, $limit: Int, $offset: Int) { disclosureWorkspace(audience: $audience, caseId: $caseId, limit: $limit, offset: $offset) }&quot;,
+<section id="operations"><h2>GraphQL operations</h2><p>Open an operation for its arguments and request shape. Fields returning <code>JSON</code> have operation-specific projections; the transport does not promise a universal invoice or statement response shape.</p><div class="filters"><div><label for="operation-search">Search operations</label><input type="search" id="operation-search" placeholder="Statement, policy, finance…"></div><div><label for="operation-group">Area</label><select id="operation-group"><option value="">All areas</option><option>Household billing</option><option>Client experience</option><option>Earlier workspaces</option><option>Internal Finance</option><option>Internal evidence</option><option>Internal Product</option><option>Household policies</option><option>Billing events and policies</option></select></div></div><p id="operation-count" class="meta" aria-live="polite"></p><div id="operation-list"><details class="operation" id="disclosureWorkspace" data-group="Household billing"><summary><span class="badge query">QUERY</span><strong>disclosureWorkspace</strong><span class="group">Household billing</span></summary><div class="operation-body"><p>Selected household invoice, account allocations, valuation, terms, credit/refund, compensation and cost evidence. Internal audiences also receive policy and recognition records. The RIA case reports a separately observed cost; it does not infer a platform fee.</p><p class="meta">Returns <code>JSON!</code></p><div class="scroll"><table><thead><tr><th>Argument</th><th>Type</th><th>Presence</th></tr></thead><tbody><tr><td><code>audience</code></td><td><code>String!</code></td><td>Required</td></tr><tr><td><code>caseId</code></td><td><code>ID!</code></td><td>Required</td></tr><tr><td><code>limit</code></td><td><code>Int</code></td><td>Optional</td></tr><tr><td><code>offset</code></td><td><code>Int</code></td><td>Optional</td></tr><tr><td><code>pageChanges</code></td><td><code>Boolean</code></td><td>Optional</td></tr></tbody></table></div><p class="meta">Replace identifiers prefixed REPLACE_WITH using IDs from a preceding read.</p><pre>{
+  &quot;query&quot;: &quot;query DisclosureWorkspace($audience: String!, $caseId: ID!, $limit: Int, $offset: Int, $pageChanges: Boolean) { disclosureWorkspace(audience: $audience, caseId: $caseId, limit: $limit, offset: $offset, pageChanges: $pageChanges) }&quot;,
   &quot;variables&quot;: {
     &quot;audience&quot;: &quot;client&quot;,
     &quot;caseId&quot;: &quot;advisor&quot;,
     &quot;limit&quot;: 100,
-    &quot;offset&quot;: 0
+    &quot;offset&quot;: 0,
+    &quot;pageChanges&quot;: true
   }
 }</pre></div></details>
 <details class="operation" id="audienceClient" data-group="Client experience"><summary><span class="badge query">QUERY</span><strong>audienceClient</strong><span class="group">Client experience</span></summary><div class="operation-body"><p>Account detail and its paged observations. Obtain clientId from audienceClients.</p><p class="meta">Returns <code>JSON!</code></p><div class="scroll"><table><thead><tr><th>Argument</th><th>Type</th><th>Presence</th></tr></thead><tbody><tr><td><code>caseId</code></td><td><code>ID!</code></td><td>Required</td></tr><tr><td><code>clientId</code></td><td><code>ID!</code></td><td>Required</td></tr><tr><td><code>limit</code></td><td><code>Int</code></td><td>Optional</td></tr><tr><td><code>offset</code></td><td><code>Int</code></td><td>Optional</td></tr></tbody></table></div><p class="meta">Replace identifiers prefixed REPLACE_WITH using IDs from a preceding read.</p><pre>{
@@ -94,10 +95,12 @@
     &quot;search&quot;: null
   }
 }</pre></div></details>
-<details class="operation" id="medallionWorkspace" data-group="Internal Product"><summary><span class="badge query">QUERY</span><strong>medallionWorkspace</strong><span class="group">Internal Product</span></summary><div class="operation-body"><p>Policy versions, assignments, runs, events and statements for the selected synthetic case and namespace. Client identities are restricted to their own case/workspace.</p><p class="meta">Returns <code>JSON!</code></p><div class="scroll"><table><thead><tr><th>Argument</th><th>Type</th><th>Presence</th></tr></thead><tbody><tr><td><code>caseId</code></td><td><code>ID!</code></td><td>Required</td></tr><tr><td><code>runId</code></td><td><code>ID</code></td><td>Optional</td></tr><tr><td><code>scenarioId</code></td><td><code>ID</code></td><td>Optional</td></tr><tr><td><code>workspace</code></td><td><code>String!</code></td><td>Required</td></tr></tbody></table></div><p class="meta">Replace identifiers prefixed REPLACE_WITH using IDs from a preceding read.</p><pre>{
-  &quot;query&quot;: &quot;query MedallionWorkspace($caseId: ID!, $runId: ID, $scenarioId: ID, $workspace: String!) { medallionWorkspace(caseId: $caseId, runId: $runId, scenarioId: $scenarioId, workspace: $workspace) }&quot;,
+<details class="operation" id="medallionWorkspace" data-group="Internal Product"><summary><span class="badge query">QUERY</span><strong>medallionWorkspace</strong><span class="group">Internal Product</span></summary><div class="operation-body"><p>Policy versions, assignments, runs, events and statements for the selected synthetic case and namespace. Client identities are restricted to their own case/workspace.</p><p class="meta">Returns <code>JSON!</code></p><div class="scroll"><table><thead><tr><th>Argument</th><th>Type</th><th>Presence</th></tr></thead><tbody><tr><td><code>caseId</code></td><td><code>ID!</code></td><td>Required</td></tr><tr><td><code>limit</code></td><td><code>Int</code></td><td>Optional</td></tr><tr><td><code>offset</code></td><td><code>Int</code></td><td>Optional</td></tr><tr><td><code>runId</code></td><td><code>ID</code></td><td>Optional</td></tr><tr><td><code>scenarioId</code></td><td><code>ID</code></td><td>Optional</td></tr><tr><td><code>workspace</code></td><td><code>String!</code></td><td>Required</td></tr></tbody></table></div><p class="meta">Replace identifiers prefixed REPLACE_WITH using IDs from a preceding read.</p><pre>{
+  &quot;query&quot;: &quot;query MedallionWorkspace($caseId: ID!, $limit: Int, $offset: Int, $runId: ID, $scenarioId: ID, $workspace: String!) { medallionWorkspace(caseId: $caseId, limit: $limit, offset: $offset, runId: $runId, scenarioId: $scenarioId, workspace: $workspace) }&quot;,
   &quot;variables&quot;: {
     &quot;caseId&quot;: &quot;advisor&quot;,
+    &quot;limit&quot;: 20,
+    &quot;offset&quot;: 0,
     &quot;runId&quot;: &quot;REPLACE_WITH_RUN_ID&quot;,
     &quot;scenarioId&quot;: &quot;baseline&quot;,
     &quot;workspace&quot;: &quot;advisor&quot;
@@ -225,6 +228,7 @@
     &quot;base_policy_id&quot;,
     &quot;policy&quot;,
     &quot;effective_from&quot;,
+    &quot;effective_to&quot;,
     &quot;reason&quot;
   ],
   &quot;additionalProperties&quot;: false
@@ -363,16 +367,9 @@
       &quot;format&quot;: &quot;date&quot;
     },
     &quot;effective_to&quot;: {
-      &quot;anyOf&quot;: [
-        {
-          &quot;type&quot;: &quot;string&quot;,
-          &quot;description&quot;: &quot;API end dates are exclusive; UI last-day dates are inclusive.&quot;,
-          &quot;format&quot;: &quot;date&quot;
-        },
-        {
-          &quot;type&quot;: &quot;null&quot;
-        }
-      ]
+      &quot;type&quot;: &quot;string&quot;,
+      &quot;description&quot;: &quot;API end dates are exclusive; UI last-day dates are inclusive.&quot;,
+      &quot;format&quot;: &quot;date&quot;
     },
     &quot;reason&quot;: {
       &quot;type&quot;: &quot;string&quot;
@@ -386,6 +383,7 @@
     &quot;policy_id&quot;,
     &quot;subject_id&quot;,
     &quot;effective_from&quot;,
+    &quot;effective_to&quot;,
     &quot;reason&quot;
   ],
   &quot;additionalProperties&quot;: false
@@ -610,7 +608,7 @@
   }
 }</pre><p>Validation, scope, review, stale evidence, period locks and source conflicts are distinct failures. A command response does not establish payment execution, a signed agreement or live accounting posting.</p></section>
 <section id="agents"><h2>MCP / WebMCP</h2><p>This API is the application foundation for future agent tools. An MCP server and browser WebMCP registration are not implemented yet. Those additions need explicit tool schemas, real authenticated identity and account scopes, protocol/client compatibility tests and the same existing review boundaries.</p><p>Both adapters would call the existing Rails services. The billing engine, API-driven policies and Savvy-owned billing records remain shared.</p></section>
-<footer>Source contract: <a href="https://github.com/stevekkall-beansgc/savvy-proto/blob/56b9d90349b2d839f041320239aab6872c3f5eb1/contracts/schema.graphql" target="_blank" rel="noopener noreferrer">GraphQL SDL at 56b9d90 ↗</a> · <a href="openapi.yaml" download>OpenAPI YAML</a><p>Independent synthetic prototype. No real client data, live payment execution, Campfire posting or CLM signature integration.</p></footer>
+<footer>Source contract: <a href="https://github.com/stevekkall-beansgc/savvy-proto/blob/7d4fca40522c3846b23c0ead4f5cf5190d7a6e9a/contracts/schema.graphql" target="_blank" rel="noopener noreferrer">GraphQL SDL at 7d4fca4 ↗</a> · <a href="openapi.yaml" download>OpenAPI YAML</a><p>Independent synthetic prototype. No real client data, live payment execution, Campfire posting or CLM signature integration.</p></footer>
 </main></div>
 <script>
 const search=document.getElementById('operation-search'),group=document.getElementById('operation-group'),operations=[...document.querySelectorAll('#operation-list .operation')];
