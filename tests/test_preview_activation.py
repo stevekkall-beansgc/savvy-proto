@@ -140,3 +140,32 @@ class PreviewActivationTest(unittest.TestCase):
         with patch.object(self.app.subprocess, 'run', side_effect=[ok, ok, fatal]), patch.object(self.app.time, 'sleep') as sleep:
             with self.assertRaises(subprocess.CalledProcessError): self.app.restart()
         sleep.assert_not_called()
+
+    def test_public_mode_requires_matching_origin_access_before_switch(self):
+        self.cfg['access_mode'] = 'public_demo'
+        (self.app.ROOT/'deploy/device-host.json').write_text(json.dumps(self.cfg))
+        with patch.object(self.app, 'run', self.run_command), patch.object(self.app, 'request', return_value={'success':True,'result':{'config':self.config}}), patch.object(self.app, 'restart') as restart, patch.object(self.app.urllib.request, 'urlopen', self.stage):
+            with self.assertRaisesRegex(AssertionError, 'declared mode'): self.app.activate(True, self.control)
+            restart.assert_not_called()
+        self.assertEqual(self.original_bytes, self.app.PLIST.read_bytes())
+
+    def test_public_activation_verifies_anonymous_html_and_records_mode(self):
+        self.cfg['access_mode'] = 'public_demo'
+        (self.app.ROOT/'deploy/device-host.json').write_text(json.dumps(self.cfg))
+        self.config['ingress'][0]['service'] = self.app.ORIGIN
+        self.config['ingress'][0]['originRequest']['access']['required'] = False
+        for public_url in [self.app.HOST+'/', 'https://synthetic-team.cloudflareaccess.com/login']:
+            def fetch(req, **kwargs):
+                if isinstance(req, str): return self.stage()
+                response = BytesIO(b'synthetic application')
+                response.status = 200
+                response.url = public_url
+                return response
+            with self.subTest(url=public_url), patch.object(self.app, 'run', self.run_command), patch.object(self.app, 'request', return_value={'success':True,'result':{'config':self.config}}), patch.object(self.app, 'restart'), patch.object(self.app.urllib.request, 'urlopen', fetch):
+                if public_url.startswith(self.app.HOST):
+                    self.app.activate(True, self.control)
+                    receipt = json.loads((self.app.RUNTIME/'activation.json').read_text())
+                    self.assertEqual('public_demo',receipt['access_mode'])
+                    self.assertFalse(receipt['access_preserved'])
+                else:
+                    with self.assertRaisesRegex(AssertionError, 'without login'): self.app.activate(True, self.control)

@@ -1,5 +1,6 @@
 {
   "hostname": "savvy-proto.beanshop.top",
+  "access_mode": "public_demo",
   "tunnel_name": "savvy-proto-mac",
   "origin": "http://127.0.0.1:3100",
   "access_app_id": "2110c116-64f1-4718-a119-51f2f396d87d",

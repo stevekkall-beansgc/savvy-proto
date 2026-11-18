@@ -22,3 +22,13 @@ Independent synthetic prototype. Start with `docs/WORKSPACES-MILESTONE.md`,
   Hosted walkthroughs must be distinguished from the interactive local application.
 - Releases follow the Bean release standard, with green exact-commit CI, annotated
   tags and matching GitHub Release notes. GitHub Releases are the changelog.
+
+## Test commands
+
+- Unit and deployment guard checks: `python3 -m unittest discover -s tests -q`.
+- Rails/PostgreSQL integration: `bash scripts/release-domain-check.sh` uses its
+  own disposable test database and never the served database or frontend slots.
+- Full frontend, browser and reporting acceptance runs in Prototype checks.
+- Source-linked architecture and API acceptance runs in Architecture checks.
+- Public demo access is explicitly authorized in `deploy/device-host.json`.
+  Preserve this mode on updates; never change access for any other hostname.

@@ -1,0 +1,14 @@
+name: gate
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  compliance:
+    uses: stevekkall-beansgc/gate-kit/.github/workflows/compliance.yml@v0.9.0
+    with:
+      repo: savvy-proto
+      full: true

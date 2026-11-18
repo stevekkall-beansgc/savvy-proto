@@ -1,4 +1,32 @@
-# Savvy execution handoff
+# Savvy release handoff
+
+## Current review release
+
+Start with `docs/SAVVY-REVIEW.md`, `docs/FOUR-CAPABILITY-CLOSURE-VALIDATION.md`
+and `docs/DEMO-PREVIEW.md`. The owner is presenting in person on November 19 and
+explicitly requested public access to all synthetic experiences. `public_demo`
+in `deploy/device-host.json` is deliberate; do not silently restore owner-only
+access. Full app: https://savvy-proto.beanshop.top/; local: http://127.0.0.1:3104/;
+public architecture/API: https://savvy.beanshop.top/ and /api/.
+
+The four agreed prototype scopes are implemented and accepted: both products,
+API-driven commercial composition through one engine, durable pipeline processing,
+and complete enumerated billing/cash/refund/earnings/mock accounting corrections.
+Campfire and CLM remain mocked. Historical milestone claims below are not current
+runtime authority. The architecture includes actual services and executed results.
+
+Release identity belongs to the GitHub Release and annotated tag. Actual app and
+static document deployment commits belong to `.runtime/hosting/activation.json`
+and `.runtime/publication/deployment.json`. Verify both before reporting release
+alignment. Never rebuild an active frontend slot; never reset/migrate served data.
+The retained baseline DB is `savvy-billing-complete-db` at 55441; older pairs remain
+preserved. Release receipts and DB backups stay ignored under `.runtime/release`.
+
+Production auth, live connectors, hierarchy, real agreements and MCP/WebMCP remain
+future scope. The public demo has shared fictional state and cannot execute money.
+
+## Historical implementation handoff
+
 
 ## Four-capability closure — current work
 

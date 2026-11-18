@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Switch the owned preview and its existing Access-protected route; never touch data."""
+"""Switch the owned preview, preserving its configured access mode and data."""
 import argparse
 import copy
 import importlib.util
@@ -133,10 +133,12 @@ def activate(apply, control):
     assert len(routes) == 1
     route = routes[0]
     assert route['service'] in ['http://127.0.0.1:3100', ORIGIN]
+    public_demo = cfg.get('access_mode', 'owner') == 'public_demo'
+    assert cfg.get('access_mode', 'owner') in ('owner', 'public_demo'), 'Unknown access mode'
     access = route['originRequest']['access']
-    assert access['required'] is True and access['teamName'] == cfg['access_team'] and access['audTag'] == [cfg['access_aud']]
+    assert access['required'] is (not public_demo) and access['teamName'] == cfg['access_team'] and access['audTag'] == [cfg['access_aud']], 'Tunnel access differs from declared mode'
     route['service'] = ORIGIN
-    print(json.dumps({'commit': sha, 'origin': ORIGIN, 'access_preserved': True, 'apply': apply}))
+    print(json.dumps({'commit': sha, 'origin': ORIGIN, 'access_preserved': not public_demo, 'access_mode': 'public_demo' if public_demo else 'owner', 'apply': apply}))
     if not apply:
         return
     RUNTIME.mkdir(parents=True, exist_ok=True)
@@ -165,11 +167,14 @@ def activate(apply, control):
         # Identify our own health checker; the zone rejects Python's generic UA.
         public_probe = urllib.request.Request(HOST, headers={'User-Agent': 'Savvy-Prototype-Preview-Check/1.0'})
         with urllib.request.urlopen(public_probe, timeout=30) as response:
-            assert response.url.startswith('https://' + cfg['access_team'] + '.cloudflareaccess.com/'), 'Access must still protect the app'
-        receipt = {**build_proof, 'commit': sha, 'host': HOST, 'origin': ORIGIN, 'access_preserved': True,
+            if public_demo:
+                assert response.status == 200 and response.url.rstrip('/') == HOST, 'Public demo must load without login'
+            else:
+                assert response.url.startswith('https://' + cfg['access_team'] + '.cloudflareaccess.com/'), 'Access must still protect the app'
+        receipt = {**build_proof, 'commit': sha, 'host': HOST, 'origin': ORIGIN, 'access_preserved': not public_demo, 'access_mode': 'public_demo' if public_demo else 'owner',
                    'data_mutations': 0, 'old_origin': next(r['service'] for r in original['ingress'] if r.get('hostname') == cfg['hostname'])}
         (RUNTIME / 'activation.json').write_text(json.dumps(receipt, indent=2) + '\n')
-        print('Preview activated; hosted route verified; Access retained.')
+        print('Preview activated; hosted route and configured access verified.')
     except Exception:
         try:
             if tunnel_attempted:

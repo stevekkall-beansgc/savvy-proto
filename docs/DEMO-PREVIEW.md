@@ -2,7 +2,7 @@
 
 The functional Rails/PostgreSQL demo is distinct from the public architecture:
 
-- `https://savvy-proto.beanshop.top/`: full application, device-hosted, existing Cloudflare Access protection.
+- `https://savvy-proto.beanshop.top/`: full application, device-hosted, public synthetic demo, no sign-in.
 - `http://127.0.0.1:3104/`: the same application on this device, loopback only.
 - `https://savvy.beanshop.top/`: public interactive architecture document.
 
@@ -22,12 +22,11 @@ Fresh setup explicitly runs `script/seed_presentation.rb` and
 `script/seed_billing_platform.rb` and `script/seed_billing_closure.rb` after schema preparation and base seeds. Page reads
 and preview activation never seed. Read `FOUR-CAPABILITY-CLOSURE-VALIDATION.md` for current scope and limits.
 
-The new schema is rehearsed on a restored database clone at 55440, container
-`savvy-platform-preview-db`, volume `savvy-platform-preview-data`. Before activation,
-verify all prior values and that the original retained database has not changed.
-The prior API3108/database55438 remain paired for immediate rollback. Once new
-writes occur after cutover, switching to the old database would omit those writes;
-use a forward fix or an explicit reconciliation before any later rollback.
+The four-capability baseline is served from `savvy-billing-complete-db` at
+55441; the prior candidate-b/API3109/database55440 pair remains preserved. Read
+actual runtime receipts before assuming a slot/container. Once new writes occur,
+switching to an older database would omit those writes; use a forward fix or
+reconcile explicitly before rollback.
 
 ## Updating the existing preview
 
@@ -56,7 +55,7 @@ source-frozen baseline rollback API.
    **Architecture checks** must succeed on the exact candidate/main commit.
 5. `python3 deploy/activate-preview.py` performs preflight only.
    `python3 deploy/activate-preview.py --apply` promotes the verified inactive pair
-   through the owned clarity service on 3104, preserves Cloudflare Access and
+   through the owned clarity service on 3104, preserves the declared public demo access mode and
    records `.runtime/hosting/activation.json`. The existing route is not rewritten
    if already correct. Failed readiness, changed artifacts or image identity cause
    rollback to the previous frontend/API pair and receipt.

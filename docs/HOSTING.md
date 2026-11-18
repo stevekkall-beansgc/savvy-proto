@@ -1,85 +1,71 @@
-# Device hosting — 15 November 2026
+# Savvy demo hosting
 
-Live private app: **https://savvy-proto.beanshop.top/**
+The public full app is **https://savvy-proto.beanshop.top/**; the local app is
+**http://127.0.0.1:3104/**. Public architecture and API documents are independently
+hosted at **https://savvy.beanshop.top/**. No sign-in is required for the synthetic
+demo. Simulated audiences and roles demonstrate workflows, not production identity.
 
-The owner authorized the full application on this Mac, using existing
-Cloudflare/GCP infrastructure with no new spend. This is the current interactive
-Next.js → Rails → PostgreSQL application; Campfire and CLM remain mocked.
-Public source: https://github.com/stevekkall-beansgc/savvy-proto.
-The separate public architecture document is `https://savvy.beanshop.top/`;
-see `PUBLIC-ARCHITECTURE.md`. The full application hostname above remains separate.
+## Current application
 
-## Traffic and access
+Cloudflare HTTPS → dedicated Savvy Tunnel → loopback Next.js 3104 → immutable Rails
+API → retained PostgreSQL. A worker uses the same API image and database for queued
+normalization/evaluation. API and database ports remain loopback-only; there is no
+public Docker port or inbound router rule.
 
-Cloudflare DNS/TLS → dedicated Savvy named Tunnel → loopback Next.js port 3100 →
-loopback Rails port 3101 → retained PostgreSQL volume (port 55437).
+Read `.runtime/hosting/activation.json` for the exact active commit, frontend slot,
+API image and endpoint. Read `.runtime/hosting/public-access.json` for public access
+verification and `.runtime/publication/deployment.json` for static publication.
+Inspect the API container's `PGHOST` before connecting to a database. Historical
+milestone documents and old port numbers are not deployment authority.
 
-The entire hostname, including /api/graphql, has an owner-only Cloudflare Access
-policy for the existing owner Google/email identity. The existing Google and
-email-code identity providers handle login. The tunnel also verifies the app's
-Access JWT before forwarding. Unmatched hostnames return 404. No public API/DB
-port, router inbound rule, bypass policy or service token was added. The isolated
-subdomain does not replace the apex site or existing routes. Simulated product
-roles are separate from this authenticated owner identity.
+The four-capability baseline uses `savvy-billing-complete-db`, volume
+`savvy-billing-complete-data`, loopback 55441. The prior database at 55440 and the
+older retained volumes remain preserved. Never reset, reseed or migrate an active
+retained database to deploy a build.
 
-Next.js permits the exact HTTPS origin via SAVVY_PUBLIC_ORIGIN; localhost still
-works. Unrelated origins, suffix lookalikes and insecure HTTP are rejected.
-Non-secret resource IDs are in deploy/device-host.json. The tunnel token is
-fetched at launch through Cloudflare's token API using the existing BeanLaunch
-credential mirror, then passed through its environment, never argv or disk.
-No new Secret Manager version, paid tier or rented server was created.
+## Public access and scope
 
-The configuration follows Cloudflare's current [origin JWT documentation](https://developers.cloudflare.com/tunnel/reference/origin-parameters/)
-and [remote tunnel API](https://developers.cloudflare.com/cloudflare-one/networks/connectors/cloudflare-tunnel/get-started/create-remote-tunnel-api/).
+The owner explicitly authorized public access to all synthetic demo experiences.
+`deploy/device-host.json` declares `public_demo`; `deploy/public-demo.py --apply` can
+add an Everyone bypass to only the recorded Savvy Access application and disable
+its tunnel-origin JWT requirement. The existing owner policy remains available.
+The installed token is Tunnel-scoped, so the initial policy was saved through the
+Cloudflare dashboard and `--origin-only --apply` verified the public origin.
+Other hostnames, applications, identity providers and routes are unchanged.
+The tool validates ownership, records prior configuration and rolls back a failed
+change. Activation checks preserve the declared public mode on future updates.
 
-## Persistence and availability
+All financial records are synthetic and shared; public actions can change that
+shared state. The app has no real customer connection, credentials-entry flow,
+payment execution, real agreements or live Campfire/CLM posting.
 
-Two user LaunchAgents run after login and restart on exit:
+## Presentation availability
 
-- com.beanlabs.savvy-proto.app starts the existing Docker stack, waits for API
-  health, then serves the optimized frontend. Docker services have restart policies.
-- com.beanlabs.savvy-proto.tunnel retrieves the tunnel token in memory and starts
-  cloudflared. Path normalization is explicitly enabled.
+The Mac must remain powered, connected and logged in with Docker Desktop running.
+Owned login services restart the frontend and tunnel; Docker restart policies
+cover API, worker and database. AC sleep prevention does not override manual
+sleep, lid closure, logout or network loss. This is device hosting, not a claim
+of independent cloud uptime. The local app is usable without external ingress;
+the downloaded architecture HTML is self-contained.
 
-The app prevents automatic system sleep on AC power while serving, without
-changing global sleep settings. This does not override manual sleep, lid closure,
-shutdown, network loss or logout. The Mac must stay powered, connected and logged
-in, with Docker Desktop running. This is not independent cloud uptime.
-The PostgreSQL volume retains history across process/container restarts. GitHub
-stores source/seed fixtures, not the retained database volume.
+## Updates, backup and rollback
 
-## Operate and recover
+Follow [preview operations](DEMO-PREVIEW.md): clean committed source, immutable API
+and worker images, an inactive frontend slot, green exact-commit application and
+architecture CI, recorded acceptance, guarded activation and public verification.
+For schema changes, restore a fresh clone and compare every pre-existing value.
+Activation never seeds, migrates or calculates.
 
-Build with npm --prefix apps/web run build. Install/reload both login services
-with python3 deploy/install-device.py. The installer only manages the two Savvy
-labels and refuses another working directory. First-time dependency/API image
-setup remains ./scripts/setup.sh. Keep this source path or reinstall after moving.
-Do not start a competing frontend on port 3100 while its login service owns it.
+Source in GitHub does not back up the retained Docker volume. Take a logical
+`pg_dump -Fc` of the verified active database before releases; keep it ignored and
+outside public release assets. Restoring must target a new disposable/retained
+clone. Keep the prior image, slot, database and receipts. A rollback after new
+writes requires reconciliation; switching to an old DB would omit those writes.
 
-Inspect launchctl print gui/$(id -u)/com.beanlabs.savvy-proto.app and the same
-.tunnel target; docker compose ps shows the API/DB. Logs are ignored under
-.runtime/hosting/. python3 scripts/host_check.py verifies actual proxy boundaries.
-Restart one job with launchctl kickstart -k against its gui/<uid>/<label> target.
+Public-access rollback: remove only the recorded public policy, then restore the
+saved tunnel access configuration from `.runtime/hosting/public-access-before.json`.
+Reconcile `access_mode` in source before further activation. Credentials are read
+at runtime from the existing BeanLaunch mirror and never written to source or
+process arguments. No new paid infrastructure is required.
 
-To suspend hosting, launchctl bootout both Savvy targets; merely killing a process
-will cause restart. Keep the Access policy. To retire it, remove only the recorded
-Savvy DNS record after checking its ID, then retire its dedicated tunnel/app.
-Do not change other sites or delete the database volume.
-
-For upgrades: commit/push reviewed source, wait for exact-commit CI, build and
-restart the app service. Do not reset or reseed main history to deploy UI changes.
-Take a logical backup before future schema changes; the recovery checker restores
-only into a disposable database.
-
-## Validation
-
-Optimized frontend/TypeScript build, shell/Python syntax, six actual proxy origin
-checks and 21 product HTTP checks passed. Anonymous edge requests redirect to
-Access login. Browser Google sign-in as the owner loaded live earnings
-($1,750/$1,000/$750) and the retained November 16 scheduled proposal, its separate
-$850→$950 example, and both reviews. The two installed plists contain no tokens.
-A service restart check verifies app/tunnel recovery without replacing data.
-
-The earlier unpublished Sites placeholder is unused. It was not substituted for
-this application. No real provider integration, payment, signature or real
-company/customer data was introduced.
+[Historical November 15 setup](HOSTING-HISTORY.md) is retained for provenance.

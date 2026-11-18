@@ -5,7 +5,7 @@ Source: **https://github.com/stevekkall-beansgc/savvy-proto** (public).
 
 This publication serves the standalone architecture document, not the Rails
 application. It has no login, provider connection, GraphQL endpoint, database,
-local-file viewer, payment action or accounting posting. The existing private
+local-file viewer, payment action or accounting posting. The public synthetic
 device-hosted app at `savvy-proto.beanshop.top` remains a separate route.
 
 ## Build and verification
@@ -40,8 +40,8 @@ not access Cloudflare credentials or deploy automatically.
 
 The public header links to `https://savvy.beanshop.top/api/`, with OpenAPI YAML
 and authoritative GraphQL SDL downloads. The reference documents the implemented
-GraphQL transport, all 21 query/mutation fields, command enums and 10 detailed
-household policy/event/cash-association request examples. It has no live request
+GraphQL transport, all 23 query/mutation fields, command enums and 36 typed
+policy, billing, earnings, cash, accounting and worker command examples. It has no live request
 execution or credential entry. MCP/WebMCP interfaces are explicitly future work.
 
 `docs/api/build.py` generates the YAML and self-contained page from the SDL and
@@ -81,7 +81,7 @@ after the upload; observe the custom-domain status before declaring it live.
 
 Keep the prior deployment ID before an update. A rollback restores a prior
 static Pages deployment; it never changes commercial policy, retained database
-state or the private application route. Source-code links remain pinned to the
+state or the full application route. Source-code links remain pinned to the
 implementation version inspected by the document.
 
 ## Public repository review
