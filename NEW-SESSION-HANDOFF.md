@@ -1,5 +1,31 @@
 # Savvy execution handoff
 
+## Interactive architecture and source checkpoints — 18 November 2026
+
+Prototype source checkpoint `3ce278b` is committed and pushed to
+`origin/codex/medallion-billing` in private `stevekkall-beansgc/savvy-proto`.
+GitHub CLI account is verified as `stevekkall-beansgc`; commit identity matches.
+The hosted main deployment remains on its existing version. Fresh TypeScript and
+102 read-only disclosure HTTP checks pass; the previously validated 179-file
+fingerprint was reviewed before commit. A generated build-slot import was
+returned to its portable default and trailing CSS whitespace was removed.
+
+Interactive architecture: **http://127.0.0.1:3105/**, separate from the full app
+preview at **http://127.0.0.1:3104/**. Read `docs/architecture/README.md`.
+The self-contained `docs/architecture/index.html` provides three views, 34
+component modals, source links pinned to `3ce278b`, local read-only source viewing,
+and all 33 policy nodes from a retained synthetic result. CLM/Campfire remain
+mocked; workers, object storage and runtime AI agents remain planned. This is an
+architecture document, not a replacement application or a new monetary authority.
+
+The documentation preview runs `scripts/architecture_preview.py` on loopback;
+PID/log are in `.runtime/architecture`. Restart with the documented command if
+needed. It does not depend on Rails or the database. Downloaded HTML works offline;
+local-code links require this preview server. The builder verifies code anchors
+against exact pinned source bytes. Browser acceptance passes 199 checks, covering
+all modals/nodes/source targets, keyboard, mobile, offline/print and read-only
+boundaries. Screenshots/report are under `.runtime/architecture`.
+
 ## Disclosure-informed milestone complete — 16 November 2026
 
 Read [the latest milestone](docs/DISCLOSURE-MILESTONE.md),

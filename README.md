@@ -70,6 +70,15 @@ See [brand provenance](docs/SAVVY-BRAND-REFERENCE.md). Earlier settlement and
 reconciliation APIs, evidence and tests remain retained outside the primary navigation.
 Nothing moves real cash.
 
+## Interactive architecture walkthrough
+
+Open the source-linked [architecture walkthrough](docs/architecture/README.md):
+`python3 scripts/architecture_preview.py`, then `http://127.0.0.1:3105/`.
+The three views cover the mental model, complete technical architecture and
+shared policy engine. Component modals link to exact GitHub source lines;
+all 33 nodes of the retained sample calculation are inspectable. The standalone
+HTML works offline. This documentation preview is separate from the full app.
+
 ## Continued Rails / Next.js prototype
 
 The interrupted rewrite has been reviewed and extended into a runnable local

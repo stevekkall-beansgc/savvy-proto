@@ -1,0 +1,2518 @@
+{
+  "source": "retained engine result",
+  "run_id": "disclosure-run-v1",
+  "policy_id": "disclosure-policy-v1",
+  "result": {
+    "status": "completed",
+    "context": {
+      "scenario": "disclosure_2027",
+      "entity_id": "entity-demo",
+      "tenant_id": "demo-workspace",
+      "service_start": "2027-02-01",
+      "knowledge_cutoff": "2027-02-01T00:00:00Z",
+      "service_end_exclusive": "2027-03-01"
+    },
+    "details": [
+      {
+        "id": "a_eligible",
+        "role": "intermediate",
+        "unit": "USD_minor",
+        "basis": "source_reported",
+        "payee": null,
+        "payer": null,
+        "value": "60000000/1",
+        "subject": null,
+        "currency": "USD",
+        "interval": {
+          "start": "2027-02-01",
+          "end_exclusive": "2027-03-01"
+        },
+        "component": "a_eligible",
+        "explanation": null,
+        "source_refs": [
+          {
+            "id": "disclosure-a-eligible",
+            "key": "a_eligible",
+            "kind": "source_fact",
+            "revision": 1
+          },
+          {
+            "id": "500",
+            "hash": "89e13d410cda7a87c63a2e6150b1c757a2b78b82ba06b73410ececf19f821cf9",
+            "revision": 1,
+            "external_id": "disclosure-a-eligible"
+          }
+        ],
+        "binding_refs": [
+          "a_eligible"
+        ],
+        "economic_key": "a_eligible",
+        "exact_amount": "60000000/1",
+        "output_class": null,
+        "assessed_minor": null,
+        "dependency_refs": [],
+        "netting_authority_ref": null
+      },
+      {
+        "id": "a_private",
+        "role": "intermediate",
+        "unit": "USD_minor",
+        "basis": "source_reported",
+        "payee": null,
+        "payer": null,
+        "value": "15000000/1",
+        "subject": null,
+        "currency": "USD",
+        "interval": {
+          "start": "2027-02-01",
+          "end_exclusive": "2027-03-01"
+        },
+        "component": "a_private",
+        "explanation": null,
+        "source_refs": [
+          {
+            "id": "disclosure-a-private",
+            "key": "a_private",
+            "kind": "source_fact",
+            "revision": 1
+          },
+          {
+            "id": "501",
+            "hash": "a1505ed8c8821fc125d1eb25cee2d0fd4a2751c51d186ddaa45c7c891e0b5421",
+            "revision": 1,
+            "external_id": "disclosure-a-private"
+          }
+        ],
+        "binding_refs": [
+          "a_private"
+        ],
+        "economic_key": "a_private",
+        "exact_amount": "15000000/1",
+        "output_class": null,
+        "assessed_minor": null,
+        "dependency_refs": [],
+        "netting_authority_ref": null
+      },
+      {
+        "id": "b_eligible",
+        "role": "intermediate",
+        "unit": "USD_minor",
+        "basis": "source_reported",
+        "payee": null,
+        "payer": null,
+        "value": "40000000/1",
+        "subject": null,
+        "currency": "USD",
+        "interval": {
+          "start": "2027-02-01",
+          "end_exclusive": "2027-03-01"
+        },
+        "component": "b_eligible",
+        "explanation": null,
+        "source_refs": [
+          {
+            "id": "disclosure-b-eligible",
+            "key": "b_eligible",
+            "kind": "source_fact",
+            "revision": 1
+          },
+          {
+            "id": "502",
+            "hash": "259012109346ec4a52becab991725b4812b42aa1acd1f4e1e7eace159de31fdf",
+            "revision": 1,
+            "external_id": "disclosure-b-eligible"
+          }
+        ],
+        "binding_refs": [
+          "b_eligible"
+        ],
+        "economic_key": "b_eligible",
+        "exact_amount": "40000000/1",
+        "output_class": null,
+        "assessed_minor": null,
+        "dependency_refs": [],
+        "netting_authority_ref": null
+      },
+      {
+        "id": "b_held_away",
+        "role": "intermediate",
+        "unit": "USD_minor",
+        "basis": "source_reported",
+        "payee": null,
+        "payer": null,
+        "value": "10000000/1",
+        "subject": null,
+        "currency": "USD",
+        "interval": {
+          "start": "2027-02-01",
+          "end_exclusive": "2027-03-01"
+        },
+        "component": "b_held_away",
+        "explanation": null,
+        "source_refs": [
+          {
+            "id": "disclosure-b-held-away",
+            "key": "b_held_away",
+            "kind": "source_fact",
+            "revision": 1
+          },
+          {
+            "id": "503",
+            "hash": "97ba198515bf705484c54ee61b30031d48e7c3c927628233bd8aed6324515f79",
+            "revision": 1,
+            "external_id": "disclosure-b-held-away"
+          }
+        ],
+        "binding_refs": [
+          "b_held_away"
+        ],
+        "economic_key": "b_held_away",
+        "exact_amount": "10000000/1",
+        "output_class": null,
+        "assessed_minor": null,
+        "dependency_refs": [],
+        "netting_authority_ref": null
+      },
+      {
+        "id": "reported",
+        "role": "intermediate",
+        "unit": "USD_minor",
+        "basis": "source_reported",
+        "payee": null,
+        "payer": null,
+        "value": "125000000/1",
+        "subject": null,
+        "currency": "USD",
+        "interval": {
+          "start": "2027-02-01",
+          "end_exclusive": "2027-03-01"
+        },
+        "component": "reported",
+        "explanation": null,
+        "source_refs": [
+          {
+            "id": "disclosure-a-eligible",
+            "key": "a_eligible",
+            "kind": "source_fact",
+            "revision": 1
+          },
+          {
+            "id": "500",
+            "hash": "89e13d410cda7a87c63a2e6150b1c757a2b78b82ba06b73410ececf19f821cf9",
+            "revision": 1,
+            "external_id": "disclosure-a-eligible"
+          },
+          {
+            "id": "disclosure-a-private",
+            "key": "a_private",
+            "kind": "source_fact",
+            "revision": 1
+          },
+          {
+            "id": "501",
+            "hash": "a1505ed8c8821fc125d1eb25cee2d0fd4a2751c51d186ddaa45c7c891e0b5421",
+            "revision": 1,
+            "external_id": "disclosure-a-private"
+          },
+          {
+            "id": "disclosure-b-eligible",
+            "key": "b_eligible",
+            "kind": "source_fact",
+            "revision": 1
+          },
+          {
+            "id": "502",
+            "hash": "259012109346ec4a52becab991725b4812b42aa1acd1f4e1e7eace159de31fdf",
+            "revision": 1,
+            "external_id": "disclosure-b-eligible"
+          },
+          {
+            "id": "disclosure-b-held-away",
+            "key": "b_held_away",
+            "kind": "source_fact",
+            "revision": 1
+          },
+          {
+            "id": "503",
+            "hash": "97ba198515bf705484c54ee61b30031d48e7c3c927628233bd8aed6324515f79",
+            "revision": 1,
+            "external_id": "disclosure-b-held-away"
+          }
+        ],
+        "binding_refs": [],
+        "economic_key": "reported",
+        "exact_amount": "125000000/1",
+        "output_class": null,
+        "assessed_minor": null,
+        "dependency_refs": [
+          "a_eligible",
+          "a_private",
+          "b_eligible",
+          "b_held_away"
+        ],
+        "netting_authority_ref": null
+      },
+      {
+        "id": "a_eligible_included",
+        "role": "intermediate",
+        "unit": "scalar",
+        "basis": "scalar",
+        "payee": null,
+        "payer": null,
+        "value": "1/1",
+        "subject": null,
+        "currency": null,
+        "interval": {
+          "start": "2027-02-01",
+          "end_exclusive": "2027-03-01"
+        },
+        "component": "a_eligible_included",
+        "explanation": null,
+        "source_refs": [
+          {
+            "id": "disclosure-a-eligible-included",
+            "key": "a_eligible_included",
+            "kind": "source_fact",
+            "revision": 1
+          },
+          {
+            "id": "500",
+            "hash": "89e13d410cda7a87c63a2e6150b1c757a2b78b82ba06b73410ececf19f821cf9",
+            "revision": 1,
+            "external_id": "disclosure-a-eligible"
+          }
+        ],
+        "binding_refs": [
+          "a_eligible_included"
+        ],
+        "economic_key": "a_eligible_included",
+        "exact_amount": "1/1",
+        "output_class": null,
+        "assessed_minor": null,
+        "dependency_refs": [],
+        "netting_authority_ref": null
+      },
+      {
+        "id": "a_eligible_included_amount",
+        "role": "intermediate",
+        "unit": "USD_minor",
+        "basis": "exact_accrual",
+        "payee": null,
+        "payer": null,
+        "value": "60000000/1",
+        "subject": null,
+        "currency": "USD",
+        "interval": {
+          "start": "2027-02-01",
+          "end_exclusive": "2027-03-01"
+        },
+        "component": "a_eligible_included_amount",
+        "explanation": null,
+        "source_refs": [
+          {
+            "id": "disclosure-a-eligible",
+            "key": "a_eligible",
+            "kind": "source_fact",
+            "revision": 1
+          },
+          {
+            "id": "500",
+            "hash": "89e13d410cda7a87c63a2e6150b1c757a2b78b82ba06b73410ececf19f821cf9",
+            "revision": 1,
+            "external_id": "disclosure-a-eligible"
+          },
+          {
+            "id": "disclosure-a-eligible-included",
+            "key": "a_eligible_included",
+            "kind": "source_fact",
+            "revision": 1
+          }
+        ],
+        "binding_refs": [],
+        "economic_key": "a_eligible_included_amount",
+        "exact_amount": "60000000/1",
+        "output_class": null,
+        "assessed_minor": null,
+        "dependency_refs": [
+          "a_eligible",
+          "a_eligible_included"
+        ],
+        "netting_authority_ref": null
+      },
+      {
+        "id": "a_eligible_excluded",
+        "role": "intermediate",
+        "unit": "scalar",
+        "basis": "scalar",
+        "payee": null,
+        "payer": null,
+        "value": "0/1",
+        "subject": null,
+        "currency": null,
+        "interval": {
+          "start": "2027-02-01",
+          "end_exclusive": "2027-03-01"
+        },
+        "component": "a_eligible_excluded",
+        "explanation": null,
+        "source_refs": [
+          {
+            "id": "disclosure-a-eligible-excluded",
+            "key": "a_eligible_excluded",
+            "kind": "source_fact",
+            "revision": 1
+          },
+          {
+            "id": "500",
+            "hash": "89e13d410cda7a87c63a2e6150b1c757a2b78b82ba06b73410ececf19f821cf9",
+            "revision": 1,
+            "external_id": "disclosure-a-eligible"
+          }
+        ],
+        "binding_refs": [
+          "a_eligible_excluded"
+        ],
+        "economic_key": "a_eligible_excluded",
+        "exact_amount": "0/1",
+        "output_class": null,
+        "assessed_minor": null,
+        "dependency_refs": [],
+        "netting_authority_ref": null
+      },
+      {
+        "id": "a_eligible_excluded_amount",
+        "role": "intermediate",
+        "unit": "USD_minor",
+        "basis": "exact_accrual",
+        "payee": null,
+        "payer": null,
+        "value": "0/1",
+        "subject": null,
+        "currency": "USD",
+        "interval": {
+          "start": "2027-02-01",
+          "end_exclusive": "2027-03-01"
+        },
+        "component": "a_eligible_excluded_amount",
+        "explanation": null,
+        "source_refs": [
+          {
+            "id": "disclosure-a-eligible",
+            "key": "a_eligible",
+            "kind": "source_fact",
+            "revision": 1
+          },
+          {
+            "id": "500",
+            "hash": "89e13d410cda7a87c63a2e6150b1c757a2b78b82ba06b73410ececf19f821cf9",
+            "revision": 1,
+            "external_id": "disclosure-a-eligible"
+          },
+          {
+            "id": "disclosure-a-eligible-excluded",
+            "key": "a_eligible_excluded",
+            "kind": "source_fact",
+            "revision": 1
+          }
+        ],
+        "binding_refs": [],
+        "economic_key": "a_eligible_excluded_amount",
+        "exact_amount": "0/1",
+        "output_class": null,
+        "assessed_minor": null,
+        "dependency_refs": [
+          "a_eligible",
+          "a_eligible_excluded"
+        ],
+        "netting_authority_ref": null
+      },
+      {
+        "id": "a_private_included",
+        "role": "intermediate",
+        "unit": "scalar",
+        "basis": "scalar",
+        "payee": null,
+        "payer": null,
+        "value": "0/1",
+        "subject": null,
+        "currency": null,
+        "interval": {
+          "start": "2027-02-01",
+          "end_exclusive": "2027-03-01"
+        },
+        "component": "a_private_included",
+        "explanation": null,
+        "source_refs": [
+          {
+            "id": "disclosure-a-private-included",
+            "key": "a_private_included",
+            "kind": "source_fact",
+            "revision": 1
+          },
+          {
+            "id": "501",
+            "hash": "a1505ed8c8821fc125d1eb25cee2d0fd4a2751c51d186ddaa45c7c891e0b5421",
+            "revision": 1,
+            "external_id": "disclosure-a-private"
+          }
+        ],
+        "binding_refs": [
+          "a_private_included"
+        ],
+        "economic_key": "a_private_included",
+        "exact_amount": "0/1",
+        "output_class": null,
+        "assessed_minor": null,
+        "dependency_refs": [],
+        "netting_authority_ref": null
+      },
+      {
+        "id": "a_private_included_amount",
+        "role": "intermediate",
+        "unit": "USD_minor",
+        "basis": "exact_accrual",
+        "payee": null,
+        "payer": null,
+        "value": "0/1",
+        "subject": null,
+        "currency": "USD",
+        "interval": {
+          "start": "2027-02-01",
+          "end_exclusive": "2027-03-01"
+        },
+        "component": "a_private_included_amount",
+        "explanation": null,
+        "source_refs": [
+          {
+            "id": "disclosure-a-private",
+            "key": "a_private",
+            "kind": "source_fact",
+            "revision": 1
+          },
+          {
+            "id": "501",
+            "hash": "a1505ed8c8821fc125d1eb25cee2d0fd4a2751c51d186ddaa45c7c891e0b5421",
+            "revision": 1,
+            "external_id": "disclosure-a-private"
+          },
+          {
+            "id": "disclosure-a-private-included",
+            "key": "a_private_included",
+            "kind": "source_fact",
+            "revision": 1
+          }
+        ],
+        "binding_refs": [],
+        "economic_key": "a_private_included_amount",
+        "exact_amount": "0/1",
+        "output_class": null,
+        "assessed_minor": null,
+        "dependency_refs": [
+          "a_private",
+          "a_private_included"
+        ],
+        "netting_authority_ref": null
+      },
+      {
+        "id": "a_private_excluded",
+        "role": "intermediate",
+        "unit": "scalar",
+        "basis": "scalar",
+        "payee": null,
+        "payer": null,
+        "value": "1/1",
+        "subject": null,
+        "currency": null,
+        "interval": {
+          "start": "2027-02-01",
+          "end_exclusive": "2027-03-01"
+        },
+        "component": "a_private_excluded",
+        "explanation": null,
+        "source_refs": [
+          {
+            "id": "disclosure-a-private-excluded",
+            "key": "a_private_excluded",
+            "kind": "source_fact",
+            "revision": 1
+          },
+          {
+            "id": "501",
+            "hash": "a1505ed8c8821fc125d1eb25cee2d0fd4a2751c51d186ddaa45c7c891e0b5421",
+            "revision": 1,
+            "external_id": "disclosure-a-private"
+          }
+        ],
+        "binding_refs": [
+          "a_private_excluded"
+        ],
+        "economic_key": "a_private_excluded",
+        "exact_amount": "1/1",
+        "output_class": null,
+        "assessed_minor": null,
+        "dependency_refs": [],
+        "netting_authority_ref": null
+      },
+      {
+        "id": "a_private_excluded_amount",
+        "role": "intermediate",
+        "unit": "USD_minor",
+        "basis": "exact_accrual",
+        "payee": null,
+        "payer": null,
+        "value": "15000000/1",
+        "subject": null,
+        "currency": "USD",
+        "interval": {
+          "start": "2027-02-01",
+          "end_exclusive": "2027-03-01"
+        },
+        "component": "a_private_excluded_amount",
+        "explanation": null,
+        "source_refs": [
+          {
+            "id": "disclosure-a-private",
+            "key": "a_private",
+            "kind": "source_fact",
+            "revision": 1
+          },
+          {
+            "id": "501",
+            "hash": "a1505ed8c8821fc125d1eb25cee2d0fd4a2751c51d186ddaa45c7c891e0b5421",
+            "revision": 1,
+            "external_id": "disclosure-a-private"
+          },
+          {
+            "id": "disclosure-a-private-excluded",
+            "key": "a_private_excluded",
+            "kind": "source_fact",
+            "revision": 1
+          }
+        ],
+        "binding_refs": [],
+        "economic_key": "a_private_excluded_amount",
+        "exact_amount": "15000000/1",
+        "output_class": null,
+        "assessed_minor": null,
+        "dependency_refs": [
+          "a_private",
+          "a_private_excluded"
+        ],
+        "netting_authority_ref": null
+      },
+      {
+        "id": "b_eligible_included",
+        "role": "intermediate",
+        "unit": "scalar",
+        "basis": "scalar",
+        "payee": null,
+        "payer": null,
+        "value": "1/1",
+        "subject": null,
+        "currency": null,
+        "interval": {
+          "start": "2027-02-01",
+          "end_exclusive": "2027-03-01"
+        },
+        "component": "b_eligible_included",
+        "explanation": null,
+        "source_refs": [
+          {
+            "id": "disclosure-b-eligible-included",
+            "key": "b_eligible_included",
+            "kind": "source_fact",
+            "revision": 1
+          },
+          {
+            "id": "502",
+            "hash": "259012109346ec4a52becab991725b4812b42aa1acd1f4e1e7eace159de31fdf",
+            "revision": 1,
+            "external_id": "disclosure-b-eligible"
+          }
+        ],
+        "binding_refs": [
+          "b_eligible_included"
+        ],
+        "economic_key": "b_eligible_included",
+        "exact_amount": "1/1",
+        "output_class": null,
+        "assessed_minor": null,
+        "dependency_refs": [],
+        "netting_authority_ref": null
+      },
+      {
+        "id": "b_eligible_included_amount",
+        "role": "intermediate",
+        "unit": "USD_minor",
+        "basis": "exact_accrual",
+        "payee": null,
+        "payer": null,
+        "value": "40000000/1",
+        "subject": null,
+        "currency": "USD",
+        "interval": {
+          "start": "2027-02-01",
+          "end_exclusive": "2027-03-01"
+        },
+        "component": "b_eligible_included_amount",
+        "explanation": null,
+        "source_refs": [
+          {
+            "id": "disclosure-b-eligible",
+            "key": "b_eligible",
+            "kind": "source_fact",
+            "revision": 1
+          },
+          {
+            "id": "502",
+            "hash": "259012109346ec4a52becab991725b4812b42aa1acd1f4e1e7eace159de31fdf",
+            "revision": 1,
+            "external_id": "disclosure-b-eligible"
+          },
+          {
+            "id": "disclosure-b-eligible-included",
+            "key": "b_eligible_included",
+            "kind": "source_fact",
+            "revision": 1
+          }
+        ],
+        "binding_refs": [],
+        "economic_key": "b_eligible_included_amount",
+        "exact_amount": "40000000/1",
+        "output_class": null,
+        "assessed_minor": null,
+        "dependency_refs": [
+          "b_eligible",
+          "b_eligible_included"
+        ],
+        "netting_authority_ref": null
+      },
+      {
+        "id": "b_eligible_excluded",
+        "role": "intermediate",
+        "unit": "scalar",
+        "basis": "scalar",
+        "payee": null,
+        "payer": null,
+        "value": "0/1",
+        "subject": null,
+        "currency": null,
+        "interval": {
+          "start": "2027-02-01",
+          "end_exclusive": "2027-03-01"
+        },
+        "component": "b_eligible_excluded",
+        "explanation": null,
+        "source_refs": [
+          {
+            "id": "disclosure-b-eligible-excluded",
+            "key": "b_eligible_excluded",
+            "kind": "source_fact",
+            "revision": 1
+          },
+          {
+            "id": "502",
+            "hash": "259012109346ec4a52becab991725b4812b42aa1acd1f4e1e7eace159de31fdf",
+            "revision": 1,
+            "external_id": "disclosure-b-eligible"
+          }
+        ],
+        "binding_refs": [
+          "b_eligible_excluded"
+        ],
+        "economic_key": "b_eligible_excluded",
+        "exact_amount": "0/1",
+        "output_class": null,
+        "assessed_minor": null,
+        "dependency_refs": [],
+        "netting_authority_ref": null
+      },
+      {
+        "id": "b_eligible_excluded_amount",
+        "role": "intermediate",
+        "unit": "USD_minor",
+        "basis": "exact_accrual",
+        "payee": null,
+        "payer": null,
+        "value": "0/1",
+        "subject": null,
+        "currency": "USD",
+        "interval": {
+          "start": "2027-02-01",
+          "end_exclusive": "2027-03-01"
+        },
+        "component": "b_eligible_excluded_amount",
+        "explanation": null,
+        "source_refs": [
+          {
+            "id": "disclosure-b-eligible",
+            "key": "b_eligible",
+            "kind": "source_fact",
+            "revision": 1
+          },
+          {
+            "id": "502",
+            "hash": "259012109346ec4a52becab991725b4812b42aa1acd1f4e1e7eace159de31fdf",
+            "revision": 1,
+            "external_id": "disclosure-b-eligible"
+          },
+          {
+            "id": "disclosure-b-eligible-excluded",
+            "key": "b_eligible_excluded",
+            "kind": "source_fact",
+            "revision": 1
+          }
+        ],
+        "binding_refs": [],
+        "economic_key": "b_eligible_excluded_amount",
+        "exact_amount": "0/1",
+        "output_class": null,
+        "assessed_minor": null,
+        "dependency_refs": [
+          "b_eligible",
+          "b_eligible_excluded"
+        ],
+        "netting_authority_ref": null
+      },
+      {
+        "id": "b_held_away_included",
+        "role": "intermediate",
+        "unit": "scalar",
+        "basis": "scalar",
+        "payee": null,
+        "payer": null,
+        "value": "0/1",
+        "subject": null,
+        "currency": null,
+        "interval": {
+          "start": "2027-02-01",
+          "end_exclusive": "2027-03-01"
+        },
+        "component": "b_held_away_included",
+        "explanation": null,
+        "source_refs": [
+          {
+            "id": "disclosure-b-held-away-included",
+            "key": "b_held_away_included",
+            "kind": "source_fact",
+            "revision": 1
+          },
+          {
+            "id": "503",
+            "hash": "97ba198515bf705484c54ee61b30031d48e7c3c927628233bd8aed6324515f79",
+            "revision": 1,
+            "external_id": "disclosure-b-held-away"
+          }
+        ],
+        "binding_refs": [
+          "b_held_away_included"
+        ],
+        "economic_key": "b_held_away_included",
+        "exact_amount": "0/1",
+        "output_class": null,
+        "assessed_minor": null,
+        "dependency_refs": [],
+        "netting_authority_ref": null
+      },
+      {
+        "id": "b_held_away_included_amount",
+        "role": "intermediate",
+        "unit": "USD_minor",
+        "basis": "exact_accrual",
+        "payee": null,
+        "payer": null,
+        "value": "0/1",
+        "subject": null,
+        "currency": "USD",
+        "interval": {
+          "start": "2027-02-01",
+          "end_exclusive": "2027-03-01"
+        },
+        "component": "b_held_away_included_amount",
+        "explanation": null,
+        "source_refs": [
+          {
+            "id": "disclosure-b-held-away",
+            "key": "b_held_away",
+            "kind": "source_fact",
+            "revision": 1
+          },
+          {
+            "id": "503",
+            "hash": "97ba198515bf705484c54ee61b30031d48e7c3c927628233bd8aed6324515f79",
+            "revision": 1,
+            "external_id": "disclosure-b-held-away"
+          },
+          {
+            "id": "disclosure-b-held-away-included",
+            "key": "b_held_away_included",
+            "kind": "source_fact",
+            "revision": 1
+          }
+        ],
+        "binding_refs": [],
+        "economic_key": "b_held_away_included_amount",
+        "exact_amount": "0/1",
+        "output_class": null,
+        "assessed_minor": null,
+        "dependency_refs": [
+          "b_held_away",
+          "b_held_away_included"
+        ],
+        "netting_authority_ref": null
+      },
+      {
+        "id": "b_held_away_excluded",
+        "role": "intermediate",
+        "unit": "scalar",
+        "basis": "scalar",
+        "payee": null,
+        "payer": null,
+        "value": "1/1",
+        "subject": null,
+        "currency": null,
+        "interval": {
+          "start": "2027-02-01",
+          "end_exclusive": "2027-03-01"
+        },
+        "component": "b_held_away_excluded",
+        "explanation": null,
+        "source_refs": [
+          {
+            "id": "disclosure-b-held-away-excluded",
+            "key": "b_held_away_excluded",
+            "kind": "source_fact",
+            "revision": 1
+          },
+          {
+            "id": "503",
+            "hash": "97ba198515bf705484c54ee61b30031d48e7c3c927628233bd8aed6324515f79",
+            "revision": 1,
+            "external_id": "disclosure-b-held-away"
+          }
+        ],
+        "binding_refs": [
+          "b_held_away_excluded"
+        ],
+        "economic_key": "b_held_away_excluded",
+        "exact_amount": "1/1",
+        "output_class": null,
+        "assessed_minor": null,
+        "dependency_refs": [],
+        "netting_authority_ref": null
+      },
+      {
+        "id": "b_held_away_excluded_amount",
+        "role": "intermediate",
+        "unit": "USD_minor",
+        "basis": "exact_accrual",
+        "payee": null,
+        "payer": null,
+        "value": "10000000/1",
+        "subject": null,
+        "currency": "USD",
+        "interval": {
+          "start": "2027-02-01",
+          "end_exclusive": "2027-03-01"
+        },
+        "component": "b_held_away_excluded_amount",
+        "explanation": null,
+        "source_refs": [
+          {
+            "id": "disclosure-b-held-away",
+            "key": "b_held_away",
+            "kind": "source_fact",
+            "revision": 1
+          },
+          {
+            "id": "503",
+            "hash": "97ba198515bf705484c54ee61b30031d48e7c3c927628233bd8aed6324515f79",
+            "revision": 1,
+            "external_id": "disclosure-b-held-away"
+          },
+          {
+            "id": "disclosure-b-held-away-excluded",
+            "key": "b_held_away_excluded",
+            "kind": "source_fact",
+            "revision": 1
+          }
+        ],
+        "binding_refs": [],
+        "economic_key": "b_held_away_excluded_amount",
+        "exact_amount": "10000000/1",
+        "output_class": null,
+        "assessed_minor": null,
+        "dependency_refs": [
+          "b_held_away",
+          "b_held_away_excluded"
+        ],
+        "netting_authority_ref": null
+      },
+      {
+        "id": "a_basis",
+        "role": "intermediate",
+        "unit": "USD_minor",
+        "basis": "exact_accrual",
+        "payee": null,
+        "payer": null,
+        "value": "60000000/1",
+        "subject": null,
+        "currency": "USD",
+        "interval": {
+          "start": "2027-02-01",
+          "end_exclusive": "2027-03-01"
+        },
+        "component": "a_basis",
+        "explanation": null,
+        "source_refs": [
+          {
+            "id": "disclosure-a-eligible",
+            "key": "a_eligible",
+            "kind": "source_fact",
+            "revision": 1
+          },
+          {
+            "id": "500",
+            "hash": "89e13d410cda7a87c63a2e6150b1c757a2b78b82ba06b73410ececf19f821cf9",
+            "revision": 1,
+            "external_id": "disclosure-a-eligible"
+          },
+          {
+            "id": "disclosure-a-eligible-included",
+            "key": "a_eligible_included",
+            "kind": "source_fact",
+            "revision": 1
+          },
+          {
+            "id": "disclosure-a-private",
+            "key": "a_private",
+            "kind": "source_fact",
+            "revision": 1
+          },
+          {
+            "id": "501",
+            "hash": "a1505ed8c8821fc125d1eb25cee2d0fd4a2751c51d186ddaa45c7c891e0b5421",
+            "revision": 1,
+            "external_id": "disclosure-a-private"
+          },
+          {
+            "id": "disclosure-a-private-included",
+            "key": "a_private_included",
+            "kind": "source_fact",
+            "revision": 1
+          }
+        ],
+        "binding_refs": [],
+        "economic_key": "a_basis",
+        "exact_amount": "60000000/1",
+        "output_class": null,
+        "assessed_minor": null,
+        "dependency_refs": [
+          "a_eligible_included_amount",
+          "a_private_included_amount"
+        ],
+        "netting_authority_ref": null
+      },
+      {
+        "id": "b_basis",
+        "role": "intermediate",
+        "unit": "USD_minor",
+        "basis": "exact_accrual",
+        "payee": null,
+        "payer": null,
+        "value": "40000000/1",
+        "subject": null,
+        "currency": "USD",
+        "interval": {
+          "start": "2027-02-01",
+          "end_exclusive": "2027-03-01"
+        },
+        "component": "b_basis",
+        "explanation": null,
+        "source_refs": [
+          {
+            "id": "disclosure-b-eligible",
+            "key": "b_eligible",
+            "kind": "source_fact",
+            "revision": 1
+          },
+          {
+            "id": "502",
+            "hash": "259012109346ec4a52becab991725b4812b42aa1acd1f4e1e7eace159de31fdf",
+            "revision": 1,
+            "external_id": "disclosure-b-eligible"
+          },
+          {
+            "id": "disclosure-b-eligible-included",
+            "key": "b_eligible_included",
+            "kind": "source_fact",
+            "revision": 1
+          },
+          {
+            "id": "disclosure-b-held-away",
+            "key": "b_held_away",
+            "kind": "source_fact",
+            "revision": 1
+          },
+          {
+            "id": "503",
+            "hash": "97ba198515bf705484c54ee61b30031d48e7c3c927628233bd8aed6324515f79",
+            "revision": 1,
+            "external_id": "disclosure-b-held-away"
+          },
+          {
+            "id": "disclosure-b-held-away-included",
+            "key": "b_held_away_included",
+            "kind": "source_fact",
+            "revision": 1
+          }
+        ],
+        "binding_refs": [],
+        "economic_key": "b_basis",
+        "exact_amount": "40000000/1",
+        "output_class": null,
+        "assessed_minor": null,
+        "dependency_refs": [
+          "b_eligible_included_amount",
+          "b_held_away_included_amount"
+        ],
+        "netting_authority_ref": null
+      },
+      {
+        "id": "eligible",
+        "role": "intermediate",
+        "unit": "USD_minor",
+        "basis": "exact_accrual",
+        "payee": null,
+        "payer": null,
+        "value": "100000000/1",
+        "subject": null,
+        "currency": "USD",
+        "interval": {
+          "start": "2027-02-01",
+          "end_exclusive": "2027-03-01"
+        },
+        "component": "eligible",
+        "explanation": null,
+        "source_refs": [
+          {
+            "id": "disclosure-a-eligible",
+            "key": "a_eligible",
+            "kind": "source_fact",
+            "revision": 1
+          },
+          {
+            "id": "500",
+            "hash": "89e13d410cda7a87c63a2e6150b1c757a2b78b82ba06b73410ececf19f821cf9",
+            "revision": 1,
+            "external_id": "disclosure-a-eligible"
+          },
+          {
+            "id": "disclosure-a-eligible-included",
+            "key": "a_eligible_included",
+            "kind": "source_fact",
+            "revision": 1
+          },
+          {
+            "id": "disclosure-a-private",
+            "key": "a_private",
+            "kind": "source_fact",
+            "revision": 1
+          },
+          {
+            "id": "501",
+            "hash": "a1505ed8c8821fc125d1eb25cee2d0fd4a2751c51d186ddaa45c7c891e0b5421",
+            "revision": 1,
+            "external_id": "disclosure-a-private"
+          },
+          {
+            "id": "disclosure-a-private-included",
+            "key": "a_private_included",
+            "kind": "source_fact",
+            "revision": 1
+          },
+          {
+            "id": "disclosure-b-eligible",
+            "key": "b_eligible",
+            "kind": "source_fact",
+            "revision": 1
+          },
+          {
+            "id": "502",
+            "hash": "259012109346ec4a52becab991725b4812b42aa1acd1f4e1e7eace159de31fdf",
+            "revision": 1,
+            "external_id": "disclosure-b-eligible"
+          },
+          {
+            "id": "disclosure-b-eligible-included",
+            "key": "b_eligible_included",
+            "kind": "source_fact",
+            "revision": 1
+          },
+          {
+            "id": "disclosure-b-held-away",
+            "key": "b_held_away",
+            "kind": "source_fact",
+            "revision": 1
+          },
+          {
+            "id": "503",
+            "hash": "97ba198515bf705484c54ee61b30031d48e7c3c927628233bd8aed6324515f79",
+            "revision": 1,
+            "external_id": "disclosure-b-held-away"
+          },
+          {
+            "id": "disclosure-b-held-away-included",
+            "key": "b_held_away_included",
+            "kind": "source_fact",
+            "revision": 1
+          }
+        ],
+        "binding_refs": [],
+        "economic_key": "eligible",
+        "exact_amount": "100000000/1",
+        "output_class": null,
+        "assessed_minor": null,
+        "dependency_refs": [
+          "a_basis",
+          "b_basis"
+        ],
+        "netting_authority_ref": null
+      },
+      {
+        "id": "excluded",
+        "role": "intermediate",
+        "unit": "USD_minor",
+        "basis": "exact_accrual",
+        "payee": null,
+        "payer": null,
+        "value": "25000000/1",
+        "subject": null,
+        "currency": "USD",
+        "interval": {
+          "start": "2027-02-01",
+          "end_exclusive": "2027-03-01"
+        },
+        "component": "excluded",
+        "explanation": null,
+        "source_refs": [
+          {
+            "id": "disclosure-a-eligible",
+            "key": "a_eligible",
+            "kind": "source_fact",
+            "revision": 1
+          },
+          {
+            "id": "500",
+            "hash": "89e13d410cda7a87c63a2e6150b1c757a2b78b82ba06b73410ececf19f821cf9",
+            "revision": 1,
+            "external_id": "disclosure-a-eligible"
+          },
+          {
+            "id": "disclosure-a-eligible-excluded",
+            "key": "a_eligible_excluded",
+            "kind": "source_fact",
+            "revision": 1
+          },
+          {
+            "id": "disclosure-a-private",
+            "key": "a_private",
+            "kind": "source_fact",
+            "revision": 1
+          },
+          {
+            "id": "501",
+            "hash": "a1505ed8c8821fc125d1eb25cee2d0fd4a2751c51d186ddaa45c7c891e0b5421",
+            "revision": 1,
+            "external_id": "disclosure-a-private"
+          },
+          {
+            "id": "disclosure-a-private-excluded",
+            "key": "a_private_excluded",
+            "kind": "source_fact",
+            "revision": 1
+          },
+          {
+            "id": "disclosure-b-eligible",
+            "key": "b_eligible",
+            "kind": "source_fact",
+            "revision": 1
+          },
+          {
+            "id": "502",
+            "hash": "259012109346ec4a52becab991725b4812b42aa1acd1f4e1e7eace159de31fdf",
+            "revision": 1,
+            "external_id": "disclosure-b-eligible"
+          },
+          {
+            "id": "disclosure-b-eligible-excluded",
+            "key": "b_eligible_excluded",
+            "kind": "source_fact",
+            "revision": 1
+          },
+          {
+            "id": "disclosure-b-held-away",
+            "key": "b_held_away",
+            "kind": "source_fact",
+            "revision": 1
+          },
+          {
+            "id": "503",
+            "hash": "97ba198515bf705484c54ee61b30031d48e7c3c927628233bd8aed6324515f79",
+            "revision": 1,
+            "external_id": "disclosure-b-held-away"
+          },
+          {
+            "id": "disclosure-b-held-away-excluded",
+            "key": "b_held_away_excluded",
+            "kind": "source_fact",
+            "revision": 1
+          }
+        ],
+        "binding_refs": [],
+        "economic_key": "excluded",
+        "exact_amount": "25000000/1",
+        "output_class": null,
+        "assessed_minor": null,
+        "dependency_refs": [
+          "a_eligible_excluded_amount",
+          "a_private_excluded_amount",
+          "b_eligible_excluded_amount",
+          "b_held_away_excluded_amount"
+        ],
+        "netting_authority_ref": null
+      },
+      {
+        "id": "annual_rate",
+        "role": "intermediate",
+        "unit": "scalar",
+        "basis": "scalar",
+        "payee": null,
+        "payer": null,
+        "value": "3/250",
+        "subject": null,
+        "currency": null,
+        "interval": {
+          "start": "2027-02-01",
+          "end_exclusive": "2027-03-01"
+        },
+        "component": "annual_rate",
+        "explanation": null,
+        "source_refs": [],
+        "binding_refs": [],
+        "economic_key": "annual_rate",
+        "exact_amount": "3/250",
+        "output_class": null,
+        "assessed_minor": null,
+        "dependency_refs": [],
+        "netting_authority_ref": null
+      },
+      {
+        "id": "month_factor",
+        "role": "intermediate",
+        "unit": "scalar",
+        "basis": "scalar",
+        "payee": null,
+        "payer": null,
+        "value": "1/12",
+        "subject": null,
+        "currency": null,
+        "interval": {
+          "start": "2027-02-01",
+          "end_exclusive": "2027-03-01"
+        },
+        "component": "month_factor",
+        "explanation": null,
+        "source_refs": [],
+        "binding_refs": [],
+        "economic_key": "month_factor",
+        "exact_amount": "1/12",
+        "output_class": null,
+        "assessed_minor": null,
+        "dependency_refs": [],
+        "netting_authority_ref": null
+      },
+      {
+        "id": "monthly_rate",
+        "role": "intermediate",
+        "unit": "scalar",
+        "basis": "scalar",
+        "payee": null,
+        "payer": null,
+        "value": "1/1000",
+        "subject": null,
+        "currency": null,
+        "interval": {
+          "start": "2027-02-01",
+          "end_exclusive": "2027-03-01"
+        },
+        "component": "monthly_rate",
+        "explanation": null,
+        "source_refs": [],
+        "binding_refs": [],
+        "economic_key": "monthly_rate",
+        "exact_amount": "1/1000",
+        "output_class": null,
+        "assessed_minor": null,
+        "dependency_refs": [
+          "annual_rate",
+          "month_factor"
+        ],
+        "netting_authority_ref": null
+      },
+      {
+        "id": "fee_exact",
+        "role": "intermediate",
+        "unit": "USD_minor",
+        "basis": "exact_accrual",
+        "payee": null,
+        "payer": null,
+        "value": "100000/1",
+        "subject": null,
+        "currency": "USD",
+        "interval": {
+          "start": "2027-02-01",
+          "end_exclusive": "2027-03-01"
+        },
+        "component": "fee_exact",
+        "explanation": null,
+        "source_refs": [
+          {
+            "id": "disclosure-a-eligible",
+            "key": "a_eligible",
+            "kind": "source_fact",
+            "revision": 1
+          },
+          {
+            "id": "500",
+            "hash": "89e13d410cda7a87c63a2e6150b1c757a2b78b82ba06b73410ececf19f821cf9",
+            "revision": 1,
+            "external_id": "disclosure-a-eligible"
+          },
+          {
+            "id": "disclosure-a-eligible-included",
+            "key": "a_eligible_included",
+            "kind": "source_fact",
+            "revision": 1
+          },
+          {
+            "id": "disclosure-a-private",
+            "key": "a_private",
+            "kind": "source_fact",
+            "revision": 1
+          },
+          {
+            "id": "501",
+            "hash": "a1505ed8c8821fc125d1eb25cee2d0fd4a2751c51d186ddaa45c7c891e0b5421",
+            "revision": 1,
+            "external_id": "disclosure-a-private"
+          },
+          {
+            "id": "disclosure-a-private-included",
+            "key": "a_private_included",
+            "kind": "source_fact",
+            "revision": 1
+          },
+          {
+            "id": "disclosure-b-eligible",
+            "key": "b_eligible",
+            "kind": "source_fact",
+            "revision": 1
+          },
+          {
+            "id": "502",
+            "hash": "259012109346ec4a52becab991725b4812b42aa1acd1f4e1e7eace159de31fdf",
+            "revision": 1,
+            "external_id": "disclosure-b-eligible"
+          },
+          {
+            "id": "disclosure-b-eligible-included",
+            "key": "b_eligible_included",
+            "kind": "source_fact",
+            "revision": 1
+          },
+          {
+            "id": "disclosure-b-held-away",
+            "key": "b_held_away",
+            "kind": "source_fact",
+            "revision": 1
+          },
+          {
+            "id": "503",
+            "hash": "97ba198515bf705484c54ee61b30031d48e7c3c927628233bd8aed6324515f79",
+            "revision": 1,
+            "external_id": "disclosure-b-held-away"
+          },
+          {
+            "id": "disclosure-b-held-away-included",
+            "key": "b_held_away_included",
+            "kind": "source_fact",
+            "revision": 1
+          }
+        ],
+        "binding_refs": [],
+        "economic_key": "fee_exact",
+        "exact_amount": "100000/1",
+        "output_class": null,
+        "assessed_minor": null,
+        "dependency_refs": [
+          "eligible",
+          "monthly_rate"
+        ],
+        "netting_authority_ref": null
+      },
+      {
+        "id": "fee_assessed",
+        "role": "intermediate",
+        "unit": "USD_minor",
+        "basis": "assessed",
+        "payee": null,
+        "payer": null,
+        "value": "100000/1",
+        "subject": null,
+        "currency": "USD",
+        "interval": {
+          "start": "2027-02-01",
+          "end_exclusive": "2027-03-01"
+        },
+        "component": "fee_assessed",
+        "explanation": null,
+        "source_refs": [
+          {
+            "id": "disclosure-a-eligible",
+            "key": "a_eligible",
+            "kind": "source_fact",
+            "revision": 1
+          },
+          {
+            "id": "500",
+            "hash": "89e13d410cda7a87c63a2e6150b1c757a2b78b82ba06b73410ececf19f821cf9",
+            "revision": 1,
+            "external_id": "disclosure-a-eligible"
+          },
+          {
+            "id": "disclosure-a-eligible-included",
+            "key": "a_eligible_included",
+            "kind": "source_fact",
+            "revision": 1
+          },
+          {
+            "id": "disclosure-a-private",
+            "key": "a_private",
+            "kind": "source_fact",
+            "revision": 1
+          },
+          {
+            "id": "501",
+            "hash": "a1505ed8c8821fc125d1eb25cee2d0fd4a2751c51d186ddaa45c7c891e0b5421",
+            "revision": 1,
+            "external_id": "disclosure-a-private"
+          },
+          {
+            "id": "disclosure-a-private-included",
+            "key": "a_private_included",
+            "kind": "source_fact",
+            "revision": 1
+          },
+          {
+            "id": "disclosure-b-eligible",
+            "key": "b_eligible",
+            "kind": "source_fact",
+            "revision": 1
+          },
+          {
+            "id": "502",
+            "hash": "259012109346ec4a52becab991725b4812b42aa1acd1f4e1e7eace159de31fdf",
+            "revision": 1,
+            "external_id": "disclosure-b-eligible"
+          },
+          {
+            "id": "disclosure-b-eligible-included",
+            "key": "b_eligible_included",
+            "kind": "source_fact",
+            "revision": 1
+          },
+          {
+            "id": "disclosure-b-held-away",
+            "key": "b_held_away",
+            "kind": "source_fact",
+            "revision": 1
+          },
+          {
+            "id": "503",
+            "hash": "97ba198515bf705484c54ee61b30031d48e7c3c927628233bd8aed6324515f79",
+            "revision": 1,
+            "external_id": "disclosure-b-held-away"
+          },
+          {
+            "id": "disclosure-b-held-away-included",
+            "key": "b_held_away_included",
+            "kind": "source_fact",
+            "revision": 1
+          }
+        ],
+        "binding_refs": [],
+        "economic_key": "fee_assessed",
+        "exact_amount": "100000/1",
+        "output_class": null,
+        "assessed_minor": 100000,
+        "dependency_refs": [
+          "fee_exact"
+        ],
+        "netting_authority_ref": null
+      },
+      {
+        "id": "charge",
+        "role": "terminal",
+        "unit": "USD_minor",
+        "basis": "assessed",
+        "payee": "firm-demo",
+        "payer": "disclosure-alder-household",
+        "value": "100000/1",
+        "subject": null,
+        "currency": "USD",
+        "interval": {
+          "start": "2027-02-01",
+          "end_exclusive": "2027-03-01"
+        },
+        "component": "charge",
+        "explanation": null,
+        "source_refs": [
+          {
+            "id": "disclosure-a-eligible",
+            "key": "a_eligible",
+            "kind": "source_fact",
+            "revision": 1
+          },
+          {
+            "id": "500",
+            "hash": "89e13d410cda7a87c63a2e6150b1c757a2b78b82ba06b73410ececf19f821cf9",
+            "revision": 1,
+            "external_id": "disclosure-a-eligible"
+          },
+          {
+            "id": "disclosure-a-eligible-included",
+            "key": "a_eligible_included",
+            "kind": "source_fact",
+            "revision": 1
+          },
+          {
+            "id": "disclosure-a-private",
+            "key": "a_private",
+            "kind": "source_fact",
+            "revision": 1
+          },
+          {
+            "id": "501",
+            "hash": "a1505ed8c8821fc125d1eb25cee2d0fd4a2751c51d186ddaa45c7c891e0b5421",
+            "revision": 1,
+            "external_id": "disclosure-a-private"
+          },
+          {
+            "id": "disclosure-a-private-included",
+            "key": "a_private_included",
+            "kind": "source_fact",
+            "revision": 1
+          },
+          {
+            "id": "disclosure-b-eligible",
+            "key": "b_eligible",
+            "kind": "source_fact",
+            "revision": 1
+          },
+          {
+            "id": "502",
+            "hash": "259012109346ec4a52becab991725b4812b42aa1acd1f4e1e7eace159de31fdf",
+            "revision": 1,
+            "external_id": "disclosure-b-eligible"
+          },
+          {
+            "id": "disclosure-b-eligible-included",
+            "key": "b_eligible_included",
+            "kind": "source_fact",
+            "revision": 1
+          },
+          {
+            "id": "disclosure-b-held-away",
+            "key": "b_held_away",
+            "kind": "source_fact",
+            "revision": 1
+          },
+          {
+            "id": "503",
+            "hash": "97ba198515bf705484c54ee61b30031d48e7c3c927628233bd8aed6324515f79",
+            "revision": 1,
+            "external_id": "disclosure-b-held-away"
+          },
+          {
+            "id": "disclosure-b-held-away-included",
+            "key": "b_held_away_included",
+            "kind": "source_fact",
+            "revision": 1
+          }
+        ],
+        "binding_refs": [],
+        "economic_key": "charge",
+        "exact_amount": "100000/1",
+        "output_class": "obligation",
+        "assessed_minor": 100000,
+        "dependency_refs": [
+          "fee_assessed"
+        ],
+        "netting_authority_ref": null
+      },
+      {
+        "id": "line_a",
+        "role": "terminal",
+        "unit": "USD_minor",
+        "basis": "assessed",
+        "payee": "firm-demo",
+        "payer": "disclosure-alder-household",
+        "value": "60000/1",
+        "subject": null,
+        "currency": "USD",
+        "interval": {
+          "start": "2027-02-01",
+          "end_exclusive": "2027-03-01"
+        },
+        "component": "line_a",
+        "explanation": null,
+        "source_refs": [
+          {
+            "id": "disclosure-a-eligible",
+            "key": "a_eligible",
+            "kind": "source_fact",
+            "revision": 1
+          },
+          {
+            "id": "500",
+            "hash": "89e13d410cda7a87c63a2e6150b1c757a2b78b82ba06b73410ececf19f821cf9",
+            "revision": 1,
+            "external_id": "disclosure-a-eligible"
+          },
+          {
+            "id": "disclosure-a-eligible-included",
+            "key": "a_eligible_included",
+            "kind": "source_fact",
+            "revision": 1
+          },
+          {
+            "id": "disclosure-a-private",
+            "key": "a_private",
+            "kind": "source_fact",
+            "revision": 1
+          },
+          {
+            "id": "501",
+            "hash": "a1505ed8c8821fc125d1eb25cee2d0fd4a2751c51d186ddaa45c7c891e0b5421",
+            "revision": 1,
+            "external_id": "disclosure-a-private"
+          },
+          {
+            "id": "disclosure-a-private-included",
+            "key": "a_private_included",
+            "kind": "source_fact",
+            "revision": 1
+          },
+          {
+            "id": "disclosure-b-eligible",
+            "key": "b_eligible",
+            "kind": "source_fact",
+            "revision": 1
+          },
+          {
+            "id": "502",
+            "hash": "259012109346ec4a52becab991725b4812b42aa1acd1f4e1e7eace159de31fdf",
+            "revision": 1,
+            "external_id": "disclosure-b-eligible"
+          },
+          {
+            "id": "disclosure-b-eligible-included",
+            "key": "b_eligible_included",
+            "kind": "source_fact",
+            "revision": 1
+          },
+          {
+            "id": "disclosure-b-held-away",
+            "key": "b_held_away",
+            "kind": "source_fact",
+            "revision": 1
+          },
+          {
+            "id": "503",
+            "hash": "97ba198515bf705484c54ee61b30031d48e7c3c927628233bd8aed6324515f79",
+            "revision": 1,
+            "external_id": "disclosure-b-held-away"
+          },
+          {
+            "id": "disclosure-b-held-away-included",
+            "key": "b_held_away_included",
+            "kind": "source_fact",
+            "revision": 1
+          }
+        ],
+        "binding_refs": [],
+        "economic_key": "line_a",
+        "exact_amount": "60000/1",
+        "output_class": "obligation",
+        "assessed_minor": 60000,
+        "dependency_refs": [
+          "charge",
+          "a_basis",
+          "b_basis"
+        ],
+        "netting_authority_ref": null
+      },
+      {
+        "id": "line_b",
+        "role": "terminal",
+        "unit": "USD_minor",
+        "basis": "assessed",
+        "payee": "firm-demo",
+        "payer": "disclosure-alder-household",
+        "value": "40000/1",
+        "subject": null,
+        "currency": "USD",
+        "interval": {
+          "start": "2027-02-01",
+          "end_exclusive": "2027-03-01"
+        },
+        "component": "line_b",
+        "explanation": null,
+        "source_refs": [
+          {
+            "id": "disclosure-a-eligible",
+            "key": "a_eligible",
+            "kind": "source_fact",
+            "revision": 1
+          },
+          {
+            "id": "500",
+            "hash": "89e13d410cda7a87c63a2e6150b1c757a2b78b82ba06b73410ececf19f821cf9",
+            "revision": 1,
+            "external_id": "disclosure-a-eligible"
+          },
+          {
+            "id": "disclosure-a-eligible-included",
+            "key": "a_eligible_included",
+            "kind": "source_fact",
+            "revision": 1
+          },
+          {
+            "id": "disclosure-a-private",
+            "key": "a_private",
+            "kind": "source_fact",
+            "revision": 1
+          },
+          {
+            "id": "501",
+            "hash": "a1505ed8c8821fc125d1eb25cee2d0fd4a2751c51d186ddaa45c7c891e0b5421",
+            "revision": 1,
+            "external_id": "disclosure-a-private"
+          },
+          {
+            "id": "disclosure-a-private-included",
+            "key": "a_private_included",
+            "kind": "source_fact",
+            "revision": 1
+          },
+          {
+            "id": "disclosure-b-eligible",
+            "key": "b_eligible",
+            "kind": "source_fact",
+            "revision": 1
+          },
+          {
+            "id": "502",
+            "hash": "259012109346ec4a52becab991725b4812b42aa1acd1f4e1e7eace159de31fdf",
+            "revision": 1,
+            "external_id": "disclosure-b-eligible"
+          },
+          {
+            "id": "disclosure-b-eligible-included",
+            "key": "b_eligible_included",
+            "kind": "source_fact",
+            "revision": 1
+          },
+          {
+            "id": "disclosure-b-held-away",
+            "key": "b_held_away",
+            "kind": "source_fact",
+            "revision": 1
+          },
+          {
+            "id": "503",
+            "hash": "97ba198515bf705484c54ee61b30031d48e7c3c927628233bd8aed6324515f79",
+            "revision": 1,
+            "external_id": "disclosure-b-held-away"
+          },
+          {
+            "id": "disclosure-b-held-away-included",
+            "key": "b_held_away_included",
+            "kind": "source_fact",
+            "revision": 1
+          }
+        ],
+        "binding_refs": [],
+        "economic_key": "line_b",
+        "exact_amount": "40000/1",
+        "output_class": "obligation",
+        "assessed_minor": 40000,
+        "dependency_refs": [
+          "charge",
+          "a_basis",
+          "b_basis"
+        ],
+        "netting_authority_ref": null
+      }
+    ],
+    "outputs": [
+      {
+        "id": "charge",
+        "detail_refs": [
+          "charge"
+        ]
+      },
+      {
+        "id": "line_a",
+        "detail_refs": [
+          "line_a"
+        ]
+      },
+      {
+        "id": "line_b",
+        "detail_refs": [
+          "line_b"
+        ]
+      }
+    ],
+    "bindings": [
+      {
+        "fact": "a_eligible",
+        "node": "a_eligible"
+      },
+      {
+        "fact": "a_eligible_excluded",
+        "node": "a_eligible_excluded"
+      },
+      {
+        "fact": "a_eligible_included",
+        "node": "a_eligible_included"
+      },
+      {
+        "fact": "a_private",
+        "node": "a_private"
+      },
+      {
+        "fact": "a_private_excluded",
+        "node": "a_private_excluded"
+      },
+      {
+        "fact": "a_private_included",
+        "node": "a_private_included"
+      },
+      {
+        "fact": "b_eligible",
+        "node": "b_eligible"
+      },
+      {
+        "fact": "b_eligible_excluded",
+        "node": "b_eligible_excluded"
+      },
+      {
+        "fact": "b_eligible_included",
+        "node": "b_eligible_included"
+      },
+      {
+        "fact": "b_held_away",
+        "node": "b_held_away"
+      },
+      {
+        "fact": "b_held_away_excluded",
+        "node": "b_held_away_excluded"
+      },
+      {
+        "fact": "b_held_away_included",
+        "node": "b_held_away_included"
+      }
+    ],
+    "coverage": [],
+    "exceptions": [],
+    "schema_version": "medallion-evaluation/v1",
+    "input_manifest_hash": "2d28b26b9495f5ad2c6dbf5ae0f89a42a81c4581b356229977c6ea5cff82e2eb",
+    "policy_manifest_hash": "6bbfd92a7e75a8245be025c92ee889575868e1827dade7dd6cf850c4948f1f00",
+    "engine_language_version": "primitive-graph/0.4"
+  },
+  "policy_graph": {
+    "nodes": [
+      {
+        "id": "a_eligible",
+        "op": "fact",
+        "key": "a_eligible",
+        "role": "intermediate",
+        "unit": "USD_minor",
+        "basis": "source_reported"
+      },
+      {
+        "id": "a_private",
+        "op": "fact",
+        "key": "a_private",
+        "role": "intermediate",
+        "unit": "USD_minor",
+        "basis": "source_reported"
+      },
+      {
+        "id": "b_eligible",
+        "op": "fact",
+        "key": "b_eligible",
+        "role": "intermediate",
+        "unit": "USD_minor",
+        "basis": "source_reported"
+      },
+      {
+        "id": "b_held_away",
+        "op": "fact",
+        "key": "b_held_away",
+        "role": "intermediate",
+        "unit": "USD_minor",
+        "basis": "source_reported"
+      },
+      {
+        "id": "reported",
+        "op": "add",
+        "role": "intermediate",
+        "unit": "USD_minor",
+        "basis": "source_reported",
+        "inputs": [
+          "a_eligible",
+          "a_private",
+          "b_eligible",
+          "b_held_away"
+        ]
+      },
+      {
+        "id": "a_eligible_included",
+        "op": "fact",
+        "key": "a_eligible_included",
+        "role": "intermediate",
+        "unit": "scalar",
+        "basis": "scalar"
+      },
+      {
+        "id": "a_eligible_included_amount",
+        "op": "accrue",
+        "left": "a_eligible",
+        "role": "intermediate",
+        "unit": "USD_minor",
+        "basis": "exact_accrual",
+        "right": "a_eligible_included"
+      },
+      {
+        "id": "a_eligible_excluded",
+        "op": "fact",
+        "key": "a_eligible_excluded",
+        "role": "intermediate",
+        "unit": "scalar",
+        "basis": "scalar"
+      },
+      {
+        "id": "a_eligible_excluded_amount",
+        "op": "accrue",
+        "left": "a_eligible",
+        "role": "intermediate",
+        "unit": "USD_minor",
+        "basis": "exact_accrual",
+        "right": "a_eligible_excluded"
+      },
+      {
+        "id": "a_private_included",
+        "op": "fact",
+        "key": "a_private_included",
+        "role": "intermediate",
+        "unit": "scalar",
+        "basis": "scalar"
+      },
+      {
+        "id": "a_private_included_amount",
+        "op": "accrue",
+        "left": "a_private",
+        "role": "intermediate",
+        "unit": "USD_minor",
+        "basis": "exact_accrual",
+        "right": "a_private_included"
+      },
+      {
+        "id": "a_private_excluded",
+        "op": "fact",
+        "key": "a_private_excluded",
+        "role": "intermediate",
+        "unit": "scalar",
+        "basis": "scalar"
+      },
+      {
+        "id": "a_private_excluded_amount",
+        "op": "accrue",
+        "left": "a_private",
+        "role": "intermediate",
+        "unit": "USD_minor",
+        "basis": "exact_accrual",
+        "right": "a_private_excluded"
+      },
+      {
+        "id": "b_eligible_included",
+        "op": "fact",
+        "key": "b_eligible_included",
+        "role": "intermediate",
+        "unit": "scalar",
+        "basis": "scalar"
+      },
+      {
+        "id": "b_eligible_included_amount",
+        "op": "accrue",
+        "left": "b_eligible",
+        "role": "intermediate",
+        "unit": "USD_minor",
+        "basis": "exact_accrual",
+        "right": "b_eligible_included"
+      },
+      {
+        "id": "b_eligible_excluded",
+        "op": "fact",
+        "key": "b_eligible_excluded",
+        "role": "intermediate",
+        "unit": "scalar",
+        "basis": "scalar"
+      },
+      {
+        "id": "b_eligible_excluded_amount",
+        "op": "accrue",
+        "left": "b_eligible",
+        "role": "intermediate",
+        "unit": "USD_minor",
+        "basis": "exact_accrual",
+        "right": "b_eligible_excluded"
+      },
+      {
+        "id": "b_held_away_included",
+        "op": "fact",
+        "key": "b_held_away_included",
+        "role": "intermediate",
+        "unit": "scalar",
+        "basis": "scalar"
+      },
+      {
+        "id": "b_held_away_included_amount",
+        "op": "accrue",
+        "left": "b_held_away",
+        "role": "intermediate",
+        "unit": "USD_minor",
+        "basis": "exact_accrual",
+        "right": "b_held_away_included"
+      },
+      {
+        "id": "b_held_away_excluded",
+        "op": "fact",
+        "key": "b_held_away_excluded",
+        "role": "intermediate",
+        "unit": "scalar",
+        "basis": "scalar"
+      },
+      {
+        "id": "b_held_away_excluded_amount",
+        "op": "accrue",
+        "left": "b_held_away",
+        "role": "intermediate",
+        "unit": "USD_minor",
+        "basis": "exact_accrual",
+        "right": "b_held_away_excluded"
+      },
+      {
+        "id": "a_basis",
+        "op": "add",
+        "role": "intermediate",
+        "unit": "USD_minor",
+        "basis": "exact_accrual",
+        "inputs": [
+          "a_eligible_included_amount",
+          "a_private_included_amount"
+        ]
+      },
+      {
+        "id": "b_basis",
+        "op": "add",
+        "role": "intermediate",
+        "unit": "USD_minor",
+        "basis": "exact_accrual",
+        "inputs": [
+          "b_eligible_included_amount",
+          "b_held_away_included_amount"
+        ]
+      },
+      {
+        "id": "eligible",
+        "op": "add",
+        "role": "intermediate",
+        "unit": "USD_minor",
+        "basis": "exact_accrual",
+        "inputs": [
+          "a_basis",
+          "b_basis"
+        ]
+      },
+      {
+        "id": "excluded",
+        "op": "add",
+        "role": "intermediate",
+        "unit": "USD_minor",
+        "basis": "exact_accrual",
+        "inputs": [
+          "a_eligible_excluded_amount",
+          "a_private_excluded_amount",
+          "b_eligible_excluded_amount",
+          "b_held_away_excluded_amount"
+        ]
+      },
+      {
+        "id": "annual_rate",
+        "op": "literal",
+        "role": "intermediate",
+        "unit": "scalar",
+        "basis": "scalar",
+        "value": "3/250"
+      },
+      {
+        "id": "month_factor",
+        "op": "literal",
+        "role": "intermediate",
+        "unit": "scalar",
+        "basis": "scalar",
+        "value": "1/12"
+      },
+      {
+        "id": "monthly_rate",
+        "op": "multiply",
+        "left": "annual_rate",
+        "role": "intermediate",
+        "unit": "scalar",
+        "basis": "scalar",
+        "right": "month_factor"
+      },
+      {
+        "id": "fee_exact",
+        "op": "multiply",
+        "left": "eligible",
+        "role": "intermediate",
+        "unit": "USD_minor",
+        "basis": "exact_accrual",
+        "right": "monthly_rate"
+      },
+      {
+        "id": "fee_assessed",
+        "op": "assess",
+        "role": "intermediate",
+        "unit": "USD_minor",
+        "basis": "assessed",
+        "input": "fee_exact",
+        "rounding": "half_up"
+      },
+      {
+        "id": "charge",
+        "op": "add",
+        "role": "terminal",
+        "unit": "USD_minor",
+        "basis": "assessed",
+        "payee": "firm-demo",
+        "payer": "disclosure-alder-household",
+        "inputs": [
+          "fee_assessed"
+        ],
+        "currency": "USD",
+        "output_class": "obligation"
+      },
+      {
+        "id": "line_a",
+        "op": "allocate_by",
+        "role": "terminal",
+        "unit": "USD_minor",
+        "basis": "assessed",
+        "input": "charge",
+        "payee": "firm-demo",
+        "payer": "disclosure-alder-household",
+        "weights": {
+          "disclosure-alder-a": "a_basis",
+          "disclosure-alder-b": "b_basis"
+        },
+        "currency": "USD",
+        "recipient": "disclosure-alder-a",
+        "output_class": "obligation"
+      },
+      {
+        "id": "line_b",
+        "op": "allocate_by",
+        "role": "terminal",
+        "unit": "USD_minor",
+        "basis": "assessed",
+        "input": "charge",
+        "payee": "firm-demo",
+        "payer": "disclosure-alder-household",
+        "weights": {
+          "disclosure-alder-a": "a_basis",
+          "disclosure-alder-b": "b_basis"
+        },
+        "currency": "USD",
+        "recipient": "disclosure-alder-b",
+        "output_class": "obligation"
+      }
+    ],
+    "version": "disclosure-policy-v1"
+  },
+  "facts": {
+    "a_private": {
+      "id": "disclosure-a-private",
+      "hash": "a1505ed8c8821fc125d1eb25cee2d0fd4a2751c51d186ddaa45c7c891e0b5421",
+      "unit": "USD_minor",
+      "basis": "source_reported",
+      "value": 15000000,
+      "approved": true,
+      "currency": "USD",
+      "revision": 1,
+      "entity_id": "entity-demo",
+      "tenant_id": "demo-workspace",
+      "recorded_at": "2027-01-31T12:00:00Z",
+      "evidence_refs": [
+        {
+          "id": "501",
+          "hash": "a1505ed8c8821fc125d1eb25cee2d0fd4a2751c51d186ddaa45c7c891e0b5421",
+          "revision": 1,
+          "external_id": "disclosure-a-private"
+        }
+      ]
+    },
+    "a_eligible": {
+      "id": "disclosure-a-eligible",
+      "hash": "89e13d410cda7a87c63a2e6150b1c757a2b78b82ba06b73410ececf19f821cf9",
+      "unit": "USD_minor",
+      "basis": "source_reported",
+      "value": 60000000,
+      "approved": true,
+      "currency": "USD",
+      "revision": 1,
+      "entity_id": "entity-demo",
+      "tenant_id": "demo-workspace",
+      "recorded_at": "2027-01-31T12:00:00Z",
+      "evidence_refs": [
+        {
+          "id": "500",
+          "hash": "89e13d410cda7a87c63a2e6150b1c757a2b78b82ba06b73410ececf19f821cf9",
+          "revision": 1,
+          "external_id": "disclosure-a-eligible"
+        }
+      ]
+    },
+    "b_eligible": {
+      "id": "disclosure-b-eligible",
+      "hash": "259012109346ec4a52becab991725b4812b42aa1acd1f4e1e7eace159de31fdf",
+      "unit": "USD_minor",
+      "basis": "source_reported",
+      "value": 40000000,
+      "approved": true,
+      "currency": "USD",
+      "revision": 1,
+      "entity_id": "entity-demo",
+      "tenant_id": "demo-workspace",
+      "recorded_at": "2027-01-31T12:00:00Z",
+      "evidence_refs": [
+        {
+          "id": "502",
+          "hash": "259012109346ec4a52becab991725b4812b42aa1acd1f4e1e7eace159de31fdf",
+          "revision": 1,
+          "external_id": "disclosure-b-eligible"
+        }
+      ]
+    },
+    "b_held_away": {
+      "id": "disclosure-b-held-away",
+      "hash": "97ba198515bf705484c54ee61b30031d48e7c3c927628233bd8aed6324515f79",
+      "unit": "USD_minor",
+      "basis": "source_reported",
+      "value": 10000000,
+      "approved": true,
+      "currency": "USD",
+      "revision": 1,
+      "entity_id": "entity-demo",
+      "tenant_id": "demo-workspace",
+      "recorded_at": "2027-01-31T12:00:00Z",
+      "evidence_refs": [
+        {
+          "id": "503",
+          "hash": "97ba198515bf705484c54ee61b30031d48e7c3c927628233bd8aed6324515f79",
+          "revision": 1,
+          "external_id": "disclosure-b-held-away"
+        }
+      ]
+    },
+    "a_private_excluded": {
+      "id": "disclosure-a-private-excluded",
+      "hash": "a1505ed8c8821fc125d1eb25cee2d0fd4a2751c51d186ddaa45c7c891e0b5421",
+      "unit": "scalar",
+      "basis": "scalar",
+      "value": "1",
+      "approved": true,
+      "revision": 1,
+      "entity_id": "entity-demo",
+      "tenant_id": "demo-workspace",
+      "recorded_at": "2027-01-31T12:00:00Z",
+      "evidence_refs": [
+        {
+          "id": "501",
+          "hash": "a1505ed8c8821fc125d1eb25cee2d0fd4a2751c51d186ddaa45c7c891e0b5421",
+          "revision": 1,
+          "external_id": "disclosure-a-private"
+        }
+      ]
+    },
+    "a_private_included": {
+      "id": "disclosure-a-private-included",
+      "hash": "a1505ed8c8821fc125d1eb25cee2d0fd4a2751c51d186ddaa45c7c891e0b5421",
+      "unit": "scalar",
+      "basis": "scalar",
+      "value": "0",
+      "approved": true,
+      "revision": 1,
+      "entity_id": "entity-demo",
+      "tenant_id": "demo-workspace",
+      "recorded_at": "2027-01-31T12:00:00Z",
+      "evidence_refs": [
+        {
+          "id": "501",
+          "hash": "a1505ed8c8821fc125d1eb25cee2d0fd4a2751c51d186ddaa45c7c891e0b5421",
+          "revision": 1,
+          "external_id": "disclosure-a-private"
+        }
+      ]
+    },
+    "a_eligible_excluded": {
+      "id": "disclosure-a-eligible-excluded",
+      "hash": "89e13d410cda7a87c63a2e6150b1c757a2b78b82ba06b73410ececf19f821cf9",
+      "unit": "scalar",
+      "basis": "scalar",
+      "value": "0",
+      "approved": true,
+      "revision": 1,
+      "entity_id": "entity-demo",
+      "tenant_id": "demo-workspace",
+      "recorded_at": "2027-01-31T12:00:00Z",
+      "evidence_refs": [
+        {
+          "id": "500",
+          "hash": "89e13d410cda7a87c63a2e6150b1c757a2b78b82ba06b73410ececf19f821cf9",
+          "revision": 1,
+          "external_id": "disclosure-a-eligible"
+        }
+      ]
+    },
+    "a_eligible_included": {
+      "id": "disclosure-a-eligible-included",
+      "hash": "89e13d410cda7a87c63a2e6150b1c757a2b78b82ba06b73410ececf19f821cf9",
+      "unit": "scalar",
+      "basis": "scalar",
+      "value": "1",
+      "approved": true,
+      "revision": 1,
+      "entity_id": "entity-demo",
+      "tenant_id": "demo-workspace",
+      "recorded_at": "2027-01-31T12:00:00Z",
+      "evidence_refs": [
+        {
+          "id": "500",
+          "hash": "89e13d410cda7a87c63a2e6150b1c757a2b78b82ba06b73410ececf19f821cf9",
+          "revision": 1,
+          "external_id": "disclosure-a-eligible"
+        }
+      ]
+    },
+    "b_eligible_excluded": {
+      "id": "disclosure-b-eligible-excluded",
+      "hash": "259012109346ec4a52becab991725b4812b42aa1acd1f4e1e7eace159de31fdf",
+      "unit": "scalar",
+      "basis": "scalar",
+      "value": "0",
+      "approved": true,
+      "revision": 1,
+      "entity_id": "entity-demo",
+      "tenant_id": "demo-workspace",
+      "recorded_at": "2027-01-31T12:00:00Z",
+      "evidence_refs": [
+        {
+          "id": "502",
+          "hash": "259012109346ec4a52becab991725b4812b42aa1acd1f4e1e7eace159de31fdf",
+          "revision": 1,
+          "external_id": "disclosure-b-eligible"
+        }
+      ]
+    },
+    "b_eligible_included": {
+      "id": "disclosure-b-eligible-included",
+      "hash": "259012109346ec4a52becab991725b4812b42aa1acd1f4e1e7eace159de31fdf",
+      "unit": "scalar",
+      "basis": "scalar",
+      "value": "1",
+      "approved": true,
+      "revision": 1,
+      "entity_id": "entity-demo",
+      "tenant_id": "demo-workspace",
+      "recorded_at": "2027-01-31T12:00:00Z",
+      "evidence_refs": [
+        {
+          "id": "502",
+          "hash": "259012109346ec4a52becab991725b4812b42aa1acd1f4e1e7eace159de31fdf",
+          "revision": 1,
+          "external_id": "disclosure-b-eligible"
+        }
+      ]
+    },
+    "b_held_away_excluded": {
+      "id": "disclosure-b-held-away-excluded",
+      "hash": "97ba198515bf705484c54ee61b30031d48e7c3c927628233bd8aed6324515f79",
+      "unit": "scalar",
+      "basis": "scalar",
+      "value": "1",
+      "approved": true,
+      "revision": 1,
+      "entity_id": "entity-demo",
+      "tenant_id": "demo-workspace",
+      "recorded_at": "2027-01-31T12:00:00Z",
+      "evidence_refs": [
+        {
+          "id": "503",
+          "hash": "97ba198515bf705484c54ee61b30031d48e7c3c927628233bd8aed6324515f79",
+          "revision": 1,
+          "external_id": "disclosure-b-held-away"
+        }
+      ]
+    },
+    "b_held_away_included": {
+      "id": "disclosure-b-held-away-included",
+      "hash": "97ba198515bf705484c54ee61b30031d48e7c3c927628233bd8aed6324515f79",
+      "unit": "scalar",
+      "basis": "scalar",
+      "value": "0",
+      "approved": true,
+      "revision": 1,
+      "entity_id": "entity-demo",
+      "tenant_id": "demo-workspace",
+      "recorded_at": "2027-01-31T12:00:00Z",
+      "evidence_refs": [
+        {
+          "id": "503",
+          "hash": "97ba198515bf705484c54ee61b30031d48e7c3c927628233bd8aed6324515f79",
+          "revision": 1,
+          "external_id": "disclosure-b-held-away"
+        }
+      ]
+    }
+  },
+  "synthetic": true,
+  "captured_on": "2026-11-18",
+  "description": "Selected retained synthetic engine run for architecture documentation. Not a live calculation."
+}
