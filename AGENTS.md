@@ -34,7 +34,7 @@ Ruby on Rails, and PostgreSQL.
   [structure.sql](apps/api/db/structure.sql) is authoritative. Use disposable
   databases for resets and integration tests. Run destructive suites serially.
 
-## Verify changes
+## Test commands
 
 | Area | Check |
 |---|---|

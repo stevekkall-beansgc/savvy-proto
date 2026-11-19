@@ -6,10 +6,10 @@ and commercial terms into explainable invoices, advisor earnings, and Finance
 records.
 
 **The goal is to help advisors estimate what they’ll earn before billing closes.**
-The prototype uses the latest available synthetic balance and activity records with
-dated compensation terms. **Earnings** shows the estimate and its data cutoff
-alongside approved payables and confirmed payouts. The forecast-to-final workflow
-still needs validation with Savvy’s daily data and actual agreements.
+**Earnings** shows the latest calculation and its data cutoff alongside
+approved payables and confirmed payouts. The featured advisor example uses
+issued fees. Validating an open-period forecast through close still requires
+Savvy’s daily data, actual agreements, and a reconciled example.
 
 ## Start here
 
@@ -80,6 +80,13 @@ Open [http://127.0.0.1:3100/](http://127.0.0.1:3100/) and use the **Business**
 selector to explore both products. Setup loads the current fictional records
 for statements, Finance, and earnings. The local API and database bind to
 loopback ports 3101 and 55437.
+
+To try **Queue period calculations** or deferred imports, run the billing worker
+from a second terminal in the checkout:
+
+```sh
+docker compose run --rm api bundle exec rails runner script/billing_worker.rb
+```
 
 The [preview operations guide](docs/DEMO-PREVIEW.md) covers the separate
 device-hosted demo. Read [AGENTS.md](AGENTS.md), the
