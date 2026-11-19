@@ -14,9 +14,12 @@ assert(['http://127.0.0.1:3100','http://127.0.0.1:3104','http://127.0.0.1:3106']
  const text=()=>page.locator('main').innerText();
  const nav=async(name)=>{await page.getByRole('navigation',{name:'Workspace navigation'}).getByRole('button',{name,exact:true}).click()};
  const ready=async(value)=>{await page.getByText(value,{exact:true}).first().waitFor()};
+ const evidenceMap=page.getByRole('banner').getByRole('link',{name:'Evidence map',exact:true});
  const identity=async(value)=>{const d=page.locator('.aud-presenter details');if(!await d.getAttribute('open').then(v=>v!==null))await d.locator('summary').click();await page.getByLabel('View as').selectOption(value)};
  try{
- await page.goto(base);const initialIdentity=page.locator('.aud-presenter details');await initialIdentity.locator('summary').click();await page.getByLabel('Billing example').selectOption('household');await ready('Your business at a glance.');
+ await page.goto(base);
+ check(await evidenceMap.getAttribute('href')==='https://savvy.beanshop.top/evidence/' && await evidenceMap.getAttribute('target')==='_blank','Header opens the evidence map without leaving the demo');
+ const initialIdentity=page.locator('.aud-presenter details');await initialIdentity.locator('summary').click();await page.getByLabel('Billing example').selectOption('household');await ready('Your business at a glance.');
  let t=await text();check(t.includes('$1,000.00')&&t.includes('$500.00')&&t.includes('$200.00'),'Overview uses household invoice, credit and outstanding cash');check(t.includes('Your compensation')&&t.includes('$5,000.00')&&t.includes('Client fees billed'),'Advisor entitlements are distinct from client fees');check(!t.includes('Sep ')&&!t.includes('September'),'No legacy period on default overview');
  await page.getByRole('button',{name:'View statement →',exact:true}).click();await page.getByRole('button',{name:'Invoice details →',exact:true}).waitFor();
  check(await page.locator('table tbody tr').count()===2,'Two traditional invoice lines');
@@ -50,6 +53,7 @@ assert(['http://127.0.0.1:3100','http://127.0.0.1:3104','http://127.0.0.1:3106']
  if(process.env.SAVVY_SCREENSHOT)await page.screenshot({path:process.env.SAVVY_SCREENSHOT,fullPage:true});
  await identity('product');await ready('How the billing engine arrives at the charge');check(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth),'Mobile Product has no page overflow');
  await identity('finance');await ready('Household billing: cash and recognition');check(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth),'Mobile Finance has no page overflow');
+ check(await evidenceMap.isVisible(),'Header evidence map link is available on mobile Finance');
  check(errors.length===0,`No browser errors: ${errors.join('; ')}`);console.log(JSON.stringify({checks,base,errors}));
  }finally{await browser.close()}
 })().catch(e=>{console.error(e);process.exitCode=1});

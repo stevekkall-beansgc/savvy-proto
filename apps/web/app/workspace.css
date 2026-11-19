@@ -121,12 +121,24 @@
   border-bottom: 1px solid #e4e0d8;
   background: #fcfbf9;
   display: flex;
+  flex-wrap: wrap;
   align-items: center;
   justify-content: space-between;
   gap: 16px;
   padding: 12px 42px;
   color: #68635d;
   font-size: 12px;
+}
+.ws-topbar-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 8px 16px;
+  margin-left: auto;
+}
+.ws-topbar-actions .ws-link {
+  white-space: nowrap;
 }
 .ws-topbar span {
   margin: 0 8px;
