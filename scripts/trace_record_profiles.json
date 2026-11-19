@@ -26,5 +26,18 @@
   "sections_by_type": {
     "aggregate": ["members"], "invoice": ["lines"], "statement": ["lines"], "credit_memo": ["lines"],
     "debit_memo": ["lines"], "journal": ["lines", "schedule"], "accounting_package": ["lines"]
+  },
+  "references": {
+    "calculation": {"assignment_id": ["policy", "upstream"]},
+    "invoice": {"calculation_ref": ["calculation", "upstream"], "journal_entry": ["journal", "downstream"]},
+    "statement": {"invoice_id": ["invoice", "upstream"], "payable_id": ["payable", "upstream"]},
+    "credit_memo": {"invoice_id": ["invoice", "upstream"]},
+    "debit_memo": {"invoice_id": ["invoice", "upstream"]},
+    "payment": {"invoice_id": ["invoice", "upstream"]},
+    "journal": {"invoice_id": ["invoice", "upstream"], "package_id": ["accounting_package", "upstream"]},
+    "event": {"original_id": ["event", "upstream"]},
+    "payable": {"calculation_ref": ["calculation", "upstream"]},
+    "payout": {"payable_id": ["payable", "upstream"]},
+    "accounting_package": {"invoice_id": ["invoice", "upstream"], "calculation_ref": ["calculation", "upstream"]}
   }
 }

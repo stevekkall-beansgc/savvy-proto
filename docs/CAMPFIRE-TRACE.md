@@ -72,6 +72,12 @@ The field table separates supplied values, reference IDs and fields to confirm.
 Expected records show a blank field checklist based on the prototype. Where
 recognized fields are present, invoice lines, rollup members and journal
 schedules show up to 12 rows. Previews use the selected record's data.
+With one supplied object, the map names it as the sole evidence source.
+Related previews identify direct references and their original field paths.
+Fields outside the supplied object and separate crosswalk or lineage rows need
+their own evidence. To include them, supply the related records and confirm
+their links in a batch. The trace-gap chart counts supplied records by type,
+with separate bars for upstream gaps, downstream gaps, and record issues.
 For an unexplained rollup, start by confirming the measure, grain, period and
 basis before choosing between fee results, invoice activity and cash activity.
 The browser uses the supplied or confirmed references to trace actual links.

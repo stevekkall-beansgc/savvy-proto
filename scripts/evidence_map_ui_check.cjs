@@ -43,6 +43,8 @@ async function check() {
       return fs.readFile(await download.path(), 'utf8');
     }
     await startingRecord.selectOption({label:'Report or export · report-demo'});
+    const chart = page.getByRole('figure',{name:'Trace gaps by record type',exact:true});
+    assert.ok(await chart.getByRole('img').count() > 3);
     const expected = page.getByRole('button',{name:'Preview Billing rollup',exact:true});
     await expected.click();
     assert.deepEqual(await field('Total amount').getByRole('cell').allTextContents(), ['—','To confirm']);
@@ -72,13 +74,27 @@ async function check() {
     assert.match(await downloadCsv(), /"Calculation · calculation-demo","Customer","Prototype handoff gap"/);
 
     await page.getByRole('button', {name:'Clear imports',exact:true}).click();
-    await input.setInputFiles({name:'invoice.json',mimeType:'application/json',
-      buffer:Buffer.from('{"kind":"invoice","id":"test-invoice","journal_entry":"unseen-journal","total_amount":"125.00"}')});
+    const singleObject = {
+      entries:[{kind:'invoice',id:'test-invoice',journal_entry:{id:'unseen-journal'},currency:'USD',total_amount:'125.00'}],
+      links:[{from:{kind:'invoice',id:'test-invoice'},to:{kind:'payment',id:'outside-reference'}}],
+    };
+    await input.setInputFiles({name:'invoice.json',mimeType:'application/json',buffer:Buffer.from(JSON.stringify(singleObject))});
     await page.locator('#cycle-anchor').getByText(/test-invoice/).waitFor();
+    const scope = page.locator('#single-scope');
+    assert.match(await scope.innerText(), /Related records supplied · 0/);
+    assert.match(await scope.innerText(), /Excluded 1 relationship or lineage row/);
+    assert.equal(await chart.getByRole('img',{name:'Downstream gaps for Invoice · 1'}).count(), 1);
+    assert.equal(await chart.getByRole('img').count(),3);
+    assert.doesNotMatch(await startingRecord.innerText(), /outside-reference|report-demo/);
     await page.getByRole('button',{name:'Preview Campfire accounting',exact:true}).click();
     assert.deepEqual(await field('Record ID').getByRole('cell').allTextContents(), ['unseen-journal','Reference']);
     assert.deepEqual(await field('Currency').getByRole('cell').allTextContents(), ['—','To confirm']);
+    assert.match(await preview.getByText(/ID from Invoice/).innerText(), /test-invoice · field journal_entry.id/);
+    assert.doesNotMatch(await preview.innerText(), /USD|125.00/);
     await preview.getByRole('button',{name:'Close',exact:true}).click();
+    await page.getByRole('button',{name:'Confirm types & build map',exact:true}).click();
+    assert.doesNotMatch(await startingRecord.innerText(), /outside-reference/);
+    assert.match(await scope.innerText(), /Related records supplied · 0/);
     await page.getByRole('button', {name:'Clear imports',exact:true}).click();
     await input.setInputFiles({name:'report-columns.csv',mimeType:'text/csv',buffer:Buffer.from('Cost Center,Customer ID,Amount\n')});
     await page.locator('#cycle-anchor').getByText(/Report or export/).waitFor();
@@ -96,7 +112,7 @@ async function check() {
     await page.keyboard.press('Escape');
     assert.deepEqual(requests, []);
     assert.deepEqual(errors, []);
-    console.log('Evidence map, record previews, offline CSV export, pending import protection and mobile layout passed.');
+    console.log('Evidence map, gap chart, single-record provenance, offline CSV export, and mobile layout passed.');
   } finally {
     await browser.close();
   }

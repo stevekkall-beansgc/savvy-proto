@@ -85,10 +85,29 @@ class WorkflowMapTest(unittest.TestCase):
         invoice = {'kind': 'invoice', 'id': 'inv', 'lines': [{'id': 'line'}]}
         line = {'invoice_id': 'inv', 'invoice_line_id': 'line', 'calculation_id': 'first'}
         competing_line = {**line, 'calculation_id': 'second'}
-        result = workflow.build([invoice, {'lineage': [line]}, {'lineage': [competing_line]}])
+        result = workflow.build([invoice, {'kind': 'source', 'id': 'source-A'}, {'lineage': [line, competing_line]}])
         row = entry(result, 'inv')
         self.assertEqual([], row['upstream'])
         self.assertIn('Multiple crosswalks', ' '.join(row['gaps']))
+
+    def test_single_record_uses_its_fields_and_excludes_wrapper_evidence(self):
+        invoice = {
+            'kind': 'invoice', 'id': 'inv', 'currency': 'USD', 'total_amount': '125.00',
+            'journal_entry': {'id': 'journal-A'}, 'lines': [{'id': 'line-A'}],
+        }
+        bundle = {
+            'entries': [invoice],
+            'links': [{'from': {'kind': 'invoice', 'id': 'inv'}, 'to': {'kind': 'payment', 'id': 'outside'}}],
+            'lineage': [{'invoice_id': 'inv', 'invoice_line_id': 'line-A', 'calculation_id': 'outside-calc'}],
+        }
+        result = workflow.build([bundle])
+        self.assertEqual({'ignored_rows': 2}, result['single_record'])
+        self.assertEqual(['inv', 'journal-A'], [row['id'] for row in result['graph']['entries']])
+        journal = entry(result, 'journal-A')
+        self.assertEqual('reference only', journal['state'])
+        self.assertEqual({}, journal['evidence'])
+        self.assertEqual('journal_entry.id', journal['reference_from']['field'])
+        self.assertEqual(1, sum(row['records'] for row in result['graph']['coverage']))
 
     def test_line_variance_is_a_gap_at_the_calculation_stage(self):
         with trace.SAMPLE.open() as source:

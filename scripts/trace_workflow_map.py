@@ -211,10 +211,15 @@ def build_invoice(invoice, groups, lineage, metadata):
 def build(sources, hint=None):
     sources = [canonical(payload) for payload in sources]
     groups, lineage, inventory, metadata = collect(sources, hint)
+    single_record = sum(sum(item['recognized'].values()) + item['unmapped_count'] for item in inventory) == 1
+    scope = None
+    if single_record:
+        scope = {'ignored_rows': len(lineage) + sum(len(trace_entry_graph.explicit_links(payload)) for payload in sources)}
+        lineage = []
     invoice_counts = Counter(trace.ref(row.get('id')) for row in groups['invoice'])
     duplicates = sorted([identity for identity, count in invoice_counts.items() if identity and count > 1])
     eligible = [row for row in groups['invoice'] if trace.ref(row.get('id')) not in duplicates]
-    invoices = [build_invoice(row, groups, lineage, metadata) for row in eligible]
+    invoices = [] if single_record else [build_invoice(row, groups, lineage, metadata) for row in eligible]
     unattached = []
     for kind, rows in groups.items():
         if kind == 'invoice':
@@ -235,7 +240,8 @@ def build(sources, hint=None):
                          'needs_review': needs_review, 'total': len(rows), 'ask_for': STAGES[key][3]})
     return {'schema': 'savvy-workflow-map/v1', 'input_count': len(sources), 'invoices': invoices, 'coverage': coverage,
             'unattached': unattached, 'duplicate_invoice_ids': duplicates, 'inputs': inventory,
-            'graph': trace_entry_graph.build_entry_graph(groups, sources, inventory, lineage)}
+            'single_record': scope,
+            'graph': trace_entry_graph.build_entry_graph(groups, sources, inventory, lineage, single_record=single_record)}
 
 
 def render(report):

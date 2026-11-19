@@ -6,6 +6,8 @@
 <meta http-equiv="Content-Security-Policy" content="default-src 'none'; style-src 'unsafe-inline'; script-src 'unsafe-inline'; connect-src 'none'; form-action 'none'; base-uri 'none'">
 <title>Savvy · Billing evidence map</title>
 <style>
+.single-scope{margin-top:10px;padding:10px 12px;border-left:3px solid #5e8b77;background:#eef4ed;border-radius:0 6px 6px 0;overflow-wrap:anywhere}.single-scope p{font-size:13px;margin-top:3px}
+.gap-chart{margin:14px 0 0}.gap-chart-legend,.gap-chart-values{display:flex;gap:8px 18px;flex-wrap:wrap}.gap-chart-legend{font-size:12px;color:var(--sub);margin-bottom:10px}.gap-key{display:inline-flex;align-items:center;gap:5px}.gap-key::before,.gap-fill{background:var(--gap-color)}.gap-key::before{content:"";width:9px;height:9px;border-radius:2px}.gap-upstream{--gap-color:#285d4e}.gap-downstream{--gap-color:#88703e}.gap-record{--gap-color:#96554a}.gap-chart-rows{list-style:none;margin:0;padding:0}.gap-chart-row{display:grid;grid-template-columns:minmax(110px,1fr) minmax(0,3fr);align-items:center;gap:8px 18px;padding:8px 0;border-top:1px solid var(--line)}.gap-chart-type{font-size:13px;overflow-wrap:anywhere}.gap-chart-type small{display:block;color:var(--sub);font-size:11px}.gap-chart-values{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:6px 12px}.gap-metric{display:flex;align-items:center;gap:5px;min-width:0;font-size:12px;font-variant-numeric:tabular-nums}.gap-track{flex:1;min-width:0;background:#eef1eb;border-radius:4px;height:8px;overflow:hidden}.gap-fill{display:block;height:100%;border-radius:4px}.gap-chart figcaption{font-size:12px;color:var(--sub);margin-top:8px}@media(max-width:560px){.gap-chart-row{grid-template-columns:1fr;gap:4px}.gap-chart-type small{display:inline;margin-left:7px}.gap-chart-values{gap:8px}}
 :root{color-scheme:light;--ink:#17332b;--sub:#486157;--pine:#124237;--line:#d4ddd2;--paper:#f5f3eb}*{box-sizing:border-box}body{margin:0;background:var(--paper);color:var(--ink);font:15px/1.5 system-ui,sans-serif}main{max-width:1120px;margin:auto;padding:34px 26px 60px}h1,h2,h3,p{margin:0}h1{font:clamp(40px,6vw,70px)/1 Georgia,serif;letter-spacing:-.04em}h2{font:28px/1.2 Georgia,serif}h3{font-size:16px}p{color:var(--sub)}.kicker{color:var(--pine);font-size:11px;letter-spacing:.15em;font-weight:750;text-transform:uppercase;margin-bottom:10px}.intro{margin-top:10px;max-width:680px}.overview{display:flex;gap:12px;flex-wrap:wrap;margin:20px 0}.tile{min-width:148px;padding:10px 14px;background:#fff;border:1px solid var(--line);border-radius:8px}.tile strong{display:block;font-size:23px}.panel{border:1px solid var(--line);background:#fff;border-radius:10px;margin:14px 0;padding:17px}.controls{display:flex;justify-content:space-between;align-items:end;gap:8px;flex-wrap:wrap}.controls p{margin-top:5px}.controls label{font-size:13px;display:grid;gap:4px}.controls select{min-width:170px;max-width:100%;padding:8px;font:inherit;border:1px solid #91a59a;border-radius:5px;background:#fff;color:var(--ink)}.chain,.outcomes{display:grid;gap:13px;margin:15px 0}.chain{grid-template-columns:repeat(5,minmax(0,1fr))}.outcomes{grid-template-columns:repeat(3,minmax(0,1fr));margin-top:7px}.flow-label{font-size:12px;color:var(--sub);margin-top:12px}.node{position:relative;text-align:left;min-width:0;font:inherit;border:1px solid var(--line);border-radius:8px;min-height:105px;padding:10px;background:#f9faf7;color:var(--ink);cursor:pointer}.node .group,.node .status{display:block;font-size:12px}.node strong{display:block;line-height:1.25;margin:5px 0}.node .group{color:var(--sub)}.node .status{color:#654719}.node[data-state='linked'],.node[data-state='tied out'],.node[data-state='references']{background:#eaf3e9}.node[data-state='linked'] .status,.node[data-state='tied out'] .status,.node[data-state='references'] .status{color:#225345}.node[data-state='variance']{background:#faeee6}.chain .node:not(:last-child)::after{content:'→';position:absolute;right:-12px;top:42%;font-size:12px}.node[aria-pressed=true]{outline:2px solid #28624c;outline-offset:1px}button:focus-visible,select:focus-visible,summary:focus-visible{outline:2px solid #246450;outline-offset:2px}.detail{padding:13px 15px;background:#f4f5ee;border-radius:8px}.detail p,.detail ul{margin-top:7px}.detail ul{padding-left:20px}.record{display:grid;gap:6px;padding:8px 0}.record div{font-size:13px;overflow-wrap:anywhere}.record small{font-weight:680;display:inline-block;margin-right:7px}table{border-collapse:collapse;width:100%;font-size:13px}th,td{text-align:left;border-bottom:1px solid var(--line);padding:8px 6px;vertical-align:top;overflow-wrap:anywhere}th[scope=col]{color:var(--sub)}summary{cursor:pointer;font-weight:650}.log{font-size:13px;margin-top:6px}.muted{margin:6px 0;font-size:13px;color:var(--sub)}[hidden]{display:none!important}
 .entry-flow{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;margin:14px 0}.entry-flow>div{border:1px solid var(--line);border-radius:8px;padding:12px;min-width:0}.entry-flow>div:nth-child(2){background:#eaf3e9}.entry-links{list-style:none;padding:0;margin:7px 0 0;max-height:270px;overflow:auto}.entry-links li{border-bottom:1px solid var(--line);padding:5px 0}.entry-links button{border:0;background:none;padding:2px;color:var(--pine);font:inherit;text-align:left;text-decoration:underline;cursor:pointer;overflow-wrap:anywhere}.entry-links small{display:block;color:var(--sub);overflow-wrap:anywhere}.entry-flow .record strong{overflow-wrap:anywhere}
 .drop-zone{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:9px;border:1px dashed #789387;border-radius:8px;padding:14px;margin-top:13px;background:#f6f9f3}.drop-zone[data-drag=true]{border-color:#124237;outline:2px solid #548670}.actions{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin:12px 0 0}.action{font:inherit;font-size:14px;font-weight:650;border:1px solid #789387;background:#fff;color:var(--pine);padding:7px 11px;border-radius:5px;cursor:pointer}.action.primary{background:var(--pine);color:#fff;border-color:var(--pine)}.action:disabled{opacity:.55;cursor:default}.import-editor{margin-top:13px;padding-top:13px;border-top:1px solid var(--line)}.import-editor select,.import-editor input{width:100%;min-width:0;border:1px solid #91a59a;border-radius:5px;padding:7px;font:inherit;color:var(--ink);background:#fff}.import-fields{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(190px,100%),1fr));gap:8px;margin:9px 0}.import-fields label{display:grid;gap:3px;min-width:0;font-size:13px;align-content:start}.import-editor details{margin:12px 0}.import-editor p,.import-editor li{overflow-wrap:anywhere}.import-editor ul{padding-left:19px}.import-editor li .action{margin-left:8px}.import-message[data-error=true]{color:#8e3023}.trace-origin{margin-top:12px}
@@ -41,6 +43,7 @@
 <section class="panel" id="entry-panel" aria-label="Trace any entry">
 <div class="controls"><div><h2>Trace any entry</h2><p>Choose a record. Follow any link to make it the new starting point.</p></div><label>Starting record<select id="entries"></select></label></div>
 <section class="cycle-map" aria-labelledby="cycle-title"><h3 id="cycle-title" tabindex="-1">Billing cycle</h3><p class="cycle-context" id="cycle-context"></p>
+<div class="single-scope" id="single-scope" hidden></div>
 <div class="cycle-grid">
 <section aria-label="Likely upstream"><h4>Likely upstream</h4><div class="cycle-stack" id="cycle-upstream"></div></section>
 <section aria-label="Starting point"><h4>Starting point</h4><div class="cycle-anchor" id="cycle-anchor"></div></section>
@@ -69,8 +72,11 @@
 <p class="flow-label">Evidence connected to that invoice</p><div class="outcomes" id="outcomes"></div>
 <div class="detail" id="detail" aria-live="polite"></div>
 </section>
-<section class="panel"><h2>Trace gaps by record type</h2><p class="muted">Missing links and references that still need a record. Use the selected entry for the specific next question.</p>
-<table><thead><tr><th scope="col">Record type</th><th scope="col">Records</th><th scope="col">Upstream gaps</th><th scope="col">Downstream gaps</th><th scope="col">Record issues</th></tr></thead><tbody id="entry-coverage"></tbody></table></section>
+<section class="panel"><h2 id="gap-chart-title">Trace gaps by record type</h2>
+<figure class="gap-chart" aria-labelledby="gap-chart-title">
+<div class="gap-chart-legend" id="gap-chart-legend"></div><ul class="gap-chart-rows" id="entry-coverage"></ul>
+<figcaption>Bars share a scale and count issues among supplied records. The cycle shows missing related records and references.</figcaption>
+</figure></section>
 <section class="panel" id="empty" hidden><h2>Invoice detail</h2><p>There is no mapped invoice in this review. Use Trace any entry to follow the supplied records or inspect the input findings for mapping candidates.</p></section>
 <section class="panel" id="invoice-coverage"><h2>Gap summary</h2><p class="muted">Counts indicate what the supplied records leave open. They do not measure production coverage or the quality of a team’s records.</p><table><thead><tr><th scope="col">Workflow stage</th><th scope="col">Invoices to review</th><th scope="col">Ask for</th></tr></thead><tbody id="gaps"></tbody></table></section>
 <section class="panel"><h2>Input findings</h2><div id="findings"></div></section>
@@ -81,6 +87,7 @@
 <section>
 <div class="controls"><label id="record-choice-label" hidden>Record to preview<select id="record-choice"></select></label></div>
 <p id="record-check"></p>
+<p class="muted" id="record-provenance" hidden></p>
 <div class="preview-table"><table aria-label="Record fields"><thead><tr><th scope="col">Field</th><th scope="col">Value</th><th scope="col">Evidence</th></tr></thead><tbody id="preview-rows"></tbody></table></div>
 <div id="preview-sections"></div>
 </section>
@@ -151,6 +158,10 @@ function renderRecordPreview() {
     data.cycle_preview ? 'Supplied record · type and mappings need review' : 'Supplied record';
   get('record-check').textContent = previewCheck;
   get('record-check').hidden = !previewCheck;
+  const provenance = get('record-provenance');
+  const origin = entry?.reference_from;
+  provenance.hidden = !origin;
+  provenance.textContent = origin ? `ID from ${origin.label} · ${origin.id} · field ${origin.field}` : '';
   const rows = get('preview-rows');
   rows.replaceChildren();
   for (const field of view.rows) {
@@ -343,6 +354,49 @@ function renderCycle(entry) {
     }
   }
 }
+const gapSeries = [
+  ['upstream_gaps', 'Upstream gaps', 'gap-upstream'],
+  ['downstream_gaps', 'Downstream gaps', 'gap-downstream'],
+  ['record_gaps', 'Record issues', 'gap-record'],
+];
+function renderGapChart(coverage) {
+  get('gap-chart-legend').replaceChildren(...gapSeries.map(([, title, color]) => el('span', title, 'gap-key ' + color)));
+  const chart = get('entry-coverage');
+  chart.replaceChildren();
+  const max = Math.max(1, ...coverage.map(item => item.records));
+  for (const item of coverage) {
+    const row = el('li', undefined, 'gap-chart-row');
+    const heading = el('div', undefined, 'gap-chart-type');
+    heading.append(el('strong', item.type), el('small', `${item.records} supplied`));
+    const values = el('div', undefined, 'gap-chart-values');
+    for (const [key, title, color] of gapSeries) {
+      const count = item[key];
+      const metric = el('div', undefined, 'gap-metric ' + color);
+      metric.setAttribute('role', 'img');
+      metric.setAttribute('aria-label', `${title} for ${item.type} · ${count}`);
+      const track = el('span', undefined, 'gap-track');
+      const fill = el('span', undefined, 'gap-fill');
+      fill.style.width = (count / max * 100) + '%';
+      track.append(fill);
+      metric.append(track, el('span', String(count)));
+      values.append(metric);
+    }
+    row.append(heading, values);
+    chart.append(row);
+  }
+  if (!coverage.length) chart.append(el('li', 'No supplied records to chart.', 'muted'));
+}
+function renderSingleScope() {
+  const scope = get('single-scope');
+  scope.hidden = !data.single_record;
+  scope.replaceChildren();
+  if (scope.hidden) return;
+  const origin = data.graph.entries.find(record => record.state !== 'reference only');
+  scope.append(el('h4', 'Single-record evidence scope'), el('p', 'Evidence source · ' + entryLabel(origin)),
+    el('p', 'Related records supplied · 0. Related previews show direct ID references and fields to request.'));
+  const ignored = data.single_record.ignored_rows;
+  if (ignored) scope.append(el('p', `Excluded ${ignored} relationship or lineage ${ignored === 1 ? 'row' : 'rows'} outside the supplied record.`));
+}
 function renderEntry() {
   const entry=data.graph.entries[Number(entrySelect.value)];
   if (!entry) return;
@@ -375,14 +429,11 @@ for(const entry of data.graph.entries){const option=el('option',entryLabel(entry
 const firstAggregate=data.graph.entries.find(entry=>entry.type==='aggregate' && entry.state==='record present');
 if(firstAggregate)entrySelect.value=String(firstAggregate.node);
 renderEntry();
-for (const item of data.graph.coverage) {
-  const row=el('tr');const head=el('th',item.type);head.scope='row';
-  row.append(head,...[item.records,item.upstream_gaps,item.downstream_gaps,item.record_gaps].map(value=>el('td',String(value))));
-  get('entry-coverage').append(row);
-}
+renderSingleScope();
+renderGapChart(data.graph.coverage);
 get('invoice-panel').hidden=!data.invoices.length;
-get('empty').hidden=data.interactive_import || Boolean(data.invoices.length);
-get('invoice-coverage').hidden=Boolean(data.interactive_import);
+get('empty').hidden=data.interactive_import || Boolean(data.single_record) || Boolean(data.invoices.length);
+get('invoice-coverage').hidden=Boolean(data.interactive_import || data.single_record);
 for (const [index,invoice] of data.invoices.entries()){ const option=el('option',invoice.label);option.value=String(index);get('invoices').append(option); }
 renderInvoice();
 for (const item of data.coverage) {

@@ -146,7 +146,7 @@
     try {
       renderMap(buildMap([point], true));
       get('show-sample').hidden = false;
-      get('trace-origin').textContent = 'Showing a suggested cycle from one record. Review its type or field mappings to refine it.';
+      get('trace-origin').textContent = 'Single-record trace. Review the type or field mappings to refine the inferred steps.';
       message('One record loaded. The billing cycle shows likely steps and open questions.');
       if (focus) {
         get('cycle-title').focus({preventScroll: true});
@@ -227,6 +227,7 @@
     const kind = namedTypes.has(selected) ? 'event' : selected;
     if (row.kind !== kind) importer.setKind(row, kind);
     row.eventType = namedTypes.get(selected) || '';
+    row.eventNameReviewed = Boolean(row.eventType);
     row.basis = 'Type selected for review';
     renderEditor();
     refreshLabel(row);
@@ -236,6 +237,7 @@
   get('event-name').addEventListener('input', event => {
     const row = rows()[Number(reviewRecord.value)];
     row.eventType = event.target.value;
+    row.eventNameReviewed = true;
     refreshLabel(row);
     flagPending();
     showSinglePreview();
@@ -269,7 +271,8 @@
     try {
       const report = buildMap(all, false);
       renderMap(report);
-      get('trace-origin').textContent = 'Showing your imported records. The map traces relationships and flags gaps.';
+      get('trace-origin').textContent = report.single_record ? 'Single-record trace. Field mappings are confirmed.' :
+        'Showing your imported records. The map traces relationships and flags gaps.';
       get('show-sample').hidden = false;
       message(`Built the map for ${all.length} imported record${all.length === 1 ? '' : 's'}.`);
       get('entries').focus();

@@ -211,7 +211,8 @@ function createTraceImport(config) {
   };
 
   function fieldNames(kind) {
-    return [...commonFields, ...(roleFields[kind] || [])];
+    return [...new Set([...commonFields, ...(roleFields[kind] || []),
+      ...Object.keys(config.preview_profiles.references[kind] || {})])];
   }
 
   function candidates(row, field) {
@@ -273,6 +274,9 @@ function createTraceImport(config) {
     if (rows.some(row => !row.kind)) throw Error('Choose an event type for each unclassified record.');
     if (rows.some(row => row.kind === 'event' && !row.eventType.trim())) throw Error('Enter a name for each custom event type.');
     const nodes = [], byKey = new Map(), collisions = new Set(), edges = new Map(), gaps = [];
+    const singleRecord = rows.length === 1;
+    const ignoredRows = singleRecord ? importedLinks.length + reviewedLinks.length + lineage.length : 0;
+    if (singleRecord) { importedLinks = []; reviewedLinks = []; lineage = []; }
     const counts = new Map();
     for (const row of rows) {
       const evidence = mapped(row);
@@ -280,6 +284,7 @@ function createTraceImport(config) {
       delete evidence.id;
       const node = {node: nodes.length, type: row.kind, label: config.types[row.kind], id, evidence, classification: row.basis,
         state: 'record present', gaps: [], upstream: [], downstream: [], guidance: []};
+      if (row.eventNameReviewed) node.reviewer_event_label = true;
       node.observed_fields = dimensions.observe(row.raw);
       node.preview = previews.capture(row.raw, row.kind, config.preview_profiles);
       if (row.kind === 'report' || row.kind === 'aggregate') node.declared_dimensions = dimensions.declared(row.raw);
@@ -337,20 +342,35 @@ function createTraceImport(config) {
       if (edges.size > 6000) throw Error('Narrow this review to fewer relationships.');
     }
 
+    function referenceFromRecord(owner, target, field, direction) {
+      if (!target || target === owner) return;
+      target.reference_from ??= {id:owner.id, label:owner.label, field};
+      const basis = 'From supplied field ' + field;
+      if (direction === 'upstream') link(target, owner, basis);
+      else link(owner, target, basis);
+    }
+
     for (const [index, row] of rows.entries()) {
       const node = nodes[index], evidence = node.evidence;
       if (node.state !== 'record present') continue;
-      if (['payment', 'credit_memo', 'debit_memo', 'statement', 'journal'].includes(row.kind) && evidence.invoice_id)
+      if (singleRecord) {
+        for (const [field, [kind, direction]] of Object.entries(config.preview_profiles.references[row.kind] || {})) {
+          if (!evidence[field]) continue;
+          const path = row.fields[row.mapping[field]]?.path.join('.') || field;
+          referenceFromRecord(node, resolve({kind, id:evidence[field]}), path, direction);
+        }
+      }
+      if (!singleRecord && ['payment', 'credit_memo', 'debit_memo', 'statement', 'journal'].includes(row.kind) && evidence.invoice_id)
         link(resolve({kind: 'invoice', id: evidence.invoice_id}), node, preview ? 'Suggested invoice ID' : 'Reviewed invoice ID');
-      if (row.kind === 'invoice' && evidence.journal_entry) {
+      if (!singleRecord && row.kind === 'invoice' && evidence.journal_entry) {
         const journal = resolve({kind: 'journal', id: evidence.journal_entry});
         if (journal?.evidence.invoice_id && journal.evidence.invoice_id !== node.id)
           node.gaps.push('Invoice and journal point to different invoice IDs.');
         else link(node, journal, preview ? 'Suggested journal ID' : 'Reviewed journal ID');
       }
-      if (row.kind === 'event' && evidence.original_id)
+      if (!singleRecord && row.kind === 'event' && evidence.original_id)
         link(resolve({kind: 'event', id: evidence.original_id}), node, preview ? 'Suggested original event ID' : 'Reviewed original event ID');
-      if (row.kind === 'calculation' && evidence.assignment_id)
+      if (!singleRecord && row.kind === 'calculation' && evidence.assignment_id)
         link(resolve({kind: 'policy', id: evidence.assignment_id}), node, preview ? 'Suggested policy assignment ID' : 'Reviewed policy assignment ID');
       if (row.kind === 'aggregate') {
         const members = get(row.raw, 'members');
@@ -359,11 +379,15 @@ function createTraceImport(config) {
         if (Array.isArray(members) && members.length) {
           if (members.length > 500) throw Error('A rollup can list up to 500 contributor references.');
           const unique = new Set();
-          for (const member of members) {
+          for (const [memberIndex, member] of members.entries()) {
             const target = resolve(member);
             if (!target) node.gaps.push('A contributor reference needs a supported type and unique ID.');
             else if (unique.has(target.node)) node.gaps.push('A contributor is listed more than once.');
-            else { unique.add(target.node); link(target, node, 'Supplied contributor reference'); }
+            else {
+              unique.add(target.node);
+              if (singleRecord) referenceFromRecord(node, target, `members[${memberIndex}].id`, 'upstream');
+              else link(target, node, 'Supplied contributor reference');
+            }
           }
           if (get(row.raw, 'members_complete') !== true) node.gaps.push('Confirm contributor completeness for this period and measure.');
         } else if (!evidence.manifest_ref) {
@@ -461,7 +485,8 @@ function createTraceImport(config) {
     return {input_count: fileCount, graph: {entries: nodes, links: edges.size, coverage: [...coverage.values()],
       link_gaps: [...new Set(gaps)]}, invoices: [], coverage: [], unattached: [], duplicate_invoice_ids: [],
       inputs: [{input: 'review', recognized: Object.fromEntries(counts), unmapped_count: counts.get('unmapped') || 0}],
-      interactive_import: true, cycle_preview: preview};
+      interactive_import: true, cycle_preview: preview,
+      single_record: singleRecord ? {ignored_rows:ignoredRows} : null};
   }
 
   return {parse, records, prepare, fieldNames, candidates, setKind, eventKinds, mapped, build};

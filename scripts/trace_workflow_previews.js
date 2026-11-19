@@ -42,7 +42,8 @@ const tracePreviews = (() => {
     const rows = [...keys].map(key => {
       const value = fields[key];
       if (value === undefined) return {field:label(key), status:supplied ? 'Not supplied' : 'To confirm'};
-      const status = key === 'columns' ? 'Declared' : supplied ? 'Supplied' : 'Reference';
+      const status = key === 'columns' ? 'Declared' : key === 'event_type' && entry?.reviewer_event_label ? 'Reviewer label' :
+        supplied ? 'Supplied' : 'Reference';
       return {field:label(key), value, status};
     });
     const sections = (profiles.sections_by_type[kind] || []).map(section => {

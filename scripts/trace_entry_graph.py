@@ -104,7 +104,7 @@ def preview_values(record, kind):
     return {'fields': fields(record, PREVIEW_PROFILES['fields'][kind]), 'sections': sections}
 
 
-def build_entry_graph(groups, sources, input_findings, lineage):
+def build_entry_graph(groups, sources, input_findings, lineage, *, single_record=False):
     items = [(kind, row) for kind, rows in groups.items() for row in rows]
     for payload in sources:
         if isinstance(payload, dict) and 'entries' in payload:
@@ -168,13 +168,26 @@ def build_entry_graph(groups, sources, input_findings, lineage):
             return
         edges[(before, after)] = basis
 
+    def record_reference(owner, target, field, direction):
+        if target == owner:
+            return
+        before, after = (target, owner) if direction == 'upstream' else (owner, target)
+        link(before, after, 'From supplied field ' + field)
+        if target in nodes and nodes[target]['state'] == 'reference only':
+            nodes[target].setdefault('reference_from', {'id': owner[1], 'label': TYPES[owner[0]], 'field': field})
+
     for kind, row in items:
         identity = (kind, trace.ref(row.get('id')))
         if identity not in nodes:
             continue
-        if kind in ('payment', 'credit_memo', 'debit_memo', 'statement', 'journal') and (invoice_id := trace.ref(row.get('invoice_id'))):
+        if single_record:
+            for field, (target_kind, direction) in PREVIEW_PROFILES['references'].get(kind, {}).items():
+                if target_id := trace.ref(row.get(field)):
+                    path = field + '.id' if isinstance(row[field], dict) else field
+                    record_reference(identity, (target_kind, target_id), path, direction)
+        if not single_record and kind in ('payment', 'credit_memo', 'debit_memo', 'statement', 'journal') and (invoice_id := trace.ref(row.get('invoice_id'))):
             link(('invoice', invoice_id), identity, 'Recorded invoice ID')
-        if kind == 'invoice' and (journal_id := trace.ref(row.get('journal_entry'))):
+        if not single_record and kind == 'invoice' and (journal_id := trace.ref(row.get('journal_entry'))):
             journal = by_identity.get(('journal', journal_id), {})
             if trace.ref(journal.get('invoice_id')) not in {None, identity[1]}:
                 nodes[identity]['gaps'].append('Invoice and journal point to different invoice IDs.')
@@ -185,7 +198,7 @@ def build_entry_graph(groups, sources, input_findings, lineage):
             if not isinstance(members, list) or len(members) > 500:
                 raise ValueError('Provide a list of up to 500 aggregate members')
             known_members = set()
-            for member in members:
+            for index, member in enumerate(members):
                 reference = key(member)
                 if not reference:
                     nodes[identity]['gaps'].append('A contributing record is missing its kind or stable ID.')
@@ -193,7 +206,10 @@ def build_entry_graph(groups, sources, input_findings, lineage):
                     nodes[identity]['gaps'].append('A contributing record appears more than once. Confirm whether the grain allows repeats.')
                 else:
                     known_members.add(reference)
-                    link(reference, identity, 'Supplied contributor reference')
+                    if single_record:
+                        record_reference(identity, reference, f'members[{index}].id', 'upstream')
+                    else:
+                        link(reference, identity, 'Supplied contributor reference')
             definition = nodes[identity]['evidence']
             missing = [name.replace('_', ' ') for name in ('measure', 'grain', 'period_start', 'period_end', 'basis') if not definition.get(name)]
             if missing:
@@ -202,7 +218,7 @@ def build_entry_graph(groups, sources, input_findings, lineage):
                 nodes[identity]['gaps'].append('No contributor list or query manifest supplied. The total cannot establish its membership.')
             elif row.get('members_complete') is not True:
                 nodes[identity]['gaps'].append('Contributor completeness has not been confirmed for this measure and period.')
-    for payload in sources:
+    for payload in [] if single_record else sources:
         for row in explicit_links(payload):
             before, after = key(row.get('from')), key(row.get('to'))
             if before and after:
