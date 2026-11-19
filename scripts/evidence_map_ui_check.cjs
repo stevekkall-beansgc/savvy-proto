@@ -45,12 +45,12 @@ async function check() {
     await startingRecord.selectOption({label:'Report or export · report-demo'});
     const chart = page.getByRole('figure',{name:'Trace gaps by record type',exact:true});
     assert.ok(await chart.locator('.cycle-card[data-evidence=supplied]').count() > 0);
-    const expected = page.getByRole('button',{name:'Preview Billing rollup',exact:true});
+    const expected = page.getByRole('button',{name:'Preview Credit or debit memo',exact:true});
     await expected.click();
-    assert.deepEqual(await field('Total amount').getByRole('cell').allTextContents(), ['—','To confirm']);
+    assert.deepEqual(await field('Amount in minor units').getByRole('cell').allTextContents(), ['—','To confirm']);
     await page.keyboard.press('Escape');
     await preview.waitFor({state:'hidden'});
-    await page.waitForFunction(() => document.activeElement.getAttribute('aria-label') === 'Preview Billing rollup');
+    await page.waitForFunction(() => document.activeElement.getAttribute('aria-label') === 'Preview Credit or debit memo');
     await page.getByRole('button',{name:'Preview Campfire accounting',exact:true}).click();
     assert.deepEqual(await field('Record ID').getByRole('cell').allTextContents(), ['journal-demo','Supplied']);
     assert.match(await preview.getByRole('table',{name:'Supplied rows'}).innerText(), /gl-demo/);
@@ -68,6 +68,11 @@ async function check() {
 
     await page.getByRole('button',{name:'Try one rollup',exact:true}).click();
     await chart.locator('#cycle-anchor[data-evidence=start]').getByText(/monthly-billing-rollup/).waitFor();
+    const rollupPath = chart.getByRole('region', {name:'Invoice rollup',exact:true});
+    assert.deepEqual(await rollupPath.locator('.process-steps > li').evaluateAll(steps => steps.map(step => step.dataset.step)),
+      ['source','normalized','calculation','invoice','aggregate','reporting']);
+    await rollupPath.getByRole('region', {name:'Independent input for Fee calculation',exact:true})
+      .getByRole('button',{name:'Preview Terms and rate assignment',exact:true}).waitFor();
     await chart.locator('.cycle-card[data-evidence=partial]').getByRole('button',{name:'Preview Savvy invoice',exact:true}).click();
     const contribution = preview.getByRole('table',{name:'Illustrative invoice contribution',exact:true});
     assert.deepEqual(await contribution.getByRole('cell').allTextContents(),
@@ -96,7 +101,7 @@ async function check() {
     assert.match(await scope.innerText(), /Related records supplied · 0/);
     assert.match(await scope.innerText(), /Excluded 1 relationship or lineage row/);
     await chart.locator('#cycle-anchor[data-evidence=start]').waitFor();
-    await chart.locator('#cycle-downstream .cycle-card[data-evidence=partial]').getByRole('button',{name:'Preview Campfire accounting'}).waitFor();
+    await chart.locator('.cycle-card[data-stage=journal][data-evidence=partial]').getByRole('button',{name:'Preview Campfire accounting'}).waitFor();
     assert.ok(await chart.locator('.cycle-card[data-evidence=missing]').count() > 0);
     assert.equal(await chart.locator('.cycle-card[data-evidence=supplied]').count(), 0);
     assert.doesNotMatch(await startingRecord.innerText(), /outside-reference|report-demo/);

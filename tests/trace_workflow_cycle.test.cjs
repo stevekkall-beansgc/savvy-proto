@@ -2,7 +2,7 @@
 
 const assert = require('node:assert/strict');
 const test = require('node:test');
-const {plan, rollupContributor} = require('../scripts/trace_workflow_cycle.js');
+const {creationFlow, rollupContributor} = require('../scripts/trace_workflow_cycle.js');
 const {observe, review, gapRows, gapCsv} = require('../scripts/trace_workflow_dimensions.js');
 const {capture, model} = require('../scripts/trace_workflow_previews.js');
 const profiles = require('../scripts/trace_record_profiles.json');
@@ -11,41 +11,70 @@ function point(type, evidence = {}, links = {}) {
   return {type, evidence, id: 'synthetic-record', upstream: [], downstream: [], ...links};
 }
 
-test('an unexplained rollup leaves the amount basis and cycle branches open', () => {
-  const cycle = plan(point('aggregate', {total_amount: '100.00', currency: 'USD'}), []);
-  assert.match(cycle.context, /basis is unclear/);
-  assert.ok(cycle.identityFields.includes('Basis · unknown'));
-  assert.ok(cycle.identityFields.includes('Reported total · 100.00 USD'));
-  assert.ok(cycle.upstream.every(card => card.state === 'conditional' && !card.actual.length));
-  assert.ok(cycle.downstream.every(card => card.state === 'conditional'));
+const mainSteps = flow => flow.process[0].steps;
+const stepKeys = steps => steps.map(step => step.key);
+
+test('an unexplained rollup displays possible inputs outside the creation sequence', () => {
+  const flow = creationFlow(point('aggregate', {total_amount:'100.00', currency:'USD'}), []);
+  const [rollup, report] = mainSteps(flow);
+  assert.match(flow.context, /basis is unclear/);
+  assert.ok(flow.identityFields.includes('Reported total · 100.00 USD'));
+  assert.deepEqual(stepKeys(mainSteps(flow)), ['aggregate','reporting']);
+  assert.match(rollup.inputs.label, /Possible inputs/);
+  assert.deepEqual(stepKeys(rollup.inputs.steps), ['calculation','invoice','payment']);
+  assert.equal(report.state, 'expected');
 });
 
-test('invoice rollups suggest issued invoices upstream and leave consumers conditional', () => {
-  const cycle = plan(point('aggregate', {measure: 'Original invoice total'}), []);
-  assert.equal(cycle.upstream.find(card => card.title === 'Savvy invoice').state, 'expected');
-  assert.ok(!cycle.downstream.some(card => card.title === 'Savvy invoice'));
-  assert.equal(cycle.downstream.find(card => card.title === 'Campfire accounting').state, 'conditional');
+test('invoice rollups put issue before aggregation and feed policy into the calculation separately', () => {
+  const flow = creationFlow(point('aggregate', {measure:'Original invoice total'}), []);
+  const steps = mainSteps(flow);
+  assert.deepEqual(stepKeys(steps), ['source','normalized','calculation','invoice','aggregate','reporting']);
+  assert.deepEqual(stepKeys(steps[2].inputs.steps), ['policy']);
+  assert.equal(steps[3].state, 'expected');
+  assert.equal(steps[4].isAnchor, true);
+  assert.equal(steps[4].action, 'Sum issued invoices');
 });
 
-test('a rollup of invoice payments suggests cash activity', () => {
-  const cycle = plan(point('aggregate', {measure: 'Invoice payments'}), []);
-  assert.match(cycle.context, /cash or accounting activity/);
-  assert.equal(cycle.upstream.find(card => card.title === 'Cash and application').state, 'conditional');
+test('cash amounts roll up applied payments after invoice issuance', () => {
+  const flow = creationFlow(point('aggregate', {measure:'Invoice payments'}), []);
+  assert.deepEqual(stepKeys(mainSteps(flow)).slice(3), ['invoice','payment','aggregate','reporting']);
+  assert.equal(mainSteps(flow)[4].action, 'Apply confirmed cash');
 });
 
-test('supplied invoice and unresolved journal show distinct evidence states', () => {
-  const cycle = plan(point('aggregate', {}, {upstream: [{node: 0}], downstream: [{node: 1}]}), [
-    {type: 'invoice', state: 'record present'}, {type: 'journal', state: 'reference only'},
+test('journal references retain partial status at the posting step without filling the missing package', () => {
+  const flow = creationFlow(point('invoice', {}, {downstream:[{node:0}]}),
+    [{type:'journal', state:'reference only'}], {singleRecord:true});
+  const steps = mainSteps(flow);
+  assert.deepEqual(stepKeys(steps).slice(3), ['invoice','package','journal','reporting']);
+  assert.equal(steps[4].state, 'expected');
+  assert.equal(steps[5].state, 'reference');
+});
+
+test('payout requests feed settlement alongside the payable produced by the engine', () => {
+  const flow = creationFlow(point('event', {event_type:'payout_request'}), []);
+  const steps = mainSteps(flow);
+  assert.deepEqual(stepKeys(steps), ['source','normalized','calculation','payable','payout']);
+  assert.equal(steps[4].inputs.steps[0].isAnchor, true);
+  assert.match(flow.context, /confirmation that cash moved/);
+});
+
+test('the source path branches into the client and earnings workflows after the calculation', () => {
+  const {process} = creationFlow(point('source'), []);
+  assert.deepEqual(process.map(track => stepKeys(track.steps)), [
+    ['source','normalized','calculation'], ['invoice','statement'], ['payable','payout'],
   ]);
-  assert.equal(cycle.upstream.find(card => card.title === 'Savvy invoice').state, 'linked');
-  assert.equal(cycle.downstream.find(card => card.title === 'Campfire accounting').state, 'reference');
+  assert.deepEqual(process.slice(1).map(track => track.from), ['Fee calculation','Fee calculation']);
 });
 
-test('payout requests leave settlement conditional even when an ID is present', () => {
-  const cycle = plan(point('event', {event_type: 'payout_request'}), []);
-  assert.match(cycle.context, /confirmed cash movement/);
-  assert.equal(cycle.upstream.find(card => card.title === 'Earnings and payable').state, 'expected');
-  assert.equal(cycle.downstream.find(card => card.title === 'Payout and settlement').state, 'conditional');
+test('all supported starting records appear once in their process', () => {
+  const allSteps = steps => steps.flatMap(step => [step, ...allSteps(step.inputs?.steps || [])]);
+  const kinds = [...Object.keys(profiles.fields), 'unmapped'];
+  for (const kind of kinds) {
+    const {process} = creationFlow(point(kind), []);
+    const anchors = allSteps(process.flatMap(track => track.steps)).filter(step => step.isAnchor);
+    assert.equal(anchors.length, 1, kind);
+    assert.ok(anchors[0].kinds.includes(kind), kind);
+  }
 });
 
 test('journal dimensions distinguish sample visibility from prototype coverage', () => {
@@ -144,8 +173,8 @@ test('single-record invoice rollups illustrate only fields supported by the roll
   assert.equal(row.currency, 'USD');
   assert.equal(row.start, '2026-10-01');
   assert.equal(row.amount, null);
-  assert.equal(plan(partial, []).upstream.find(card => card.title === 'Savvy invoice').example, null);
-  assert.equal(plan(partial, [], {singleRecord:true}).upstream.find(card => card.title === 'Savvy invoice').state, 'illustration');
+  assert.equal(mainSteps(creationFlow(partial, []))[3].example, null);
+  assert.equal(mainSteps(creationFlow(partial, [], {singleRecord:true}))[3].state, 'illustration');
 
   function withContributors(count, members) {
     const raw = {...fieldValues, contributor_count:count, ...(members ? {members} : {})};

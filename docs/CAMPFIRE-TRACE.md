@@ -64,10 +64,13 @@ record ID and reference fields, then choose `Confirm types & build map`. You can
 add a relationship between two imported records under `Confirm relationships`
 if you established the connection during the walkthrough.
 
-The cycle uses rules based on the prototype's workflow. It shows likely stages
-with evidence missing, possible branches, supplied references that still need a
-record, and links with records present. Each stage states what to ask for.
-Open `Preview record` on the starting point or choose a preview on either side.
+The flow orders records by the steps that create them. Source deliveries are
+normalized, then the billing engine combines normalized facts and an independent
+policy assignment. For an invoice rollup, issue the invoices before aggregating
+them for reporting. For an accounting trace, the invoice feeds a handoff package
+before the mock Campfire posting. When the rollup basis is unclear, the flow shows
+alternative inputs and asks which one applies. Open a stage's preview to see
+the fields to request.
 The field table separates supplied values, reference IDs and fields to confirm.
 Expected records show a blank field checklist based on the prototype. Where
 recognized fields are present, invoice lines, rollup members and journal
@@ -77,8 +80,8 @@ Related previews identify direct references and their original field paths.
 Fields outside the supplied object and separate crosswalk or lineage rows need
 their own evidence. To include them, supply the related records and confirm
 their links in a batch. The flow chart colors the starting point, supplied
-related records, partial evidence, and gaps. Its arrows show upstream and
-downstream direction.
+related records, partial evidence, and gaps. The arrows show the modeled
+creation order. The colors show which records have evidence in the trace.
 
 `Try one rollup` illustrates an invoice contribution. The preview uses the
 rollup's grain, reporting dates and currency. Where the source states that

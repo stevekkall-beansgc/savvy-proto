@@ -17,23 +17,7 @@ const traceCycle = (() => {
     event: ['Billing event or approval', ['event'], 'Event ID and revision, source or approval, effective date and any original-event reference.'],
     package: ['Accounting package', ['accounting_package'], 'Scoped document and line references, package version, treatment and posting period.'],
     reporting: ['Internal report or review', ['report'], 'Report or job name, query or extract version, and reference to the aggregated total.'],
-  };
-  const paths = {
-    source: [[], ['normalized', 'calculation', 'aggregate?', 'invoice?', 'payable?']],
-    normalized: [['source'], ['calculation', 'aggregate?', 'invoice?', 'payable?']],
-    policy: [[], ['calculation', 'invoice?', 'payable?']],
-    calculation: [['source?', 'normalized?', 'policy', 'event?'], ['aggregate?', 'invoice?', 'payable?']],
-    invoice: [['source?', 'normalized?', 'policy', 'calculation', 'event?'], ['statement?', 'adjustment?', 'payment?', 'package?', 'journal?']],
-    payable: [['event?', 'calculation'], ['statement?', 'payout?', 'journal?']],
-    payout: [['event?', 'payable'], ['statement?', 'journal?']],
-    statement: [['calculation', 'invoice?', 'payable?', 'aggregate?'], ['reporting?']],
-    credit_memo: [['event?', 'invoice'], ['payment?', 'statement?', 'journal?']],
-    debit_memo: [['event?', 'invoice'], ['payment?', 'statement?', 'journal?']],
-    payment: [['invoice', 'adjustment?'], ['statement?', 'journal?']],
-    journal: [['package?', 'invoice?', 'aggregate?', 'adjustment?', 'payment?', 'payout?'], ['reporting?']],
-    accounting_package: [['invoice?', 'adjustment?', 'payment?'], ['journal?', 'reporting?']],
-    report: [['calculation?', 'aggregate?', 'invoice?', 'journal?'], []],
-    event: [['source?', 'policy?'], ['calculation?', 'invoice?', 'payable?', 'payout?']],
+    unmapped: ['Unclassified record', ['unmapped'], 'Confirm the object type and which process creates it.'],
   };
 
   function rollupContributor(entry) {
@@ -58,77 +42,8 @@ const traceCycle = (() => {
     };
   }
 
-  function plan(entry, entries, {singleRecord = false} = {}) {
+  function identityFieldsFor(entry) {
     const evidence = entry.evidence;
-    let [upstream, downstream] = paths[entry.type] || [
-      ['source?', 'normalized?', 'calculation?'], ['aggregate?', 'statement?', 'journal?'],
-    ];
-    let context = null;
-    if (entry.type === 'source' || entry.type === 'normalized')
-      context = 'Normalized data and independently assigned terms can meet at the calculation.';
-    if (entry.type === 'aggregate') {
-      const basis = [evidence.measure, evidence.basis].filter(Boolean).join(' ').toLowerCase().replace(/[-_]/g, ' ');
-      if (/\b(?:bank|cash|settlement|payments?|collected|journal|ledger)\b/.test(basis)) {
-        upstream = ['invoice?', 'payable?', 'payment?', 'payout?', 'journal?'];
-        context = 'The measure or basis suggests cash or accounting activity. Confirm which events or postings the total includes.';
-      } else if (/\binvoic(?:e|es|ed|ing)\b|\bissued originals\b/.test(basis)) {
-        upstream = ['source', 'normalized', 'policy', 'calculation', 'invoice'];
-        context = 'The measure or basis suggests an invoice rollup. Confirm the contributing invoices and calculation results.';
-      } else if (/\b(?:earned|earnings|entitlements?|accruals?|assessed|calculations?)\b/.test(basis)) {
-        upstream = ['source?', 'normalized?', 'policy?', 'calculation', 'payable?'];
-        context = 'The measure or basis suggests earned or assessed amounts. Confirm the contributing results and whether they created a payable.';
-      } else {
-        upstream = ['source?', 'normalized?', 'policy?', 'calculation?', 'invoice?', 'payment?'];
-        context = 'The rollup basis is unclear. It could summarize fee results, issued invoices, or cash activity. Ask for the measure definition and contributor list.';
-      }
-      downstream = ['reporting?', 'statement?', 'invoice?', 'journal?'];
-      if (entry.upstream.some(link => entries[link.node].type === 'invoice') || upstream.includes('invoice'))
-        downstream = downstream.filter(stage => stage !== 'invoice?');
-    }
-    if (entry.type === 'event') {
-      const kind = (evidence.event_type || '').toLowerCase().replace(/[_-]+/g, ' ');
-      if (kind === 'payout request') {
-        upstream = ['payable'];
-        downstream = ['payout?', 'journal?'];
-        context = 'A payout request still needs eligibility and confirmed cash movement before it can reduce a payable.';
-      } else if (kind === 'compensation entitlement') {
-        downstream = ['calculation', 'payable', 'statement?', 'payout?'];
-        context = 'An entitlement may enter the calculation for earned compensation.';
-      } else if (kind === 'one time charge' || kind === 'one time credit') {
-        upstream = ['source?', 'policy', 'invoice?'];
-        downstream = ['calculation', 'invoice?', 'statement?', 'journal?'];
-        context = 'A one-time event can enter the billing calculation. Check the approval, effective date and any original document it corrects.';
-      } else {
-        context = 'This event type needs a workflow check. Confirm what triggers it and what consumes it.';
-      }
-    }
-    if (entry.type === 'unmapped') {
-      context = 'The record has no reliable cycle position yet. These are possible areas to investigate. Choose an event type to narrow the map.';
-    }
-
-    function stageCards(keys, direction) {
-      const connections = entry[direction];
-      const contribution = singleRecord && direction === 'upstream' ? rollupContributor(entry) : null;
-      const shown = new Set();
-      const cards = keys.map(key => {
-        const conditional = key.endsWith('?');
-        const [title, kinds, ask] = stages[key.replace(/\?$/, '')];
-        const actual = connections.filter(link => kinds.includes(entries[link.node].type));
-        actual.forEach(link => shown.add(link.node));
-        const present = actual.some(link => entries[link.node].state === 'record present');
-        const referenced = actual.some(link => entries[link.node].state === 'reference only');
-        const example = !present && !conditional && kinds.includes('invoice') ? contribution : null;
-        const state = referenced ? (present ? 'partial' : 'reference') : present ? 'linked' : example ? 'illustration' : conditional ? 'conditional' : 'expected';
-        return {title, state, ask, actual, kinds, example};
-      });
-      for (const link of connections.filter(link => !shown.has(link.node)).slice(0, 5)) {
-        const node = entries[link.node];
-        cards.push({title: node.label, kinds: [node.type], state: node.state === 'reference only' ? 'reference' : 'linked',
-          ask: 'Confirm the record’s scope and how the two records are related.', actual: [link]});
-      }
-      return cards;
-    }
-
     const identityFields = [];
     if (!entry.id) identityFields.push('Record ID · unknown');
     if (entry.type === 'aggregate') {
@@ -145,16 +60,129 @@ const traceCycle = (() => {
       if (evidence.schedule_id) identityFields.push('Schedule reference · ' + evidence.schedule_id);
     }
 
-    return {
-      context,
-      upstream: stageCards(upstream, 'upstream'),
-      downstream: stageCards(downstream, 'downstream'),
-      anchorAsk: Object.values(stages).find(([, kinds]) => kinds.includes(entry.type))?.[2],
-      identityFields,
-    };
+    return identityFields;
   }
 
-  return {plan, rollupContributor};
+  const actions = {
+    source:'Capture source delivery', normalized:'Normalize source records', policy:'Assign commercial terms',
+    calculation:'Run the billing engine', invoice:'Issue native document', aggregate:'Aggregate results',
+    reporting:'Publish report', payable:'Issue approved payable', payout:'Record payout evidence',
+    statement:'Build client statement', adjustment:'Issue reviewed correction', payment:'Apply confirmed cash',
+    package:'Prepare mock accounting handoff', journal:'Record mock posting', event:'Capture approved event or request',
+    unmapped:'Identify object type',
+  };
+
+  function creationFlow(entry, entries, {singleRecord = false} = {}) {
+    const connected = [...new Map([...entry.upstream, ...entry.downstream].map(link => [link.node, link])).values()];
+    const keyFor = kind => Object.keys(stages).find(key => stages[key][1].includes(kind));
+    const anchor = keyFor(entry.type) || 'unmapped';
+    const has = key => connected.some(link => stages[key][1].includes(entries[link.node].type));
+    const ledger = ['package', 'journal'];
+    const core = ['source', 'normalized', 'calculation'];
+    const invoice = [...core, 'invoice'];
+    const extraInputs = new Map([['calculation', {keys:['policy'], label:'Independent input'}]]);
+    const tracks = [];
+    let primary, title, rollupSource, context;
+    const eventType = (entry.evidence.event_type || '').toLowerCase().replace(/[_-]+/g, ' ');
+    const basis = [entry.evidence.measure, entry.evidence.basis].filter(Boolean).join(' ').toLowerCase().replace(/[-_]/g, ' ');
+    const cashBasis = /\b(?:bank|cash|settlement|payments?|collected|journal|ledger)\b/.test(basis);
+
+    if (anchor === 'aggregate') {
+      if (cashBasis) {
+        const posting = /\b(?:journal|ledger)\b/.test(basis);
+        primary = [...invoice, ...(posting ? ledger : ['payment']), 'aggregate', 'reporting'];
+        rollupSource = posting ? 'Aggregate journal postings' : 'Aggregate applied cash';
+        title = posting ? 'Accounting rollup' : 'Cash application rollup';
+        context = 'Confirm which cash applications or postings the measure includes.';
+      } else if (/\binvoic(?:e|es|ed|ing)\b|\bissued originals\b/.test(basis)) {
+        primary = [...invoice, 'aggregate', 'reporting'];
+        rollupSource = 'Sum issued invoices';
+        title = 'Invoice rollup';
+        context = 'The supplied measure points to issued invoices. Confirm the contributor list and the calculation behind each invoice.';
+      } else if (/\b(?:earned|earnings|entitlements?|accruals?|assessed|calculations?)\b/.test(basis)) {
+        primary = [...core, 'aggregate', 'reporting'];
+        rollupSource = 'Aggregate calculation results';
+        title = 'Calculated earnings or fees';
+        context = 'Confirm which results contribute to the rollup and which led to issued documents.';
+      } else {
+        primary = ['aggregate', 'reporting'];
+        title = 'Rollup and report';
+        context = 'The rollup basis is unclear. Request the measure definition and contributor list to determine its inputs.';
+        extraInputs.set('aggregate', {keys:['calculation', 'invoice', 'payment'], label:'Possible inputs · confirm the rollup basis'});
+      }
+    } else if (anchor === 'payable' || anchor === 'payout' || (anchor === 'event' && eventType === 'payout request')) {
+      primary = [...core, 'payable', 'payout'];
+      title = 'Advisor earnings and payout';
+      extraInputs.set('payout', {keys:['event'], label:'Payout request'});
+      context = 'Payout needs an eligible payable and confirmation that cash moved.';
+    } else if (anchor === 'event') {
+      if (eventType === 'compensation entitlement') {
+        primary = ['event', 'calculation', 'payable'];
+        title = 'Compensation entitlement';
+      } else if (eventType === 'one time charge' || eventType === 'one time credit') {
+        primary = ['event', 'calculation', 'invoice'];
+        title = 'One-time billing';
+        context = 'Confirm the event approval, effective date and any original document it corrects.';
+      } else {
+        primary = ['event'];
+        title = 'Confirm the event before choosing a process';
+        context = 'Confirm what triggers the event and which step uses it.';
+      }
+    } else if (anchor === 'adjustment' || anchor === 'payment') {
+      primary = [...invoice, anchor, ...ledger];
+      title = anchor === 'payment' ? 'Invoice, cash application and accounting' : 'Invoice correction and accounting';
+    } else if (ledger.includes(anchor) ||
+        (anchor === 'reporting' && has('journal')) ||
+        (anchor === 'invoice' && (has('journal') || has('package')))) {
+      primary = [...invoice, ...ledger, 'reporting'];
+      title = 'Invoice to accounting report';
+      extraInputs.set('package', {keys:['adjustment','payment'], label:'Additional inputs when present'});
+    } else if (anchor === 'reporting') {
+      primary = ['reporting'];
+      title = 'Report creation';
+      extraInputs.set('reporting', {keys:['calculation','aggregate'], label:'Possible report inputs'});
+    } else if (anchor === 'invoice' || anchor === 'statement') {
+      primary = has('payable') && anchor === 'statement' ? [...core,'payable','statement'] : [...invoice,'statement'];
+      title = 'Client statement';
+    } else if (anchor === 'unmapped') {
+      primary = ['unmapped'];
+      title = 'Confirm the object before choosing a process';
+      context = 'Choose an event type to place the supplied record in the flow.';
+    } else {
+      primary = core;
+      title = 'Source to calculation';
+      tracks.push({title:'Client billing', from:'calculation', keys:['invoice','statement']},
+        {title:'Advisor earnings', from:'calculation', keys:['payable','payout']});
+    }
+
+    const shown = new Set();
+    const contribution = singleRecord && rollupSource === 'Sum issued invoices' ? rollupContributor(entry) : null;
+    function step(key) {
+      const [stageTitle, kinds, ask] = stages[key];
+      const isAnchor = key === anchor;
+      const actual = isAnchor ? [] : connected.filter(link => kinds.includes(entries[link.node].type));
+      actual.forEach(link => shown.add(link.node));
+      const present = actual.some(link => entries[link.node].state === 'record present');
+      const referenced = actual.some(link => entries[link.node].state === 'reference only');
+      const example = key === 'invoice' && !present ? contribution : null;
+      const input = extraInputs.get(key);
+      return {key, title:stageTitle, action: key === 'aggregate' && rollupSource ? rollupSource : actions[key],
+        kinds, ask, isAnchor, actual, example,
+        state:present ? (referenced ? 'partial' : 'linked') : referenced ? 'reference' : example ? 'illustration' : 'expected',
+        inputs:input && {label:input.label, steps:input.keys.map(step)}};
+    }
+    const process = [{title, keys:primary}, ...tracks].map(track => ({
+      title:track.title, from:track.from && stages[track.from][0], steps:track.keys.map(step),
+    }));
+    const other = connected.filter(link => !shown.has(link.node)).map(link => {
+      const node = entries[link.node];
+      return {key:keyFor(node.type), title:node.label, kinds:[node.type], actual:[link],
+        state:node.state === 'reference only' ? 'reference' : 'linked'};
+    });
+    return {process, other, context, identityFields:identityFieldsFor(entry)};
+  }
+
+  return {rollupContributor, creationFlow};
 })();
 
 if (typeof module !== 'undefined') module.exports = traceCycle;

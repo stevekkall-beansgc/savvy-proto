@@ -7,9 +7,19 @@
 <title>Savvy · Billing evidence map</title>
 <style>
 .single-scope{margin-top:10px;padding:10px 12px;border-left:3px solid #5e8b77;background:#eef4ed;border-radius:0 6px 6px 0;overflow-wrap:anywhere}.single-scope p{font-size:13px;margin-top:3px}
-.trace-flow{margin:12px 0 0}.trace-flow h4{margin:0 0 8px;font-size:13px}
-.trace-flow .cycle-grid{grid-template-columns:minmax(0,1fr) 22px minmax(0,.85fr) 22px minmax(0,1fr);gap:8px}
-.trace-arrow{justify-self:center;align-self:start;margin-top:42px;color:#647e74;font-size:21px}
+.trace-flow{margin:16px 0 0}.trace-flow h4{margin:0 0 8px;font-size:16px}
+.process-track{margin-top:13px;padding:12px;background:#f6f8f3;border:1px solid var(--line);border-radius:9px}
+.process-track h5{margin:0 0 8px;font-size:13px}.process-from{color:var(--sub);font-size:12px;margin:-3px 0 8px}
+.process-steps,.process-inputs ol,.process-other ul{list-style:none;margin:0;padding:0}
+.process-steps{display:grid;grid-template-columns:repeat(var(--steps),minmax(0,1fr));gap:18px;align-items:start}
+.process-steps>li{position:relative;min-width:0}
+.process-steps>li:not(:last-child)::after{content:'→';position:absolute;right:-17px;top:23px;color:var(--pine);font-weight:700}
+.process-inputs{margin-top:6px}.process-inputs>p{margin:0 0 5px;font-size:11px;font-weight:650}
+.process-inputs ol,.process-other ul{display:grid;gap:5px}.process-inputs .process-node{min-height:0}
+.process-node{min-height:94px}.process-node .process-action{color:var(--pine);font-size:12px;line-height:1.25;margin:0 0 5px}
+.process-node .process-status{margin-top:5px}.process-other{margin-top:8px}
+.process-other ul{grid-template-columns:repeat(auto-fit,minmax(min(175px,100%),1fr));margin-top:7px}
+@media(max-width:870px){.process-steps{grid-template-columns:1fr;gap:22px}.process-steps>li:not(:last-child)::after{content:'↓';top:auto;bottom:-22px;left:15px;right:auto}.process-node{min-height:0}.process-inputs{border-left:2px solid var(--line);padding-left:10px;margin:7px 0 0 14px}}
 .trace-legend{display:flex;flex-wrap:wrap;gap:6px 13px;margin:6px 0 10px;color:var(--sub);font-size:12px}
 .trace-key{display:inline-flex;align-items:center;gap:5px}.trace-key::before{content:"";width:9px;height:9px;border:1px solid var(--state-line);background:var(--state-bg);border-radius:3px}
 [data-evidence=start]{--state-line:#6687b0;--state-bg:#e9f1fb}
@@ -20,15 +30,14 @@
 .trace-flow .cycle-card[data-evidence=missing]{border-style:dashed}
 .trace-flow figcaption{font-size:12px;color:var(--sub);margin-top:8px}
 #preview-example{background:#fff9ec;border:1px solid #ead6a5;border-radius:8px;padding:8px 10px;margin:10px 0}#preview-example h3{margin-top:0}
-@media(max-width:680px){.trace-flow .cycle-grid{grid-template-columns:1fr}.trace-arrow{display:none}.trace-flow .cycle-point{grid-row:1}}
 
 :root{color-scheme:light;--ink:#17332b;--sub:#486157;--pine:#124237;--line:#d4ddd2;--paper:#f5f3eb}*{box-sizing:border-box}body{margin:0;background:var(--paper);color:var(--ink);font:15px/1.5 system-ui,sans-serif}main{max-width:1120px;margin:auto;padding:34px 26px 60px}h1,h2,h3,p{margin:0}h1{font:clamp(40px,6vw,70px)/1 Georgia,serif;letter-spacing:-.04em}h2{font:28px/1.2 Georgia,serif}h3{font-size:16px}p{color:var(--sub)}.kicker{color:var(--pine);font-size:11px;letter-spacing:.15em;font-weight:750;text-transform:uppercase;margin-bottom:10px}.intro{margin-top:10px;max-width:680px}.overview{display:flex;gap:12px;flex-wrap:wrap;margin:20px 0}.tile{min-width:148px;padding:10px 14px;background:#fff;border:1px solid var(--line);border-radius:8px}.tile strong{display:block;font-size:23px}.panel{border:1px solid var(--line);background:#fff;border-radius:10px;margin:14px 0;padding:17px}.controls{display:flex;justify-content:space-between;align-items:end;gap:8px;flex-wrap:wrap}.controls p{margin-top:5px}.controls label{font-size:13px;display:grid;gap:4px}.controls select{min-width:170px;max-width:100%;padding:8px;font:inherit;border:1px solid #91a59a;border-radius:5px;background:#fff;color:var(--ink)}.chain,.outcomes{display:grid;gap:13px;margin:15px 0}.chain{grid-template-columns:repeat(5,minmax(0,1fr))}.outcomes{grid-template-columns:repeat(3,minmax(0,1fr));margin-top:7px}.flow-label{font-size:12px;color:var(--sub);margin-top:12px}.node{position:relative;text-align:left;min-width:0;font:inherit;border:1px solid var(--line);border-radius:8px;min-height:105px;padding:10px;background:#f9faf7;color:var(--ink);cursor:pointer}.node .group,.node .status{display:block;font-size:12px}.node strong{display:block;line-height:1.25;margin:5px 0}.node .group{color:var(--sub)}.node .status{color:#654719}.node[data-state='linked'],.node[data-state='tied out'],.node[data-state='references']{background:#eaf3e9}.node[data-state='linked'] .status,.node[data-state='tied out'] .status,.node[data-state='references'] .status{color:#225345}.node[data-state='variance']{background:#faeee6}.chain .node:not(:last-child)::after{content:'→';position:absolute;right:-12px;top:42%;font-size:12px}.node[aria-pressed=true]{outline:2px solid #28624c;outline-offset:1px}button:focus-visible,select:focus-visible,summary:focus-visible{outline:2px solid #246450;outline-offset:2px}.detail{padding:13px 15px;background:#f4f5ee;border-radius:8px}.detail p,.detail ul{margin-top:7px}.detail ul{padding-left:20px}.record{display:grid;gap:6px;padding:8px 0}.record div{font-size:13px;overflow-wrap:anywhere}.record small{font-weight:680;display:inline-block;margin-right:7px}table{border-collapse:collapse;width:100%;font-size:13px}th,td{text-align:left;border-bottom:1px solid var(--line);padding:8px 6px;vertical-align:top;overflow-wrap:anywhere}th[scope=col]{color:var(--sub)}summary{cursor:pointer;font-weight:650}.log{font-size:13px;margin-top:6px}.muted{margin:6px 0;font-size:13px;color:var(--sub)}[hidden]{display:none!important}
 .entry-flow{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;margin:14px 0}.entry-flow>div{border:1px solid var(--line);border-radius:8px;padding:12px;min-width:0}.entry-flow>div:nth-child(2){background:#eaf3e9}.entry-links{list-style:none;padding:0;margin:7px 0 0;max-height:270px;overflow:auto}.entry-links li{border-bottom:1px solid var(--line);padding:5px 0}.entry-links button{border:0;background:none;padding:2px;color:var(--pine);font:inherit;text-align:left;text-decoration:underline;cursor:pointer;overflow-wrap:anywhere}.entry-links small{display:block;color:var(--sub);overflow-wrap:anywhere}.entry-flow .record strong{overflow-wrap:anywhere}
 .drop-zone{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:9px;border:1px dashed #789387;border-radius:8px;padding:14px;margin-top:13px;background:#f6f9f3}.drop-zone[data-drag=true]{border-color:#124237;outline:2px solid #548670}.actions{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin:12px 0 0}.action{font:inherit;font-size:14px;font-weight:650;border:1px solid #789387;background:#fff;color:var(--pine);padding:7px 11px;border-radius:5px;cursor:pointer}.action.primary{background:var(--pine);color:#fff;border-color:var(--pine)}.action:disabled{opacity:.55;cursor:default}.import-editor{margin-top:13px;padding-top:13px;border-top:1px solid var(--line)}.import-editor select,.import-editor input{width:100%;min-width:0;border:1px solid #91a59a;border-radius:5px;padding:7px;font:inherit;color:var(--ink);background:#fff}.import-fields{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(190px,100%),1fr));gap:8px;margin:9px 0}.import-fields label{display:grid;gap:3px;min-width:0;font-size:13px;align-content:start}.import-editor details{margin:12px 0}.import-editor p,.import-editor li{overflow-wrap:anywhere}.import-editor ul{padding-left:19px}.import-editor li .action{margin-left:8px}.import-message[data-error=true]{color:#8e3023}.trace-origin{margin-top:12px}
-.cycle-map{border-top:1px solid var(--line);padding-top:16px;margin:16px 0}.cycle-context{margin-top:6px;max-width:76ch}.cycle-grid{display:grid;grid-template-columns:1fr .86fr 1fr;gap:12px;align-items:start;margin-top:14px}.cycle-grid section{min-width:0}.cycle-grid h4{font-size:13px;margin:0 0 8px}.cycle-stack{display:grid;gap:6px}.cycle-card,.cycle-anchor{background:#f9faf7;border:1px solid var(--line);border-radius:7px;padding:8px 10px;overflow-wrap:anywhere}.cycle-card strong,.cycle-anchor strong{display:block;font-size:14px}.cycle-card p,.cycle-anchor p{font-size:12px;margin-top:3px}.cycle-card[data-state=expected],.cycle-card[data-state=reference],.cycle-card[data-state=partial]{background:#fff8e7;border-color:#e2cb97}.cycle-card[data-state=conditional]{border-style:dashed}.cycle-card[data-state=linked],.cycle-anchor{background:#eaf3e9}.cycle-card .cycle-state,.cycle-anchor .cycle-state{display:block;font-size:11px;font-weight:700;color:#55472c}.cycle-card[data-state=linked] .cycle-state{color:var(--pine)}.cycle-card .entry-links{margin-top:3px;font-size:12px;max-height:124px}.cycle-card .entry-links li:last-child{border-bottom:0}.cycle-anchor .record{padding-bottom:0}.cycle-anchor .cycle-facts{border-top:1px solid var(--line);margin-top:9px;padding-top:8px}.drop-zone .actions{margin:0}body[data-generated=ready] .template-notice,body:not([data-generated=ready]) main>:not(.template-notice){display:none}
+.cycle-map{border-top:1px solid var(--line);padding-top:16px;margin:16px 0}.cycle-context{margin-top:6px;max-width:76ch}.cycle-card,.cycle-anchor{background:#f9faf7;border:1px solid var(--line);border-radius:7px;padding:8px 10px;overflow-wrap:anywhere}.cycle-card strong,.cycle-anchor strong{display:block;font-size:14px}.cycle-card p,.cycle-anchor p{font-size:12px;margin-top:3px}.cycle-card .cycle-state,.cycle-anchor .cycle-state{display:block;font-size:11px;font-weight:700;color:#55472c}.cycle-card[data-state=linked] .cycle-state{color:var(--pine)}.process-node .entry-links{margin-top:3px;font-size:12px;max-height:124px}.process-node .entry-links li:last-child{border-bottom:0}.drop-zone .actions{margin:0}body[data-generated=ready] .template-notice,body:not([data-generated=ready]) main>:not(.template-notice){display:none}
 .dimension-review{margin:16px 0;padding-top:16px;border-top:1px solid var(--line);scroll-margin:14px}.dimension-review>p{margin:5px 0 10px}.dimension-review th[scope=row]{min-width:10ch}.dimension-review td{font-size:13px}.dimension-review td:nth-child(2){min-width:10ch}.dimension-review td:nth-child(3){min-width:16ch}.dimension-review [data-coverage=missing],.dimension-review [data-coverage=dropped],.dimension-warning{color:#764815}.dimension-review td strong{display:block}.dimension-review td p{margin-top:4px}.dimension-review details{margin-top:11px}.dimension-review td details{margin-top:5px}.dimension-review td details p{margin-top:5px}.dimension-review .dimension-path{display:block;overflow-wrap:anywhere;margin:2px 0}
 .record-preview-button{border:0;padding:4px 0;margin-top:3px;background:transparent;color:var(--pine);font:inherit;font-size:12px;font-weight:650;text-decoration:underline;cursor:pointer;text-align:left}.record-dialog{width:min(660px,calc(100% - 28px));max-height:calc(100dvh - 32px);padding:0;border:1px solid var(--line);border-radius:12px;color:var(--ink);background:#fff;overflow:auto}.record-dialog::backdrop{background:#122e26b8}.record-dialog header{display:flex;align-items:start;justify-content:space-between;gap:10px;position:sticky;top:0;background:var(--paper);border-bottom:1px solid var(--line);padding:14px 16px;z-index:1}.record-dialog h2{font-size:23px;overflow-wrap:anywhere}.record-dialog h3{margin-top:14px}.record-dialog section{padding:14px 16px 20px}.record-dialog .controls{margin-bottom:8px}.record-dialog .preview-table{margin-top:10px;overflow-x:auto}.record-dialog td[data-status="To confirm"],.record-dialog td[data-status="Not supplied"]{color:#764815}.record-dialog th[scope=row]{width:38%;font-weight:600}.record-dialog table[aria-label="Record fields"] td:last-child{width:24%}#preview-example table{min-width:500px}#preview-example th:nth-child(3),#preview-example td:nth-child(4){white-space:nowrap}
-@media(max-width:680px){.cycle-grid{grid-template-columns:1fr}.cycle-grid section:nth-child(2){grid-row:1}.dimension-review table,.dimension-review tbody,.dimension-review tr,.dimension-review td,.dimension-review th{display:block}.dimension-review thead{position:absolute;clip-path:inset(50%);width:1px;height:1px;overflow:hidden}.dimension-review tr{border-bottom:1px solid var(--line);padding:6px 0}.dimension-review td,.dimension-review th{border:0;padding:2px 0}.dimension-review td::before{content:attr(data-label);display:block;font-size:11px;font-weight:680;color:var(--sub)}}
+@media(max-width:680px){.dimension-review table,.dimension-review tbody,.dimension-review tr,.dimension-review td,.dimension-review th{display:block}.dimension-review thead{position:absolute;clip-path:inset(50%);width:1px;height:1px;overflow:hidden}.dimension-review tr{border-bottom:1px solid var(--line);padding:6px 0}.dimension-review td,.dimension-review th{border:0;padding:2px 0}.dimension-review td::before{content:attr(data-label);display:block;font-size:11px;font-weight:680;color:var(--sub)}}
 @media(max-width:680px){.entry-flow{grid-template-columns:1fr}.entry-flow>div:nth-child(2){grid-row:1}.entry-links{max-height:185px}}
 @media(max-width:740px){main{padding:24px 14px}.chain{grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}.chain .node::after{display:none}.outcomes{grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}.tile{min-width:110px}.controls select{min-width:144px}.panel{padding:12px}th,td{padding:6px 4px}}
 </style>
@@ -59,11 +68,9 @@
 <section class="cycle-map" aria-labelledby="cycle-title"><h3 id="cycle-title" tabindex="-1">Billing cycle</h3><p class="cycle-context" id="cycle-context"></p>
 <div class="single-scope" id="single-scope" hidden></div>
 <figure class="trace-flow" aria-labelledby="trace-flow-title"><h4 id="trace-flow-title">Trace gaps by record type</h4><div class="trace-legend" id="trace-legend"></div>
-<div class="cycle-grid">
-<section aria-label="Likely upstream"><h4>Likely upstream</h4><div class="cycle-stack" id="cycle-upstream"></div></section>
-<span class="trace-arrow" aria-hidden="true">→</span><section class="cycle-point" aria-label="Starting point"><h4>Starting point</h4><div class="cycle-anchor" id="cycle-anchor"></div></section>
-<span class="trace-arrow" aria-hidden="true">→</span><section aria-label="Likely downstream"><h4>Likely downstream</h4><div class="cycle-stack" id="cycle-downstream"></div></section>
-</div><figcaption>Arrows show direction from upstream to downstream. Each stage shows the evidence available for its records.</figcaption></figure></section>
+<div id="process-tracks"></div><details class="process-other" id="process-other" hidden><summary>Other linked records</summary><ul id="process-related"></ul></details>
+<figcaption>Arrows show the prototype’s object creation order. Colors show which records have evidence in this trace.</figcaption>
+</figure><div class="actions" id="cycle-actions"></div></section>
 <section class="dimension-review" id="dimension-review" aria-labelledby="dimension-title" hidden>
 <div class="controls"><div><h3 id="dimension-title" tabindex="-1">Reporting dimension coverage</h3><p>Compare fields in your starting record and any linked records with the reviewed prototype.</p></div>
 <label>Show dimensions<select id="dimension-filter"><option value="all">All relevant fields</option><option value="gaps">Gaps and questions</option><option value="supplied">Found in supplied data</option><option value="profile">All reviewed dimensions</option></select></label></div>
@@ -283,9 +290,8 @@ function renderLinks(target, links) {
   target.append(list);
 }
 const cycleStates = {
-  expected: 'Likely · evidence missing', conditional: 'Possible · depends on the workflow',
-  reference: 'Reference only · record needed', linked: 'Record linked', partial: 'Some records still needed',
-  illustration: 'Example row · partial evidence',
+  expected: 'Evidence needed', reference: 'Reference only', linked: 'Record supplied',
+  partial: 'Some records needed', illustration: 'Example row',
 };
 const traceLegend = [['start','Provided input'], ['supplied','Related record supplied'],
   ['partial','Partial evidence'], ['missing','Evidence needed']];
@@ -346,70 +352,96 @@ function renderDimensions(entry) {
   }
 }
 function renderCycle(entry) {
-  const cycle = traceCycle.plan(entry, data.graph.entries, {singleRecord:Boolean(data.single_record)});
+  const flow = traceCycle.creationFlow(entry, data.graph.entries, {singleRecord:Boolean(data.single_record)});
   const scopeOrigin = data.single_record && data.graph.entries.find(record => record.state !== 'reference only');
   get('trace-legend').replaceChildren(...traceLegend.map(([state, title]) => {
     const key = el('span', title, 'trace-key');
     key.dataset.evidence = state;
     return key;
   }));
-  get('cycle-context').textContent = cycle.context || 'The cycle shows likely steps, possible branches and records connected by supplied evidence.';
-  const anchor = get('cycle-anchor');
-  anchor.dataset.evidence = entry.state === 'reference only' ? 'partial' : 'start';
-  const status = entry.state === 'reference only' ? 'Reference only' :
-    data.cycle_preview && entry.type !== 'unmapped' ? 'Supplied record · type suggested' :
-    entry.type === 'unmapped' ? 'Position uncertain' : 'Supplied record';
-  anchor.replaceChildren(el('span', status, 'cycle-state'), el('strong', entryLabel(entry)));
-  if (entry.classification) anchor.append(el('p', entry.classification));
-  for (const fact of cycle.identityFields) {
-    const row = el('p', fact);
-    if (fact.endsWith(' · unknown')) row.style.fontWeight = '650';
-    anchor.append(row);
-  }
-  if (cycle.anchorAsk) anchor.append(el('p', 'Check: ' + cycle.anchorAsk, 'cycle-facts'));
-  anchor.append(previewButton('Preview record', [{entry, kind:entry.type}], cycle.anchorAsk, 'Preview starting record'));
-  if (entry.state !== 'reference only') {
-    const actions = el('div', undefined, 'actions');
-    if (data.cycle_preview) {
-      const type = el('button', 'Review event type', 'action');
-      type.type = 'button';
-      type.addEventListener('click', () => get('review-kind').focus());
-      actions.append(type);
-    }
-    const review = el('button', 'Review reporting dimensions', 'action');
-    review.type = 'button';
-    review.addEventListener('click', () => get('dimension-title').focus());
-    actions.append(review);
-    anchor.append(actions);
-  }
-  for (const [direction, cards] of [['upstream', cycle.upstream], ['downstream', cycle.downstream]]) {
-    const stack = get('cycle-' + direction);
-    stack.replaceChildren();
-    if (!cards.length) stack.append(el('p', 'This is a boundary of the modeled cycle.', 'muted'));
-    for (const card of cards) {
-      const item = el('article', undefined, 'cycle-card');
-      item.dataset.state = card.state;
-      const suppliedInput = scopeOrigin && card.actual.length === 1 && card.actual[0].node === scopeOrigin.node;
-      item.dataset.evidence = suppliedInput ? 'start' : card.state === 'linked' ? 'supplied' :
-        ['reference', 'partial', 'illustration'].includes(card.state) ? 'partial' : 'missing';
-      item.append(el('span', suppliedInput ? 'Provided input' : cycleStates[card.state], 'cycle-state'),
-        el('strong', card.title), el('p', 'Check: ' + card.ask));
-      if (card.actual.length) {
-        const records = el('div');
-        renderLinks(records, card.actual);
-        item.append(records);
+  get('cycle-context').textContent = flow.context || '';
+
+  function renderStep(step) {
+    const row = el('li');
+    row.dataset.step = step.key;
+    const card = el('article', undefined, step.isAnchor ? 'process-node cycle-anchor' : 'process-node cycle-card');
+    card.dataset.stage = step.key;
+    if (step.action) card.append(el('p', step.action, 'process-action'));
+    card.append(el('strong', step.title));
+    if (step.isAnchor) {
+      card.id = 'cycle-anchor';
+      card.dataset.evidence = entry.state === 'reference only' ? 'partial' : 'start';
+      const status = entry.state === 'reference only' ? 'Reference only' :
+        entry.type === 'unmapped' ? 'Object type to confirm' :
+        data.cycle_preview ? 'Provided input · type suggested' : 'Provided input';
+      card.append(el('span', status, 'cycle-state process-status'), el('p', entryLabel(entry)));
+      const facts = flow.identityFields;
+      if (facts.length) {
+        const details = el('details');
+        details.append(el('summary', 'Key fields'), ...facts.map(fact => el('p', fact)));
+        card.append(details);
       }
-      const options = card.actual.map(link => {
+      card.append(previewButton('Preview record', [{entry, kind:entry.type}], step.ask, 'Preview starting record'));
+    } else {
+      const suppliedInput = scopeOrigin && step.actual.length === 1 && step.actual[0].node === scopeOrigin.node;
+      card.dataset.evidence = suppliedInput ? 'start' : step.state === 'linked' ? 'supplied' :
+        step.state === 'expected' ? 'missing' : 'partial';
+      card.append(el('span', suppliedInput ? 'Provided input' : cycleStates[step.state], 'cycle-state process-status'));
+      const options = step.actual.map(link => {
         const record = data.graph.entries[link.node];
         return {entry:record, kind:record.type};
       });
-      if (card.example) options.unshift({kind:'invoice', example:card.example});
-      if (!options.length) options.push(...card.kinds.map(kind => ({kind})));
-      const description = card.example ? 'Preview contributor row' : card.actual.length ? 'Preview records' : 'Preview expected fields';
-      item.append(previewButton(description, options, card.ask, 'Preview ' + card.title));
-      stack.append(item);
+      if (step.example) options.unshift({kind:'invoice', example:step.example});
+      if (!options.length) options.push(...step.kinds.map(kind => ({kind})));
+      const description = step.example ? 'Preview contributor row' : step.actual.length ? 'Preview records' : 'Preview fields';
+      card.append(previewButton(description, options, step.ask, 'Preview ' + step.title));
+      if (step.actual.length) {
+        const records = el('div');
+        renderLinks(records, step.actual);
+        card.append(records);
+      }
     }
+    row.append(card);
+    if (step.inputs) {
+      const inputs = el('section', undefined, 'process-inputs');
+      inputs.setAttribute('aria-label', step.inputs.label + ' for ' + step.title);
+      const label = step.inputs.label.startsWith('Possible') ? step.inputs.label : '↑ ' + step.inputs.label;
+      const list = el('ol');
+      list.append(...step.inputs.steps.map(renderStep));
+      inputs.append(el('p', label), list);
+      row.append(inputs);
+    }
+    return row;
   }
+
+  get('process-tracks').replaceChildren(...flow.process.map(track => {
+    const lane = el('section', undefined, 'process-track');
+    lane.setAttribute('aria-label', track.title);
+    const steps = el('ol', undefined, 'process-steps');
+    steps.style.setProperty('--steps', String(track.steps.length));
+    steps.setAttribute('aria-label', 'Object creation steps');
+    steps.append(...track.steps.map(renderStep));
+    lane.append(el('h5', track.title));
+    if (track.from) lane.append(el('p', 'From ' + track.from + ' →', 'process-from'));
+    lane.append(steps);
+    return lane;
+  }));
+  get('process-other').hidden = !flow.other.length;
+  get('process-other').open = false;
+  get('process-related').replaceChildren(...flow.other.map(renderStep));
+  const actions = get('cycle-actions');
+  actions.replaceChildren();
+  if (entry.state === 'reference only') return;
+  if (data.cycle_preview) {
+    const type = el('button', 'Review event type', 'action');
+    type.type = 'button';
+    type.addEventListener('click', () => get('review-kind').focus());
+    actions.append(type);
+  }
+  const review = el('button', 'Review reporting dimensions', 'action');
+  review.type = 'button';
+  review.addEventListener('click', () => get('dimension-title').focus());
+  actions.append(review);
 }
 function renderSingleScope() {
   const scope = get('single-scope');
