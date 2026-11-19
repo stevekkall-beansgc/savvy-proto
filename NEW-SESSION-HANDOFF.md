@@ -2,35 +2,44 @@
 
 ## Current review release
 
-Start with `docs/SAVVY-REVIEW.md`, `docs/FOUR-CAPABILITY-CLOSURE-VALIDATION.md`
-and `docs/DEMO-PREVIEW.md`. The owner is presenting in person on November 19 and
-explicitly requested public access to all synthetic experiences. `public_demo`
-in `deploy/device-host.json` is deliberate; do not silently restore owner-only
-access. Full app: https://savvy-proto.beanshop.top/; local: http://127.0.0.1:3104/;
-public architecture/API: https://savvy.beanshop.top/ and /api/.
+Open the [README](README.md) for the public demo and source index. Read the
+[design decisions](docs/DESIGN-DECISIONS.md) for the rationale and plan history,
+and the [closure evidence](docs/FOUR-CAPABILITY-CLOSURE-VALIDATION.md) for what was
+verified. The working demo's `public_demo` setting in `deploy/device-host.json`
+is deliberate. The [preview operations guide](docs/DEMO-PREVIEW.md) covers local
+and hosted application access.
 
 The four agreed prototype scopes are implemented and accepted: both products,
 API-driven commercial composition through one engine, durable pipeline processing,
 and complete enumerated billing/cash/refund/earnings/mock accounting corrections.
-Campfire and CLM remain mocked. Historical milestone claims below are not current
-runtime authority. The architecture includes actual services and executed results.
+Campfire and CLM remain mocked. The architecture includes actual services and
+executed results. The [evidence map](https://savvy.beanshop.top/evidence/) and
+[API reference](https://savvy.beanshop.top/api/) are independently hosted with it.
 
 Release identity belongs to the GitHub Release and annotated tag. Actual app and
 static document deployment commits belong to `.runtime/hosting/activation.json`
-and `.runtime/publication/deployment.json`. Verify both before reporting release
-alignment. Never rebuild an active frontend slot; never reset/migrate served data.
+and `.runtime/publication/deployment.json` on the hosting device. A fresh clone
+can check the [release history](https://github.com/stevekkall-beansgc/savvy-proto/releases)
+and [public build metadata](https://savvy.beanshop.top/build-metadata.json).
+Verify the actual deployment before reporting that a commit is serving. Preserve
+the active frontend slot and served data when building a candidate.
 The retained baseline DB is `savvy-billing-complete-db` at 55441; older pairs remain
 preserved. Release receipts and DB backups stay ignored under `.runtime/release`.
 
-Production auth, live connectors, hierarchy, real agreements and MCP/WebMCP remain
-future scope. Public reads show prepared examples. Demo session cookies select a separate fictional
-workspace for changes, and Start again revokes that scope. See `docs/FINANCE-ACCEPTANCE.md`
-for independent expected values and the pending Savvy Finance acceptance.
+Production auth, live connectors, hierarchy, real agreements and MCP/WebMCP
+remain future scope. Public reads show prepared examples. Demo session cookies
+select a separate fictional workspace for changes, and **Start again** revokes
+that scope. The [Finance worksheet](docs/FINANCE-ACCEPTANCE.md) records independent
+expected values and pending Savvy Finance sign-off.
 
 ## Historical implementation handoff
 
+The remaining entries describe past milestones. Their planning status, build
+slots, database ports, provider settings, and publication claims apply to those
+milestones. Use the current review release and deployment receipts above for
+operational decisions.
 
-## Four-capability closure — current work
+### Four-capability closure
 
 The user explicitly reopened the four priorities: the shared invoice foundation
 was not full completion. `docs/FOUR-CAPABILITY-CLOSURE.md` is the acceptance contract; `docs/FOUR-CAPABILITY-CLOSURE-VALIDATION.md` maps each case to implementation and proof.
@@ -46,7 +55,7 @@ uses disposable 55439, while deployment must use a newly restored retained clone
 Do not assume source completion or documentation means activation succeeded.
 
 
-## Shared billing milestone — 18 November 2026
+### Shared billing milestone — 18 November 2026
 
 Read `docs/FOUR-CAPABILITY-PLAN.md` and `docs/FOUR-CAPABILITY-VALIDATION.md`.
 The default workspace now uses shared source mappings, normalization jobs, policy
@@ -64,7 +73,7 @@ The intended new pair is candidate-b / API3109; actual success must be verified 
 `.runtime/hosting/activation.json`. Do not rebuild an active slot.
 
 
-## Eight-issue corrective milestone — 18 November 2026
+### Eight-issue corrective milestone — 18 November 2026
 
 Read `docs/EIGHT-ISSUE-FIX-PLAN.md` and `docs/EIGHT-ISSUE-VALIDATION.md` first.
 Billing corrections compare native invoice/line economics, assignments enforce
@@ -82,7 +91,7 @@ never seed retained history. Existing comparisons become stale when implementati
 bindings change; Product must explicitly compare again before review/publication.
 
 
-## OpenAPI and GraphQL reference — 18 November 2026
+### OpenAPI and GraphQL reference — 18 November 2026
 
 Public API reference: `https://savvy.beanshop.top/api/`; YAML at
 `/api/openapi.yaml`; authoritative SDL download at `/api/schema.graphql`.
@@ -100,7 +109,7 @@ Publication includes only the API HTML/YAML/SDL alongside architecture assets.
 Check `.runtime/publication/deployment.json` and public build metadata for the
 actual published commit.
 
-## Functional demo alignment — 18 November 2026
+### Functional demo alignment — 18 November 2026
 
 The February 2027 household is now the default example across Client, Product and
 Finance. Broker compensation stays distinct from client billing. Product leads
@@ -123,7 +132,7 @@ Synthetic fresh setup explicitly installs presentation examples; page reads and
 preview activation never seed. Campfire and CLM remain mocked, and the original
 deployment/data are retained for rollback.
 
-## Public architecture publication — 18 November 2026
+### Public architecture publication — 18 November 2026
 
 User requested GitHub-only code links, a public static walkthrough on
 `https://savvy.beanshop.top/`, and public source. The GitHub repository is now
@@ -145,7 +154,7 @@ verify the live `/build-metadata.json` against GitHub main before claiming a
 specific version is published. Existing full app previews and the separate
 owner-authenticated `savvy-proto.beanshop.top` route are not this public document.
 
-## Interactive architecture and source checkpoints — 18 November 2026
+### Interactive architecture and source checkpoints — 18 November 2026
 
 Prototype source checkpoint `3ce278b` is committed and pushed to
 `origin/codex/medallion-billing` in private `stevekkall-beansgc/savvy-proto`.
@@ -171,7 +180,7 @@ against exact pinned source bytes. Browser acceptance passes 199 checks, coverin
 all modals/nodes/source targets, keyboard, mobile, offline/print and read-only
 boundaries. Screenshots/report are under `.runtime/architecture`.
 
-## Disclosure-informed milestone complete — 16 November 2026
+### Disclosure-informed milestone complete — 16 November 2026
 
 Read [the latest milestone](docs/DISCLOSURE-MILESTONE.md),
 [Astra's revised plan](docs/DISCLOSURE-IMPLEMENTATION-PLAN.md),
@@ -202,7 +211,7 @@ are under `artifacts/disclosure`. No retained reset, external provider write,
 hosted deployment, GitHub push, release or new infrastructure spend occurred.
 This is a bounded fixture milestone; parent–child advisor hierarchy stays deferred.
 
-## Real Savvy disclosures — 16 November 2026
+### Real Savvy disclosures — 16 November 2026
 
 Latest preview remains **http://127.0.0.1:3104/**, left on Agreements & terms.
 Read `docs/SAVVY-DISCLOSURES-REVIEW-2026-11-16.md` for research and current gaps.
@@ -223,7 +232,7 @@ last page controls, CRS navigation, download links, Escape/focus return and no
 horizontal overflow at the current viewport. Campfire/CLM remain mocked; no pricing,
 accounting, provider, database or hosted deployment changes were made.
 
-## Current clarity revision — 16 November 2026
+### Clarity revision — 16 November 2026
 
 Read [the clarity milestone](docs/CLARITY-REVISION-2026-11-16.md).
 The latest preview is http://127.0.0.1:3104/ and was left open on the visual
@@ -245,7 +254,7 @@ desktop/mobile, sample PDF rendering and local match/reversal checks pass.
 The original $600/$600/$400/$800 accounting values are unchanged. No retained
 database reset, provider write, hosted deployment, commit or release was made.
 
-## Three-audience implementation complete — 15 November 2026
+### Three-audience implementation complete — 15 November 2026
 
 The user explicitly authorized Terra implementation, independent review and stress
 testing of [the revised plan](docs/THREE-AUDIENCE-PLAN.md), with the local preview
@@ -274,7 +283,7 @@ current earnings. Demo identities remain explicitly simulated, not authenticatio
 The planning status in the historical sections below is superseded by this
 completion record.
 
-## Current audience plan reviewed with Astra and Sol — 15 November 2026
+### Audience plan reviewed with Astra and Sol — 15 November 2026
 
 Read [Three audiences](docs/THREE-AUDIENCE-PLAN.md) before further development.
 It integrates the queued walkthrough feedback and defines Clients (brokers under
@@ -289,7 +298,7 @@ API-driven policy, Savvy billing ownership and mocked Campfire/CLM remain requir
 The advisor-account parent–child hierarchy remains explicitly deferred.
 Earlier screen exclusions are superseded only to allow this focused Finance scope.
 
-## New walkthrough feedback queued — 15 November 2026
+### New walkthrough feedback queued — 15 November 2026
 
 Read docs/UI-WALKTHROUGH-FEEDBACK-2026-11-15.md before further interface work.
 The user wants one affiliated-advisor/independent-RIA experience, book-level
@@ -300,7 +309,7 @@ for review; no application or runtime changes were made for this feedback.
 The user explicitly deferred the advisor-account parent–child hierarchy. Do not
 choose or implement parent ownership, billing rollup or inherited permissions.
 
-## Medallion implementation — 15 November 2026
+### Medallion implementation — 15 November 2026
 
 Preview availability fix: the frontend now runs as the user LaunchAgent
 `com.beanlabs.savvy-medallion.preview`, with RunAtLoad/KeepAlive and its plist in
@@ -333,7 +342,7 @@ The local data is fictional and this remains a bounded prototype. Use the new
 validation record for passed checks and explicit capability limits. No release,
 GitHub push or replacement of the existing hosted app is part of this milestone.
 
-## Next milestone planned with Astra — 15 November 2026
+### Next milestone planned with Astra — 15 November 2026
 
 Read docs/MEDALLION-PROTOTYPE-PLAN.md and docs/MEDALLION-SAMPLE-WALKTHROUGH.md.
 These are planning documents and independently checked target figures, not
@@ -355,7 +364,7 @@ Statements are derived unified views, not an alternative writable amount source.
 The walkthrough adds bonus/guarantee, payment and service-credit cases, with exact
 approval/knowledge/posting boundaries and preserved historical statement fixtures.
 
-## Full device-hosted application — 15 November 2026
+### Full device-hosted application — 15 November 2026
 
 Live: https://savvy-proto.beanshop.top/ behind owner-only Cloudflare Access.
 Private source: https://github.com/stevekkall-beansgc/savvy-proto (main).
@@ -374,7 +383,7 @@ public HTTPS origin is allowlisted; API/database ports stay loopback-only.
 Campfire/CLM remain mocked. Local port 3100 still works, but do not start a
 competing frontend while its LaunchAgent owns that port.
 
-## Product copy cleanup — 15 November 2026
+### Product copy cleanup — 15 November 2026
 
 The owner requested product-facing language without repeated “illustrative”, demo
 warnings or “end exclusive”. The current web UI removes that scaffolding across
@@ -389,7 +398,7 @@ agreement/rate dates, date editing and clearing, unchanged earnings and schedule
 reviews. The frontend was restarted at http://127.0.0.1:3100. The November 14 ZIP
 and screenshots are historical; the current source contains this later cleanup.
 
-## Current milestone — 14 November 2026
+### Workspace milestone — 14 November 2026
 
 Start with `docs/WORKSPACES-MILESTONE.md`, `docs/VALIDATION-WORKSPACES.md`,
 `docs/WORKSPACES-IMPLEMENTATION-CONTRACT.md`, `docs/REVISED-PRODUCT-PLAN.md` and
@@ -428,7 +437,7 @@ Docker data volume. Fresh setup seeds baseline; existing local volume retains
 reviewed proposals and all prior history. No real provider, data, payment,
 signature, publication, external message or production connection was added.
 
-## Original recovery instructions (historical)
+### Original recovery instructions (historical)
 
 Start a new Codex session with GPT-6.1 Sol, high reasoning. Read docs/EXECUTION-PLAN.md, docs/TECHNICAL-SPECIFICATION.md, docs/EVIDENCE-AND-SCOPE.md, and docs/CODEX-HANDOFF.md.
 
@@ -436,11 +445,11 @@ This archive contains tracked files at commit 1daac22 plus an uncommitted apps/ 
 
 Use synthetic data. Do not contact third parties, connect to production, deploy or publish without appropriate authorization. Do not alter beanshop.top. Preserve distinctions between established facts, assumptions and unverified Campfire capabilities. The previous environment lacked Ruby, Rails, PostgreSQL and Docker; verify what is available in the new environment.
 
-## Local continuation recovered on 13 November 2026
+### Local continuation recovered on 13 November 2026
 
 The archive has been restored to `/Users/stephenkall/beans/labs/savvy-prototype/advisor-payout-explorer`. Start with `docs/CONTINUATION-STATUS.md`, `docs/INTERRUPTED-WORK-REVIEW.md` and `docs/VALIDATION-CONTINUATION.md`. The Rails/Next/Postgres/GraphQL vertical slice is now runnable; the full original execution plan is not complete. Setup: `./scripts/setup.sh`, then `npm --prefix apps/web run start` (local port 3100). Optional dbt: `./scripts/analytics.sh`. No remote, publication, live provider connection, real data or accounting posting was created.
 
-## Latest milestone: Savvy branding and recorded settlement
+### Savvy branding and recorded settlement
 
 Use `docs/SETTLEMENT-MILESTONE.md`, `docs/VALIDATION-SAVVY-SETTLEMENT.md` and
 `docs/SAVVY-BRAND-REFERENCE.md` for the current state. The owner said to use the
@@ -469,7 +478,7 @@ volume. Fresh setup seeds the baseline examples; the existing local volume keeps
 the reviewed policy-v2 and reversal history. Re-running setup retains existing
 runs. Start locally with `./scripts/start.sh` after setup.
 
-## Latest: Astra plan and Terra reconciliation team
+### Astra plan and Terra reconciliation team
 
 The owner requested Astra planning followed by Terra implementation, independent
 review and stress testing. Read `docs/CTO-READINESS-PLAN.md`,

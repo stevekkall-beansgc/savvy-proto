@@ -18,6 +18,8 @@ The demo and walkthroughs are public and open without signing in. The working
 demo is hosted from the presentation device. The architecture, evidence map,
 and API reference have separate hosting and remain available when the device is
 offline. See the [15-minute walkthrough](docs/SAVVY-REVIEW.md) for a guided tour.
+The [design decisions and validation](docs/DESIGN-DECISIONS.md) explain why the
+system is structured this way and link each milestone to its evidence.
 
 All customer and agreement records are fictional. Agreements includes real
 public Savvy disclosures with view and download options. Campfire and CLM are
