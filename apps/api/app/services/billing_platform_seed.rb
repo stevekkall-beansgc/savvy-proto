@@ -2,17 +2,25 @@
 # Never invoked from a page read or a deployment activation.
 class BillingPlatformSeed
   FIELDS=BillingPipeline::FIELDS
-  def self.call
+  def self.call(workbench = Workbench.new)
     raise 'Synthetic setup only' unless ENV['SYNTHETIC_DEMO']=='1'
-    new.call
+    new(workbench).call
   end
+  def initialize(workbench)
+    @workbench = workbench
+  end
+
+  def actor(role)
+    Workbench.new(role: role, tenant: @workbench.tenant, entity: @workbench.entity)
+  end
+
   def command(case_id,action,input,key,role='operator')
-    BillingPlatform.new(Workbench.new(role:role),case_id).command(action,input,"platform-seed-#{case_id}-#{key}")
+    BillingPlatform.new(actor(role),case_id).command(action,input,"platform-seed-#{case_id}-#{key}")
   end
   def call
     %w[advisor ria].each do |case_id|
       DemoScope.transaction do
-      p=BillingPlatform.new(Workbench.new(role:'operator'),case_id)
+      p=BillingPlatform.new(@workbench,case_id)
       next if p.rows('document').exists?
       source=command(case_id,'REGISTER_SOURCE',{'name'=>'network-report','mapping'=>{'format'=>'json','records_path'=>'records','fields'=>FIELDS.to_h { |f| [f,f] }}},'source')['source_id']
       rows=sample(case_id)

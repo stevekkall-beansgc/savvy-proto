@@ -1,12 +1,20 @@
 # Explicit, transactional synthetic acceptance data. Never run by a page or by
 # deployment activation. Existing native records are preserved; all changes append.
 class BillingClosureSeed
-  def self.call
+  def self.call(workbench = Workbench.new)
     raise 'Synthetic setup only' unless ENV['SYNTHETIC_DEMO']=='1'
-    new.call
+    new(workbench).call
   end
+  def initialize(workbench)
+    @workbench = workbench
+  end
+
+  def actor(role)
+    Workbench.new(role: role, tenant: @workbench.tenant, entity: @workbench.entity)
+  end
+
   def command(action,input,role='operator')
-    BillingPlatform.new(Workbench.new(role:role),@case).command(action,input,SecureRandom.uuid)
+    BillingPlatform.new(actor(role),@case).command(action,input,SecureRandom.uuid)
   end
   def ingest(records)
     result=command('INGEST',{'source_id'=>@source,'delivery_key'=>'closure-'+SecureRandom.uuid,'raw'=>{'records'=>records}.to_json})
@@ -48,7 +56,7 @@ class BillingClosureSeed
   def call
     %w[advisor ria].each do |case_id|
       DemoScope.transaction do
-        @case=case_id; @p=BillingPlatform.new(Workbench.new(role:'operator'),@case); @ledger=BillingLifecycle.new(@p)
+        @case=case_id; @p=BillingPlatform.new(@workbench,@case); @ledger=BillingLifecycle.new(@p)
         next if @p.rows('work_attempt').where(external_id:'closure-fixture-v1').exists?
         @source=command('REGISTER_SOURCE',{'name'=>'lifecycle-evidence','mapping'=>{'format'=>'json','records_path'=>'records','fields'=>BillingPipeline::FIELDS.to_h { |f| [f,f] }}})['source_id']
         roots=@p.rows('document').where("payload->>'original_document_id' IS NULL").order(:id)
@@ -96,7 +104,7 @@ class BillingClosureSeed
         ingest([common(subject,subject,account).merge('id'=>payout_id,'type'=>'cash','date'=>Time.current.to_date.iso8601,'amount_minor'=>paid,'direction'=>'outbound','payer_id'=>'firm-demo','payee_id'=>subject,'status'=>'confirmed','document_id'=>payable.external_id)])
         apply(payable,current(payout_id),paid)
         batch=command('QUEUE_BATCH',{'subjects'=>[october.payload['subject_id']],'service_start'=>'2026-10-01','service_end_exclusive'=>'2026-11-01','reason'=>'Durable month-end evaluation proof'})
-        item=BillingWorkItem.find_by!(batch_id:batch['batch_id']); completed=BillingWorker.perform_one(job_id:item.job_id); raise completed.inspect unless completed.status=='completed'
+        item=BillingWorkItem.find_by!(**@workbench.scope, batch_id: batch['batch_id']); completed=BillingWorker.perform_one(job_id:item.job_id); raise completed.inspect unless completed.status=='completed'
         @p.store('work_attempt',{'outcome'=>'fixture_installed','version'=>'v1','source_id'=>@source,'september_root_id'=>september.external_id,'october_root_id'=>october.external_id,'payable_id'=>payable.external_id,'batch_id'=>batch['batch_id']},id:'closure-fixture-v1',status:'completed')
       end
     end

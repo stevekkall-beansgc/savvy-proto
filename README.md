@@ -11,7 +11,7 @@ Internal Product and Internal Finance a shared view of the same evidence.
 Start with the [Savvy review guide](docs/SAVVY-REVIEW.md). Both the affiliated
 advisor and independent RIA use the same experience. Choose a business, open a
 client group, inspect a dated invoice, then follow its calculation and cash evidence.
-The demo is public and uses shared synthetic state. All client records and
+The demo is public. Start your own workspace to try changes in a separate copy. All client records and
 commercial agreements are fictional; real Savvy disclosures have view/download
 controls. Campfire and CLM are mocked. No real money moves.
 

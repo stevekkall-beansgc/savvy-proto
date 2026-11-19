@@ -204,10 +204,10 @@ add('reporting', 'Reporting transformations', 'dbt + PostgreSQL SQL models', 'Im
     [ref('analytics/models/marts/fct_medallion_rollup.sql', '-- Selected component snapshots', 'Hourly/daily snapshot projection'), ref('analytics/tests/medallion_rollup_semantics.sql', 'select ', 'Reporting semantics checks')])
 add('graphql', 'Product API', 'Rails + GraphQL Ruby', 'Implemented',
     'Serve scoped read models and explicit commands to the three audience experiences.',
-    'The Rails controller builds a request context and executes WorkbenchSchema. Query fields read retained projections; mutations use authorized command services. The Next.js route forwards only the allowed local prototype request context.',
+    'The Rails controller builds a request context and executes WorkbenchSchema. Query fields read retained projections; mutations use authorized command services. The Next.js proxy reads the visitor cookie and passes its token to Rails. DemoSession maps its hash to a fresh PostgreSQL scope. Public sample queries read the reference workspace. Commands require an active visitor scope.',
     ['Client: terms, statements and account drilldown.', 'Product: policies, comparisons and lineage.', 'Finance: obligations, cash matching and recognition records.'],
-    'Demo role headers simulate identities. They do not implement production authentication.',
-    [ref(API+'controllers/graphql_controller.rb', 'def execute', 'API request boundary'), ref(API+'graphql/workbench_schema.rb', 'class WorkbenchSchema', 'GraphQL schema'), ref('apps/web/app/api/graphql/route.ts', 'export async function POST', 'Next.js API forwarding')])
+    'Visitor scopes are fictional and expire after 24 hours. Start again closes the current scope and returns to the reference examples. Demo role switches are separate from workspace isolation.',
+    [ref(API+'controllers/graphql_controller.rb', 'def execute', 'API request boundary'), ref(API+'graphql/workbench_schema.rb', 'class WorkbenchSchema', 'GraphQL schema'), ref('apps/web/app/api/graphql/route.ts', 'export async function POST', 'Next.js API forwarding'), ref(SERVICE+'demo_session.rb', 'def start', 'Private synthetic workspace provisioning')])
 add('ui', 'Three audience interfaces', 'Next.js + React + TypeScript', 'Implemented',
     'Clients, Product and Finance use the same retained amounts through audience-specific read models.',
     'The current app shares navigation for affiliated advisors and independent RIAs. It provides book-level summaries and client drilldown, contextual policy workflows, source lineage, cash matching and supplied recognition views.',
@@ -302,7 +302,7 @@ add('proof','Executed product examples','Retained synthetic lifecycle export','I
     'Both product examples run through the shared services and native records shown in the demo.',
     'The read-only export opens retained native claims, applications, accounting acceptance and worker receipts. It does not run a price calculation or generate a made-up statement total.',
     ['October: corrected bill, partial payment, current mock accounting package.','September: excess credit, refund request, partial independently confirmed refund.','Earnings: issued native payable and independently applied payout.'],
-    'A captured proof is a synthetic snapshot. The live demo may accumulate later reviewed changes.',
+    'Each October card shows one billing subject. The app overview aggregates the full book. Visitor workspaces use fresh copies of the same fictional scenarios, with their own record IDs.',
     [ref('docs/architecture/lifecycle-run.json','billing-lifecycle-proof/v1','Executed proof snapshot'),ref('apps/api/script/export_billing_closure.rb','cases=%w','Read-only proof exporter'),ref(SERVICE+'billing_closure_seed.rb','def call','Explicit fixture setup through governed commands')])
 COMPONENTS['builder']['implementation']='BillingPolicy compiles API components or accepts a typed primitive graph. Supported components cover daily/average-daily/ending and prior-period valuations, progressive bands, dated/targeted rates, fixed, usage, time, approved events, caps/floors, customer credits and earnings. Every monetary operation remains a node in Economics::Engine.'
 COMPONENTS['builder']['refs'].append(ref(SERVICE+'disclosure_policy.rb','def self.build(','Retained minimal household graph builder'))

@@ -134,6 +134,7 @@ def activate(apply, control):
     route = routes[0]
     assert route['service'] in ['http://127.0.0.1:3100', ORIGIN]
     public_demo = cfg.get('access_mode', 'owner') == 'public_demo'
+    env['SAVVY_DEMO_SESSIONS'] = '1' if public_demo else '0'
     assert cfg.get('access_mode', 'owner') in ('owner', 'public_demo'), 'Unknown access mode'
     access = route['originRequest']['access']
     assert access['required'] is (not public_demo) and access['teamName'] == cfg['access_team'] and access['audTag'] == [cfg['access_aud']], 'Tunnel access differs from declared mode'

@@ -18,3 +18,13 @@
 .aud-evidence .ws-heading { display:none; }
 .md-node[hidden] { display:none; }
 .aud-record-ref { display:flex; align-items:center; justify-content:space-between; gap:10px; padding:7px 0; font-size:13px; overflow-wrap:anywhere; }.aud-record-ref button { flex-shrink:0; }
+
+.demo-session-tools { display:flex; flex-wrap:wrap; align-items:center; justify-content:flex-end; gap:10px; margin-bottom:14px; font-size:13px; }
+.billing-reconciliation dl { display:grid; grid-template-columns:repeat(4,minmax(0,1fr)); gap:10px; margin:16px 0 0; }
+.billing-reconciliation dl div { padding:14px; border-radius:8px; background:#f4f2ec; }
+.billing-reconciliation dl div:last-child { background:#153d32; color:white; }
+.billing-reconciliation dt { font-size:13px; }
+.billing-reconciliation dd { margin:6px 0 0; font-size:clamp(16px,2.2vw,24px); font-variant-numeric:tabular-nums; font-weight:600; }
+.demo-story { display:flex; align-items:center; justify-content:space-between; gap:12px; flex-wrap:wrap; }
+.demo-story p { margin-bottom:0; }
+@media(max-width:700px) { .billing-reconciliation dl { grid-template-columns:repeat(2,minmax(0,1fr)); } }

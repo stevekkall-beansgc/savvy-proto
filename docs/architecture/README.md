@@ -11,7 +11,8 @@ an offline presentation copy. GitHub links require internet access.
 
 - **Mental model:** source records and dated policy assignments feed one engine;
   native billing/earnings, confirmed cash and supplied accounting stay separate.
-  Two executed product examples connect the model to actual retained records.
+  Two executed billing subjects connect the model to retained records. The overview
+  in the app totals the full book.
 - **Components:** UI/API, custom Rails adapter/normalizer and policy services,
   PostgreSQL records, leased ActiveJobs, the worker, native billing/payable/lifecycle
   services, dbt projections and mocked Campfire/CLM. Planned connectors, external

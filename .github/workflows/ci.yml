@@ -40,7 +40,7 @@ jobs:
           docker compose run --rm api bundle exec rails runner script/seed_presentation.rb
           docker compose run --rm api bundle exec rails runner script/seed_billing_platform.rb
           docker compose run --rm api bundle exec rails runner script/seed_billing_closure.rb
-          SAVVY_PUBLIC_ORIGIN=https://savvy-proto.beanshop.top npm --prefix apps/web run start > /tmp/savvy-web.log 2>&1 &
+          SAVVY_DEMO_SESSIONS=1 SAVVY_PUBLIC_ORIGIN=https://savvy-proto.beanshop.top npm --prefix apps/web run start > /tmp/savvy-web.log 2>&1 &
           savvy_web_pid=$!
           trap 'kill "$savvy_web_pid" 2>/dev/null || true' EXIT
           for attempt in $(seq 1 30); do
@@ -48,6 +48,7 @@ jobs:
             sleep 1
           done
           python scripts/host_check.py
+          SAVVY_DISPOSABLE_UI_WRITES=1 python scripts/demo_session_check.py
           npm ci --prefix docs/architecture --no-audit --no-fund
           node docs/architecture/node_modules/playwright/cli.js install --with-deps chromium
           SAVVY_PLAYWRIGHT_MODULE="$PWD/docs/architecture/node_modules/playwright" SAVVY_PREVIEW_ORIGIN=http://127.0.0.1:3100 node scripts/presentation_ui_check.cjs

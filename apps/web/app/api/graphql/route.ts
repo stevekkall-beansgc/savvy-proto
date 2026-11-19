@@ -1,5 +1,8 @@
+import { NextRequest } from "next/server";
+import { DEMO_COOKIE, demoEnabled, loopbackApi } from "../../../lib/demo-session";
+
 export const runtime = "nodejs";
-export async function POST(request: Request) {
+export async function POST(request: NextRequest) {
   const origin = request.headers.get("origin");
   const allowedOrigins = new Set([
     "http://127.0.0.1:3100",
@@ -23,25 +26,19 @@ export async function POST(request: Request) {
   const body = await request.text();
   if (body.length > 1_048_576)
     return Response.json({ error: "BODY_TOO_LARGE" }, { status: 413 });
+  let api: URL;
+  try { api = loopbackApi(); }
+  catch { return Response.json({ error: "INVALID_LOCAL_API" }, { status: 500 }); }
   try {
-    const api = new URL(process.env.SAVVY_API_URL || "http://127.0.0.1:3101");
-    if (
-      api.protocol !== "http:" ||
-      !["3101", "3102", "3108", "3109"].includes(api.port) ||
-      !["127.0.0.1", "localhost", "::1", "[::1]"].includes(api.hostname) ||
-      api.username ||
-      api.password ||
-      api.pathname !== "/" ||
-      api.search ||
-      api.hash
-    ) {
-      return Response.json({ error: "INVALID_LOCAL_API" }, { status: 500 });
-    }
     const response = await fetch(new URL("/graphql", api), {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
         "X-Demo-Role": request.headers.get("X-Demo-Role") || "operator",
+        ...(demoEnabled() && {
+          "X-Savvy-Public-Demo": "1",
+          "X-Savvy-Demo-Token": request.cookies.get(DEMO_COOKIE)?.value || "",
+        }),
       },
       body,
       cache: "no-store",
@@ -49,7 +46,7 @@ export async function POST(request: Request) {
     });
     return new Response(await response.text(), {
       status: response.status,
-      headers: { "Content-Type": "application/json" },
+      headers: { "Content-Type": "application/json", "Cache-Control": "private, no-store" },
     });
   } catch {
     return Response.json(

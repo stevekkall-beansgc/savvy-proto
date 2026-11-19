@@ -35,8 +35,13 @@ Other hostnames, applications, identity providers and routes are unchanged.
 The tool validates ownership, records prior configuration and rolls back a failed
 change. Activation checks preserve the declared public mode on future updates.
 
-All financial records are synthetic and shared; public actions can change that
-shared state. The app has no real customer connection, credentials-entry flow,
+Public viewers can inspect the prepared synthetic records. Start your own demo
+creates a separate PostgreSQL scope from the fictional fixtures. An HttpOnly cookie
+carries a random capability for 24 hours. Start again revokes that scope and returns
+to the sample views. Saved workspace records remain available for operator recovery.
+The prototype admits up to 200 visitor scopes per database by default. Creation is
+serialized, with a busy response during concurrent setup. If capacity is reached,
+the read-only samples remain available. The app has no real customer connection, credentials-entry flow,
 payment execution, real agreements or live Campfire/CLM posting.
 
 ## Presentation availability

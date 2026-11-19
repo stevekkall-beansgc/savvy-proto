@@ -23,7 +23,9 @@ The retained baseline DB is `savvy-billing-complete-db` at 55441; older pairs re
 preserved. Release receipts and DB backups stay ignored under `.runtime/release`.
 
 Production auth, live connectors, hierarchy, real agreements and MCP/WebMCP remain
-future scope. The public demo has shared fictional state and cannot execute money.
+future scope. Public reads show prepared examples. Demo session cookies select a separate fictional
+workspace for changes, and Start again revokes that scope. See `docs/FINANCE-ACCEPTANCE.md`
+for independent expected values and the pending Savvy Finance acceptance.
 
 ## Historical implementation handoff
 
