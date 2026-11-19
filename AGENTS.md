@@ -1,7 +1,10 @@
 # Savvy Proto
 
-Independent synthetic prototype. Start with `docs/WORKSPACES-MILESTONE.md`,
-`docs/VALIDATION-WORKSPACES.md` and `NEW-SESSION-HANDOFF.md`.
+Independent synthetic prototype. Read `README.md` for the current demo and source
+index, `NEW-SESSION-HANDOFF.md` for the active baseline, and
+`docs/FOUR-CAPABILITY-CLOSURE-VALIDATION.md` for implemented scope and verification.
+`docs/WORKSPACES-MILESTONE.md` and `docs/VALIDATION-WORKSPACES.md` describe an
+earlier milestone.
 
 - Preserve Savvy public-site branding and the explicit Broker/Internal experiences.
 - Savvy owns commercial billing obligations, invoices/lines and custodial instructions.
