@@ -1,5 +1,8 @@
 """Link explicit references and report the evidence expected around any entry."""
 from collections import Counter, defaultdict, deque
+from decimal import Decimal
+import json
+from pathlib import Path
 
 if __package__:
     from . import trace_campfire as trace
@@ -40,6 +43,7 @@ IDENTIFIERS = ('entity', 'source', 'source_id', 'invoice_id', 'invoice_number', 
                'agreement_ref', 'assignment_id', 'input_manifest_id', 'economic_date', 'posting_period', 'original_id', 'revision')
 DESCRIPTORS = ('measure', 'grain', 'basis', 'event_type')
 MEASURES = ('total_amount', 'amount', 'amount_due', 'applied_amount', 'record_count', 'amount_minor')
+PREVIEW_PROFILES = json.loads(Path(__file__).with_name('trace_record_profiles.json').read_text(encoding='utf-8'))
 
 
 def key(reference):
@@ -80,6 +84,26 @@ def declared_dimensions(record):
     ))[:100]
 
 
+def preview_values(record, kind):
+    def fields(value, keys):
+        found = {}
+        for key in keys:
+            raw = value.get(key)
+            if isinstance(raw, bool):
+                found[key] = 'true' if raw else 'false'
+            elif isinstance(raw, (str, int, Decimal)) and str(raw).strip():
+                found[key] = str(raw)[:160]
+        return found
+
+    sections = {}
+    for name in PREVIEW_PROFILES['sections_by_type'].get(kind, []):
+        values = record.get(name)
+        if isinstance(values, list):
+            rows = [fields(value, PREVIEW_PROFILES['sections'][name]) for value in values[:12] if isinstance(value, dict)]
+            sections[name] = {'rows': [row for row in rows if row], 'total': len(values)}
+    return {'fields': fields(record, PREVIEW_PROFILES['fields'][kind]), 'sections': sections}
+
+
 def build_entry_graph(groups, sources, input_findings, lineage):
     items = [(kind, row) for kind, rows in groups.items() for row in rows]
     for payload in sources:
@@ -114,6 +138,7 @@ def build_entry_graph(groups, sources, input_findings, lineage):
         node = {'type': kind, 'id': alias, 'label': TYPES[kind], 'state': 'record present', 'evidence': evidence, 'gaps': []}
         if kind != 'unmapped':
             node['observed_fields'] = dimension_fields(row)
+            node['preview'] = preview_values(row, kind)
         if kind in ('report', 'aggregate'):
             node['declared_dimensions'] = declared_dimensions(row)
         if not alias or counts[(kind, alias)] > 1:

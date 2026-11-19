@@ -1,0 +1,30 @@
+{
+  "fields": {
+    "source": ["source", "source_id", "provider", "revision", "observed_at", "received_at"],
+    "normalized": ["source_id", "source_revision", "normalization_run_id", "mapping_version", "customer_id", "account_id", "economic_date", "amount_minor", "currency"],
+    "policy": ["policy_id", "policy_version_id", "agreement_ref", "billing_subject_id", "product_id", "starts_on", "ends_on"],
+    "calculation": ["input_manifest_id", "assignment_id", "policy_version_id", "billing_subject_id", "period_start", "period_end", "amount_minor", "currency"],
+    "aggregate": ["measure", "basis", "grain", "period_start", "period_end", "total_amount", "currency", "manifest_ref", "members_complete"],
+    "invoice": ["invoice_number", "billing_subject_id", "period_start", "period_end", "total_amount", "amount_due", "currency", "calculation_ref", "journal_entry"],
+    "statement": ["invoice_id", "invoice_line_id", "payable_id", "period_start", "period_end", "amount", "currency", "status"],
+    "credit_memo": ["invoice_id", "invoice_line_id", "original_id", "amount_minor", "applied_amount", "applied_on", "currency", "reason_code", "status"],
+    "debit_memo": ["invoice_id", "invoice_line_id", "original_id", "amount_minor", "applied_amount", "applied_on", "currency", "reason_code", "status"],
+    "payment": ["invoice_id", "cash_confirmation_id", "payment_date", "posting_period", "amount", "amount_minor", "currency", "application_kind"],
+    "journal": ["invoice_id", "package_id", "posting_date", "posting_period", "schedule_id", "currency", "status"],
+    "event": ["event_type", "revision", "source_id", "billing_subject_id", "economic_date", "posting_period", "amount_minor", "currency", "event_policy_id", "approval_id", "original_id", "reason_code"],
+    "payable": ["billing_subject_id", "period_start", "period_end", "amount_minor", "currency", "calculation_ref", "status"],
+    "payout": ["request_id", "payable_id", "cash_confirmation_id", "economic_date", "amount_minor", "currency", "status"],
+    "accounting_package": ["invoice_id", "posting_period", "treatment_ref", "calculation_ref", "amount_minor", "currency"],
+    "report": ["report_name", "definition_ref", "manifest_ref", "period_start", "period_end", "grain", "record_count", "columns"],
+    "unmapped": []
+  },
+  "sections": {
+    "lines": ["id", "invoice_line_id", "description", "service_start", "service_end_exclusive", "amount", "amount_minor", "debit_minor", "credit_minor", "currency", "gl_account_code", "cost_center"],
+    "schedule": ["id", "period", "amount_minor", "currency"],
+    "members": ["kind", "id"]
+  },
+  "sections_by_type": {
+    "aggregate": ["members"], "invoice": ["lines"], "statement": ["lines"], "credit_memo": ["lines"],
+    "debit_memo": ["lines"], "journal": ["lines", "schedule"], "accounting_package": ["lines"]
+  }
+}

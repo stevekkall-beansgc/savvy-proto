@@ -3,6 +3,7 @@
 function createTraceImport(config) {
   const own = (object, key) => Object.hasOwn(object, key);
   const dimensions = typeof module !== 'undefined' ? require('./trace_workflow_dimensions.js') : traceDimensions;
+  const previews = typeof module !== 'undefined' ? require('./trace_workflow_previews.js') : tracePreviews;
   const isObject = value => value !== null && typeof value === 'object' && !Array.isArray(value);
   const words = value => String(value).replace(/([a-z0-9])([A-Z])/g, '$1 $2').toLowerCase().replace(/[_-]+/g, ' ').trim();
   const slug = value => words(value).replace(/\s+/g, '_');
@@ -280,6 +281,7 @@ function createTraceImport(config) {
       const node = {node: nodes.length, type: row.kind, label: config.types[row.kind], id, evidence, classification: row.basis,
         state: 'record present', gaps: [], upstream: [], downstream: [], guidance: []};
       node.observed_fields = dimensions.observe(row.raw);
+      node.preview = previews.capture(row.raw, row.kind, config.preview_profiles);
       if (row.kind === 'report' || row.kind === 'aggregate') node.declared_dimensions = dimensions.declared(row.raw);
       nodes.push(node);
       if (!id) {

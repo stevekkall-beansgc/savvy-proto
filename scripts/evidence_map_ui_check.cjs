@@ -33,6 +33,8 @@ async function check() {
     const startingRecord = page.getByRole('combobox', {name:'Starting record',exact:true});
     const input = page.locator('#record-files');
     const review = page.getByRole('button', {name:'Review reporting dimensions',exact:true});
+    const preview = page.getByRole('dialog');
+    const field = name => preview.getByRole('row').filter({has:page.getByRole('rowheader',{name,exact:true})});
 
     async function downloadCsv() {
       const [download] = await Promise.all([page.waitForEvent('download'), button.click()]);
@@ -41,6 +43,16 @@ async function check() {
       return fs.readFile(await download.path(), 'utf8');
     }
     await startingRecord.selectOption({label:'Report or export · report-demo'});
+    const expected = page.getByRole('button',{name:'Preview Billing rollup',exact:true});
+    await expected.click();
+    assert.deepEqual(await field('Total amount').getByRole('cell').allTextContents(), ['—','To confirm']);
+    await page.keyboard.press('Escape');
+    await preview.waitFor({state:'hidden'});
+    await page.waitForFunction(() => document.activeElement.getAttribute('aria-label') === 'Preview Billing rollup');
+    await page.getByRole('button',{name:'Preview Campfire accounting',exact:true}).click();
+    assert.deepEqual(await field('Record ID').getByRole('cell').allTextContents(), ['journal-demo','Supplied']);
+    assert.match(await preview.getByRole('table',{name:'Supplied rows'}).innerText(), /gl-demo/);
+    await preview.getByRole('button',{name:'Close',exact:true}).click();
     await review.click();
     const demo = await downloadCsv();
     assert.match(demo, /"Recommended assignment or carry-forward"/);
@@ -60,6 +72,14 @@ async function check() {
     assert.match(await downloadCsv(), /"Calculation · calculation-demo","Customer","Prototype handoff gap"/);
 
     await page.getByRole('button', {name:'Clear imports',exact:true}).click();
+    await input.setInputFiles({name:'invoice.json',mimeType:'application/json',
+      buffer:Buffer.from('{"kind":"invoice","id":"test-invoice","journal_entry":"unseen-journal","total_amount":"125.00"}')});
+    await page.locator('#cycle-anchor').getByText(/test-invoice/).waitFor();
+    await page.getByRole('button',{name:'Preview Campfire accounting',exact:true}).click();
+    assert.deepEqual(await field('Record ID').getByRole('cell').allTextContents(), ['unseen-journal','Reference']);
+    assert.deepEqual(await field('Currency').getByRole('cell').allTextContents(), ['—','To confirm']);
+    await preview.getByRole('button',{name:'Close',exact:true}).click();
+    await page.getByRole('button', {name:'Clear imports',exact:true}).click();
     await input.setInputFiles({name:'report-columns.csv',mimeType:'text/csv',buffer:Buffer.from('Cost Center,Customer ID,Amount\n')});
     await page.locator('#cycle-anchor').getByText(/Report or export/).waitFor();
     await review.click();
@@ -69,9 +89,14 @@ async function check() {
     assert.doesNotMatch(single, /Possible loss in supplied handoff/);
     await page.setViewportSize({width:320,height:900});
     assert.ok(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth));
+    await page.getByRole('button',{name:'Preview starting record',exact:true}).click();
+    const bounds = await preview.boundingBox();
+    assert.ok(bounds.x >= 0 && bounds.x + bounds.width <= 320);
+    assert.deepEqual(await field('Columns').getByRole('cell').allTextContents(), ['Cost Center, Customer ID, Amount','Declared']);
+    await page.keyboard.press('Escape');
     assert.deepEqual(requests, []);
     assert.deepEqual(errors, []);
-    console.log('Evidence map, offline CSV export, pending import protection and mobile layout passed.');
+    console.log('Evidence map, record previews, offline CSV export, pending import protection and mobile layout passed.');
   } finally {
     await browser.close();
   }

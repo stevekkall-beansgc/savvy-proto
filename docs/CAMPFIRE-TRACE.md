@@ -67,6 +67,11 @@ if you established the connection during the walkthrough.
 The cycle uses rules based on the prototype's workflow. It shows likely stages
 with evidence missing, possible branches, supplied references that still need a
 record, and links with records present. Each stage states what to ask for.
+Open `Preview record` on the starting point or choose a preview on either side.
+The field table separates supplied values, reference IDs and fields to confirm.
+Expected records show a blank field checklist based on the prototype. Where
+recognized fields are present, invoice lines, rollup members and journal
+schedules show up to 12 rows. Previews use the selected record's data.
 For an unexplained rollup, start by confirming the measure, grain, period and
 basis before choosing between fee results, invoice activity and cash activity.
 The browser uses the supplied or confirmed references to trace actual links.

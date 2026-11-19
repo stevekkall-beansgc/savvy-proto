@@ -245,11 +245,12 @@ def render(report):
     config = {'types': trace_entry_graph.TYPES, 'expected': trace_entry_graph.EXPECTED, 'groups': trace_entry_graph.GRAPH_GROUPS,
               'identifiers': trace_entry_graph.IDENTIFIERS, 'descriptors': trace_entry_graph.DESCRIPTORS,
               'measures': trace_entry_graph.MEASURES, 'aliases': trace_discovery.ALIASES,
-              'record_ids': trace_discovery.RECORD_IDS, 'kind_hints': trace_discovery.KIND_HINTS}
+              'record_ids': trace_discovery.RECORD_IDS, 'kind_hints': trace_discovery.KIND_HINTS,
+              'preview_profiles': trace_entry_graph.PREVIEW_PROFILES}
     template = TEMPLATE.read_text(encoding='utf-8').replace('@@GENERATED@@', 'ready')
     head, _, body = template.split('<!-- TEMPLATE_NOTICE -->')
     template = head + body
-    for name in ('cycle', 'dimensions', 'import', 'import_ui'):
+    for name in ('cycle', 'dimensions', 'previews', 'import', 'import_ui'):
         source = TEMPLATE.with_name(f'trace_workflow_{name}.js').read_text(encoding='utf-8')
         template = template.replace(f'/*@@{name.upper()}_JS@@*/', source)
     return template.replace('@@MAP_CONFIG@@', embedded(config)).replace('@@MAP_DATA@@', embedded(report))

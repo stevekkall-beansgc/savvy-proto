@@ -11,6 +11,7 @@
 .drop-zone{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:9px;border:1px dashed #789387;border-radius:8px;padding:14px;margin-top:13px;background:#f6f9f3}.drop-zone[data-drag=true]{border-color:#124237;outline:2px solid #548670}.actions{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin:12px 0 0}.action{font:inherit;font-size:14px;font-weight:650;border:1px solid #789387;background:#fff;color:var(--pine);padding:7px 11px;border-radius:5px;cursor:pointer}.action.primary{background:var(--pine);color:#fff;border-color:var(--pine)}.action:disabled{opacity:.55;cursor:default}.import-editor{margin-top:13px;padding-top:13px;border-top:1px solid var(--line)}.import-editor select,.import-editor input{width:100%;min-width:0;border:1px solid #91a59a;border-radius:5px;padding:7px;font:inherit;color:var(--ink);background:#fff}.import-fields{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(190px,100%),1fr));gap:8px;margin:9px 0}.import-fields label{display:grid;gap:3px;min-width:0;font-size:13px;align-content:start}.import-editor details{margin:12px 0}.import-editor p,.import-editor li{overflow-wrap:anywhere}.import-editor ul{padding-left:19px}.import-editor li .action{margin-left:8px}.import-message[data-error=true]{color:#8e3023}.trace-origin{margin-top:12px}
 .cycle-map{border-top:1px solid var(--line);padding-top:16px;margin:16px 0}.cycle-context{margin-top:6px;max-width:76ch}.cycle-grid{display:grid;grid-template-columns:1fr .86fr 1fr;gap:12px;align-items:start;margin-top:14px}.cycle-grid section{min-width:0}.cycle-grid h4{font-size:13px;margin:0 0 8px}.cycle-stack{display:grid;gap:6px}.cycle-card,.cycle-anchor{background:#f9faf7;border:1px solid var(--line);border-radius:7px;padding:8px 10px;overflow-wrap:anywhere}.cycle-card strong,.cycle-anchor strong{display:block;font-size:14px}.cycle-card p,.cycle-anchor p{font-size:12px;margin-top:3px}.cycle-card[data-state=expected],.cycle-card[data-state=reference],.cycle-card[data-state=partial]{background:#fff8e7;border-color:#e2cb97}.cycle-card[data-state=conditional]{border-style:dashed}.cycle-card[data-state=linked],.cycle-anchor{background:#eaf3e9}.cycle-card .cycle-state,.cycle-anchor .cycle-state{display:block;font-size:11px;font-weight:700;color:#55472c}.cycle-card[data-state=linked] .cycle-state{color:var(--pine)}.cycle-card .entry-links{margin-top:3px;font-size:12px;max-height:124px}.cycle-card .entry-links li:last-child{border-bottom:0}.cycle-anchor .record{padding-bottom:0}.cycle-anchor .cycle-facts{border-top:1px solid var(--line);margin-top:9px;padding-top:8px}.drop-zone .actions{margin:0}body[data-generated=ready] .template-notice,body:not([data-generated=ready]) main>:not(.template-notice){display:none}
 .dimension-review{margin:16px 0;padding-top:16px;border-top:1px solid var(--line);scroll-margin:14px}.dimension-review>p{margin:5px 0 10px}.dimension-review th[scope=row]{min-width:10ch}.dimension-review td{font-size:13px}.dimension-review td:nth-child(2){min-width:10ch}.dimension-review td:nth-child(3){min-width:16ch}.dimension-review [data-coverage=missing],.dimension-review [data-coverage=dropped],.dimension-warning{color:#764815}.dimension-review td strong{display:block}.dimension-review td p{margin-top:4px}.dimension-review details{margin-top:11px}.dimension-review td details{margin-top:5px}.dimension-review td details p{margin-top:5px}.dimension-review .dimension-path{display:block;overflow-wrap:anywhere;margin:2px 0}
+.record-preview-button{border:0;padding:4px 0;margin-top:3px;background:transparent;color:var(--pine);font:inherit;font-size:12px;font-weight:650;text-decoration:underline;cursor:pointer;text-align:left}.record-dialog{width:min(660px,calc(100% - 28px));max-height:calc(100dvh - 32px);padding:0;border:1px solid var(--line);border-radius:12px;color:var(--ink);background:#fff;overflow:auto}.record-dialog::backdrop{background:#122e26b8}.record-dialog header{display:flex;align-items:start;justify-content:space-between;gap:10px;position:sticky;top:0;background:var(--paper);border-bottom:1px solid var(--line);padding:14px 16px;z-index:1}.record-dialog h2{font-size:23px;overflow-wrap:anywhere}.record-dialog h3{margin-top:14px}.record-dialog section{padding:14px 16px 20px}.record-dialog .controls{margin-bottom:8px}.record-dialog .preview-table{margin-top:10px;overflow-x:auto}.record-dialog td[data-status="To confirm"],.record-dialog td[data-status="Not supplied"]{color:#764815}.record-dialog th[scope=row]{width:38%;font-weight:600}.record-dialog td:last-child{width:24%}.record-dialog table[aria-label="Supplied rows"] td:last-child{width:auto}
 @media(max-width:680px){.cycle-grid{grid-template-columns:1fr}.cycle-grid section:nth-child(2){grid-row:1}.dimension-review table,.dimension-review tbody,.dimension-review tr,.dimension-review td,.dimension-review th{display:block}.dimension-review thead{position:absolute;clip-path:inset(50%);width:1px;height:1px;overflow:hidden}.dimension-review tr{border-bottom:1px solid var(--line);padding:6px 0}.dimension-review td,.dimension-review th{border:0;padding:2px 0}.dimension-review td::before{content:attr(data-label);display:block;font-size:11px;font-weight:680;color:var(--sub)}}
 @media(max-width:680px){.entry-flow{grid-template-columns:1fr}.entry-flow>div:nth-child(2){grid-row:1}.entry-links{max-height:185px}}
 @media(max-width:740px){main{padding:24px 14px}.chain{grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}.chain .node::after{display:none}.outcomes{grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}.tile{min-width:110px}.controls select{min-width:144px}.panel{padding:12px}th,td{padding:6px 4px}}
@@ -75,16 +76,27 @@
 <section class="panel"><h2>Input findings</h2><div id="findings"></div></section>
 <p class="muted">References are supplied evidence. Confirm them in the source systems.</p>
 </main>
+<dialog class="record-dialog" id="record-dialog" aria-labelledby="record-title">
+<header><div><h2 id="record-title">Record preview</h2><p class="muted" id="record-state"></p></div><button class="action" id="close-record" type="button">Close</button></header>
+<section>
+<div class="controls"><label id="record-choice-label" hidden>Record to preview<select id="record-choice"></select></label></div>
+<p id="record-check"></p>
+<div class="preview-table"><table aria-label="Record fields"><thead><tr><th scope="col">Field</th><th scope="col">Value</th><th scope="col">Evidence</th></tr></thead><tbody id="preview-rows"></tbody></table></div>
+<div id="preview-sections"></div>
+</section>
+</dialog>
 <script id="map-data" type="application/json">@@MAP_DATA@@</script>
 <script id="map-config" type="application/json">@@MAP_CONFIG@@</script>
 <script>
 /*@@CYCLE_JS@@*/
 /*@@DIMENSIONS_JS@@*/
+/*@@PREVIEWS_JS@@*/
 /*@@IMPORT_JS@@*/
 </script>
 <script>
 'use strict';
 const originalData = document.body.dataset.generated === 'ready' ? JSON.parse(document.querySelector('#map-data').textContent) : null;
+const mapSettings = originalData && JSON.parse(document.querySelector('#map-config').textContent);
 let data = originalData;
 let mapNeedsBuild = false;
 let gapRows = [];
@@ -127,6 +139,86 @@ function renderInvoice() {
 }
 const entrySelect=get('entries');
 const entryLabel=entry=>`${entry.evidence.event_type || entry.label} · ${entry.id || '(missing ID)'}`;
+const recordDialog = get('record-dialog');
+let previewOptions = [], previewCheck = '', previewTrigger;
+function renderRecordPreview() {
+  const {entry, kind} = previewOptions[Number(get('record-choice').value)];
+  const view = tracePreviews.model(kind, entry, mapSettings.preview_profiles);
+  get('record-title').textContent = entry ? entryLabel(entry) : (mapSettings.types[kind] || 'Record') + ' · expected fields';
+  get('record-state').textContent = !entry ? 'Expected fields · confirm the record and its values' :
+    entry.state === 'reference only' ? 'Reference only · retrieve the referenced record' :
+    entry.state === 'ambiguous identity' ? 'Supplied record · identity needs review' :
+    data.cycle_preview ? 'Supplied record · type and mappings need review' : 'Supplied record';
+  get('record-check').textContent = previewCheck;
+  get('record-check').hidden = !previewCheck;
+  const rows = get('preview-rows');
+  rows.replaceChildren();
+  for (const field of view.rows) {
+    const row = el('tr');
+    const header = el('th', field.field);
+    header.scope = 'row';
+    const status = el('td', field.status);
+    status.dataset.status = field.status;
+    row.append(header, el('td', field.value ?? '—'), status);
+    rows.append(row);
+  }
+  const sections = get('preview-sections');
+  sections.replaceChildren();
+  for (const group of view.sections) {
+    sections.append(el('h3', group.title));
+    if (!group.rows.length) {
+      const status = !entry || entry.state === 'reference only' ? 'Rows to confirm.' :
+        group.total ? 'Rows were supplied. Review their field names in the source.' : 'No rows supplied.';
+      sections.append(el('p', status, 'muted'));
+      continue;
+    }
+    if (group.total > group.rows.length) sections.append(el('p', `Showing ${group.rows.length} of ${group.total} supplied rows.`, 'muted'));
+    const wrap = el('div', undefined, 'preview-table');
+    const table = el('table');
+    table.setAttribute('aria-label', 'Supplied rows');
+    const head = el('thead'), header = el('tr'), body = el('tbody');
+    for (const column of group.columns) {
+      const cell = el('th', column);
+      cell.scope = 'col';
+      header.append(cell);
+    }
+    head.append(header);
+    for (const values of group.rows) {
+      const row = el('tr');
+      for (const value of values) row.append(el('td', value ?? '—'));
+      body.append(row);
+    }
+    table.append(head, body);
+    wrap.append(table);
+    sections.append(wrap);
+  }
+}
+function previewButton(text, options, ask, name = text) {
+  const button = el('button', text, 'record-preview-button');
+  button.type = 'button';
+  button.setAttribute('aria-label', name);
+  button.addEventListener('click', () => {
+    previewOptions = options;
+    previewCheck = ask ? 'Check: ' + ask : '';
+    previewTrigger = button;
+    const select = get('record-choice');
+    select.replaceChildren(...options.map(({entry, kind}, index) => {
+      const option = el('option', entry ? entryLabel(entry) : mapSettings.types[kind]);
+      option.value = String(index);
+      return option;
+    }));
+    get('record-choice-label').hidden = options.length < 2;
+    renderRecordPreview();
+    recordDialog.showModal();
+    get('close-record').focus();
+  });
+  return button;
+}
+get('record-choice').addEventListener('change', renderRecordPreview);
+get('close-record').addEventListener('click', () => recordDialog.close());
+recordDialog.addEventListener('close', () => {
+  if (previewTrigger?.isConnected) previewTrigger.focus();
+});
 function renderLinks(target, links) {
   target.replaceChildren();
   if (!links.length) {target.append(el('p','No connected record supplied.', 'muted'));return;}
@@ -214,6 +306,7 @@ function renderCycle(entry) {
     anchor.append(row);
   }
   if (cycle.anchorAsk) anchor.append(el('p', 'Check: ' + cycle.anchorAsk, 'cycle-facts'));
+  anchor.append(previewButton('Preview record', [{entry, kind:entry.type}], cycle.anchorAsk, 'Preview starting record'));
   if (entry.state !== 'reference only') {
     const actions = el('div', undefined, 'actions');
     if (data.cycle_preview) {
@@ -241,6 +334,11 @@ function renderCycle(entry) {
         renderLinks(records, card.actual);
         item.append(records);
       }
+      const options = card.actual.length ? card.actual.map(link => {
+        const record = data.graph.entries[link.node];
+        return {entry:record, kind:record.type};
+      }) : card.kinds.map(kind => ({kind}));
+      item.append(previewButton(card.actual.length ? 'Preview records' : 'Preview expected fields', options, card.ask, 'Preview ' + card.title));
       stack.append(item);
     }
   }
@@ -261,6 +359,7 @@ function renderEntry() {
   for (const clue of entry.guidance) issues.append(el('p',`${clue.direction} · ${clue.state}. ${clue.ask_for}`));
 }
 function renderMap(report) {
+if (recordDialog.open) recordDialog.close();
 data = report;
 mapNeedsBuild = false;
 get('supplied-evidence').open = false;

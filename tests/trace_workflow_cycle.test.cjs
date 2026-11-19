@@ -4,6 +4,8 @@ const assert = require('node:assert/strict');
 const test = require('node:test');
 const {plan} = require('../scripts/trace_workflow_cycle.js');
 const {observe, review, gapRows, gapCsv} = require('../scripts/trace_workflow_dimensions.js');
+const {capture, model} = require('../scripts/trace_workflow_previews.js');
+const profiles = require('../scripts/trace_record_profiles.json');
 
 function point(type, evidence = {}, links = {}) {
   return {type, evidence, id: 'synthetic-record', upstream: [], downstream: [], ...links};
@@ -112,4 +114,24 @@ test('the gap list retains coverage and verification as separate rows', () => {
 test('CSV escapes quotes, multiline text, and spreadsheet formulas', () => {
   const text = gapCsv([[' =demo', '+demo', '-demo', '@demo', '\ttext', 'a,"b"\nc']]);
   assert.ok(text.endsWith(`"' =demo","'+demo","'-demo","'@demo","'\ttext","a,""b""\nc"\r\n`));
+});
+
+test('every profile renders expected fields without inventing values', () => {
+  for (const kind of Object.keys(profiles.fields)) {
+    const view = model(kind, undefined, profiles);
+    assert.equal(view.rows[0].field, 'Record ID');
+    assert.ok(view.rows.every(row => row.status === 'To confirm' && row.value === undefined), kind);
+    assert.ok(view.sections.every(section => section.rows.length === 0), kind);
+  }
+});
+
+test('record previews distinguish reference IDs from actual line values', () => {
+  const reference = model('journal', {id:'journal-1', state:'reference only', evidence:{}}, profiles);
+  assert.deepEqual(reference.rows[0], {field:'Record ID', value:'journal-1', status:'Reference'});
+  assert.ok(reference.rows.slice(1).every(row => row.value === undefined));
+  const raw = {posting_period:'2026-11', lines:[{id:'line-1', debit_minor:'999999999999999', credit_minor:0, cost_center:'operations'}]};
+  const actual = model('journal', {id:'journal-2', state:'record present', evidence:{}, preview:capture(raw,'journal',profiles)}, profiles);
+  assert.equal(actual.rows.find(row => row.field === 'Posting period').value, '2026-11');
+  assert.deepEqual(actual.sections[0].rows, [['line-1','999999999999999','0','operations']]);
+  assert.equal(actual.rows.find(row => row.field === 'Currency').status, 'Not supplied');
 });

@@ -58,7 +58,8 @@ reference navigation, filtering and downloads.
 The [Evidence map](https://savvy.beanshop.top/evidence/) runs in the browser.
 The published page includes only a fictional walkthrough. People can drop
 redacted JSON or CSV for an assessment and download a gap list from
-`Reporting dimension coverage`. Imported files and generated CSVs stay on the
+`Reporting dimension coverage`. Record previews show supplied fields, reference
+IDs and expected fields to confirm at each stage. Imported files and generated CSVs stay on the
 visitor's device. The static bundle has no upload endpoint. The browser test
 checks that the file import and CSV work after network access is disabled.
 

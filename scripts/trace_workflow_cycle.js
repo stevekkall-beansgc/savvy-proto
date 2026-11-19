@@ -95,11 +95,11 @@ const traceCycle = (() => {
         const present = actual.some(link => entries[link.node].state === 'record present');
         const referenced = actual.some(link => entries[link.node].state === 'reference only');
         const state = referenced ? (present ? 'partial' : 'reference') : present ? 'linked' : conditional ? 'conditional' : 'expected';
-        return {title, state, ask, actual};
+        return {title, state, ask, actual, kinds};
       });
       for (const link of connections.filter(link => !shown.has(link.node)).slice(0, 5)) {
         const node = entries[link.node];
-        cards.push({title: node.label, state: node.state === 'reference only' ? 'reference' : 'linked',
+        cards.push({title: node.label, kinds: [node.type], state: node.state === 'reference only' ? 'reference' : 'linked',
           ask: 'Confirm the record’s scope and how the two records are related.', actual: [link]});
       }
       return cards;
