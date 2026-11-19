@@ -51,7 +51,9 @@ class Browser:
 def main():
     sample, first, second = Browser(), Browser(), Browser()
     original = sample.read('overview')['summary']
-    assert original['original_billed_minor'] + original['debit_minor'] - original['credit_minor'] == original['corrected_billed_minor']
+    invoices, debits, credits, net = (int(original[key]) for key in
+        ('original_billed_minor', 'debit_minor', 'credit_minor', 'corrected_billed_minor'))
+    assert invoices + debits - credits == net
     sample.command('SAVE_POLICY', {}, status=403, extra={'X-Savvy-Public-Demo': '0'})
     first.request('/api/demo-session', 'POST', status=403, origin='https://example.invalid')
     try:
@@ -67,7 +69,7 @@ def main():
             'effective_to':'2026-11-01', 'reason':'Compare an isolated planning fee change'})['policy_id']
         compared = first.command('COMPARE_POLICY', {'policy_id':draft, 'baseline_policy_id':base['id'],
             'subject_id':'alder-household','service_start':'2026-10-01','service_end_exclusive':'2026-11-01'})
-        assert (compared['before_minor'], compared['after_minor']) == (106918, 108418), compared
+        assert (int(compared['before_minor']), int(compared['after_minor'])) == (106918, 108418), compared
         for browser, visible in [(first, True), (second, False), (sample, False)]:
             assert (draft in [item['id'] for item in browser.read('queue')['requests']]) == visible
             assert browser.read('overview')['summary'] == original

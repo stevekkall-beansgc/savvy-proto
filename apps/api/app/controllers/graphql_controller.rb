@@ -56,17 +56,15 @@ class GraphqlController < ActionController::API
     operations = document.definitions.grep(GraphQL::Language::Nodes::OperationDefinition)
     selected = data['operationName'] ? operations.find { |op| op.name == data['operationName'] } : operations.first
     session = DemoSession.new(request.headers['X-Savvy-Demo-Token'])
-    workspace = session.workspace(role: role)
-    if selected&.operation_type == 'mutation'
-      raise Economics::Error.new('DEMO_WORKSPACE_REQUIRED', 'Start your own demo workspace to make changes.') unless workspace
-      result = DemoScope.transaction do
-        DemoScope.where(**workspace.scope).lock.first
-        raise Economics::Error.new('DEMO_WORKSPACE_REQUIRED', 'Start your own demo workspace to make changes.') unless session.active?(workspace)
-        execute_query(document, data, workspace)
-      end
-      return render json: result
+    mutating = selected&.operation_type == 'mutation'
+    workspace = session.workspace(role: role, require_active: mutating)
+    if mutating
+      # Workbench checks again under its write lock, so reset and a command
+      # cannot race and the command keeps its own transaction boundary.
+      session.require_active!(workspace)
+    elsif !session.active?(workspace)
+      workspace = Workbench.new(role: role)
     end
-    workspace = Workbench.new(role: role) unless session.active?(workspace)
     render json: execute_query(document, data, workspace)
   rescue GraphQL::ParseError
     render json: { errors: [{ message: 'Invalid GraphQL document.' }] }, status: :bad_request

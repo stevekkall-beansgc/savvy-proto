@@ -10,9 +10,10 @@ class Workbench
   ROLES = %w[operator finance legal advisor ria auditor].freeze
   attr_reader :role, :tenant, :entity
 
-  def initialize(role: "operator", tenant: TENANT, entity: ENTITY)
+  def initialize(role: "operator", tenant: TENANT, entity: ENTITY, demo_session: nil)
     raise Economics::Error.new("FORBIDDEN") unless ROLES.include?(role)
     @role, @tenant, @entity = role, tenant, entity
+    @demo_session = demo_session
   end
 
   def scope
@@ -90,6 +91,7 @@ class Workbench
     request_hash = Economics::Canonical.hash(input)
     DemoScope.transaction do
       DemoScope.where(**scope).lock.first! # One local serializable write lane per demo entity.
+      @demo_session&.require_active!(self)
       prior = DemoOperation.find_by(**scope, actor_id: role, operation: action, idempotency_key: key)
       if prior
         raise Economics::Error.new("IDEMPOTENCY_CONFLICT", "This key was used with different inputs") unless prior.request_hash == request_hash

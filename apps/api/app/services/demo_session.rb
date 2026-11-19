@@ -10,9 +10,15 @@ class DemoSession
     @token = token
   end
 
-  def workspace(role: 'operator')
+  def workspace(role: 'operator', require_active: false)
     return unless @token.is_a?(String) && @token.match?(/\A[0-9a-f]{64}\z/)
-    Workbench.new(role: role, tenant: PREFIX + Digest::SHA256.hexdigest(@token))
+    Workbench.new(role: role, tenant: PREFIX + Digest::SHA256.hexdigest(@token),
+      demo_session: require_active ? self : nil)
+  end
+
+  def require_active!(workbench)
+    return if active?(workbench)
+    raise Economics::Error.new('DEMO_WORKSPACE_REQUIRED', 'Start your own demo workspace to make changes.')
   end
 
   def active?(workbench = workspace)
