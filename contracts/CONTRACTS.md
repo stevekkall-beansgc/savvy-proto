@@ -1,4 +1,8 @@
-# Local synthetic API 0.6.0
+# Local synthetic API history
+
+For the current API contract, see the [OpenAPI 0.8.0 reference](../docs/api/openapi.yaml)
+and the [authoritative GraphQL SDL](schema.graphql). The notes below describe
+the earlier 0.6.0 milestone.
 
 ## Disclosure-informed addition — 16 November 2026
 

@@ -12,6 +12,8 @@ const root=path.resolve(__dirname,'..');
  const check=(ok,label)=>{assert(ok,label);checks++};
  try{
  await page.goto(origin);await page.getByRole('link',{name:'API reference',exact:true}).click();await page.getByRole('heading',{name:'API reference.',exact:true}).waitFor();
+ const identity=await page.locator('#identity').innerText();
+ check(identity.includes('without signing in') && identity.includes('Start your own demo') && identity.includes('savvy_demo_session'),'Public reads and the isolated write session are distinguished');
  check(await page.locator('#operation-list .operation').count()===23,'Every SDL operation is listed');
  await page.getByLabel('Search operations').fill('audienceStatement');check(await page.locator('#operation-list .operation:visible').count()===1,'Search filters operations');
  await page.locator('#audienceStatement summary').click();check((await page.locator('#audienceStatement pre').innerText()).includes('query AudienceStatement'),'Statement request body expands');

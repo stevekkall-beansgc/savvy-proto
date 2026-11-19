@@ -14,7 +14,7 @@ from jsonschema import Draft202012Validator, FormatChecker
 from openapi_spec_validator import validate_spec
 
 ROOT=Path(__file__).resolve().parent.parent
-API_ORIGINS={'http://127.0.0.1:3102','http://127.0.0.1:3108','http://127.0.0.1:3109'}
+API_ORIGINS={'http://127.0.0.1:3101','http://127.0.0.1:3102','http://127.0.0.1:3108','http://127.0.0.1:3109'}
 
 
 def check(live=False):
@@ -72,8 +72,22 @@ def check(live=False):
         assert actual==committed,name+' differs from reference source pin'
     for path,fragment in [('/graphql','post "/graphql"'),('/health','get "/health"')]:
         assert fragment in (ROOT/'apps/api/config/routes.rb').read_text()
-        assert {entry['url'] for entry in spec['paths'][path]['servers']}=={'http://127.0.0.1:3108','http://127.0.0.1:3109'}
+        assert {entry['url'] for entry in spec['paths'][path]['servers']}=={'http://127.0.0.1:3101','http://127.0.0.1:3108','http://127.0.0.1:3109'}
     assert set(spec['paths'])=={'/api/graphql','/graphql','/health'}
+    host=json.loads((ROOT/'deploy/device-host.json').read_text())
+    assert host['access_mode']=='public_demo'
+    assert spec['servers'][0]['url']=='https://'+host['hostname']
+    assert spec['servers'][1]['url']=='http://127.0.0.1:3100'
+    hosted=spec['paths']['/api/graphql']['post']
+    assert hosted['security']==[{}, {'DemoWorkspaceSession':[]}]
+    assert set(spec['components']['securitySchemes'])=={'DemoWorkspaceSession'}
+    session=spec['components']['securitySchemes']['DemoWorkspaceSession']
+    session_source=(ROOT/'apps/web/lib/demo-session.ts').read_text()
+    assert session['in']=='cookie' and 'DEMO_COOKIE = "'+session['name']+'"' in session_source
+    assert 'Start your own demo' in hosted['x-hosted-access']
+    assert spec['paths']['/graphql']['post']['security']==[]
+    page=(ROOT/'docs/api/index.html').read_text()
+    assert 'API contract '+spec['info']['version'] in page
     assert spec['x-agent-interfaces']['mcp']['implemented'] is False
     assert spec['x-agent-interfaces']['webmcp']['implemented'] is False
     live_reads=0

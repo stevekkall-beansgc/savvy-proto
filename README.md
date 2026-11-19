@@ -5,11 +5,17 @@ RIA products. It shows how the same policy-driven engine turns source records
 and commercial terms into explainable invoices, advisor earnings, and Finance
 records.
 
+**The goal is to help advisors estimate what they’ll earn before billing closes.**
+The prototype uses the latest available synthetic balance and activity records with
+dated compensation terms. **Earnings** shows the estimate and its data cutoff
+alongside approved payables and confirmed payouts. The forecast-to-final workflow
+still needs validation with Savvy’s daily data and actual agreements.
+
 ## Start here
 
 | Open | What to try |
 |---|---|
-| [Working demo](https://savvy-proto.beanshop.top/) | Choose **Advisor business** or **Harbor RIA**, open **Statements**, and drill into an invoice. Use **Start your own demo** to try changes in a separate workspace. |
+| [Working demo](https://savvy-proto.beanshop.top/) | Choose **Advisor business** or **Harbor RIA**, open **Earnings** to compare estimates with payouts, or drill into an invoice under **Statements**. Use **Start your own demo** to try changes in a separate workspace. |
 | [Architecture](https://savvy.beanshop.top/) | Explore the **Mental model**, **Components**, and **Billing engine**. Click a component to see what creates it and open the exact source. |
 | [Evidence map](https://savvy.beanshop.top/evidence/) | Choose **Try one rollup**. Follow object creation from source delivery through invoice and report, and preview what each record can prove. The viewer also accepts JSON or CSV and exports a gap list. |
 | [API reference](https://savvy.beanshop.top/api/) | Read the GraphQL contract, policy and billing commands, and download OpenAPI YAML or the schema. |
@@ -61,17 +67,24 @@ Cash confirmations and supplied recognition schedules remain separate evidence.
 | Demo, API, and evidence viewer | [Next.js app](apps/web) · [GraphQL schema](contracts/schema.graphql) · [Evidence map code](scripts/trace_workflow_cycle.js) · [Evidence map guide](docs/CAMPFIRE-TRACE.md) |
 | What was tested | [Acceptance and current limits](docs/FOUR-CAPABILITY-CLOSURE-VALIDATION.md) · [Prototype checks](.github/workflows/ci.yml) · [Architecture checks](.github/workflows/architecture.yml) |
 
-## Run and maintain
+## Run a fresh clone
 
-The full app runs on the owner's Mac with Next.js, Rails and PostgreSQL. Local
-access is **http://127.0.0.1:3104/**. The Mac must remain powered, online and logged
-in with Docker running for the hosted app to be available.
+Install Docker with Compose and Node.js 22 or newer. In a fresh checkout, run:
 
-Developers should read [AGENTS.md](AGENTS.md), the
-[current handoff](NEW-SESSION-HANDOFF.md),
-[preview operations](docs/DEMO-PREVIEW.md) and
-[hosting/recovery](docs/HOSTING.md) before running setup or changing a deployment.
-Existing data must be preserved; tests use separate disposable databases.
+```sh
+./scripts/setup.sh
+SAVVY_DEMO_SESSIONS=1 npm --prefix apps/web run start
+```
+
+Open [http://127.0.0.1:3100/](http://127.0.0.1:3100/) and use the **Business**
+selector to explore both products. Setup loads the current fictional records
+for statements, Finance, and earnings. The local API and database bind to
+loopback ports 3101 and 55437.
+
+The [preview operations guide](docs/DEMO-PREVIEW.md) covers the separate
+device-hosted demo. Read [AGENTS.md](AGENTS.md), the
+[current handoff](NEW-SESSION-HANDOFF.md), and [hosting/recovery](docs/HOSTING.md)
+before changing that deployment. Use disposable databases for tests.
 
 Production identity, live source connectors, real agreements, advisor hierarchy,
 and MCP/WebMCP are future work. Policy data configures the engine’s supported

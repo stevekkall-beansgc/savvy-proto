@@ -3,12 +3,14 @@ info:
   title: Savvy billing prototype API
   version: 0.8.0
   description: Current synthetic Rails/GraphQL implementation. Savvy owns billing obligations, invoices/lines and
-    custodial instructions. One Economics::Engine evaluates policy data. Campfire and CLM remain mocked. The public
-    API reference is static documentation; hosted operations require the existing Cloudflare Access login. Simulated
-    X-Demo-Role identities are not production authentication.
+    custodial instructions. One Economics::Engine evaluates policy data. Campfire and CLM remain mocked. The API
+    reference is static. Hosted sample reads need no sign-in. Hosted mutations require an active isolated demo workspace.
+    X-Demo-Role selects a simulated role.
 servers:
 - url: https://savvy-proto.beanshop.top
-  description: Device-hosted full application; Cloudflare Access browser login required.
+  description: Public device-hosted synthetic demo. Prepared queries need no sign-in.
+- url: http://127.0.0.1:3100
+  description: Fresh-clone Next.js frontend on loopback.
 externalDocs:
   description: Authoritative GraphQL SDL in the repository
   url: https://github.com/stevekkall-beansgc/savvy-proto/blob/dbcca40ad9b9f1479976ed643b1f5e2af6a4f546/contracts/schema.graphql
@@ -30,8 +32,8 @@ paths:
       - name: X-Demo-Role
         in: header
         required: false
-        description: Simulated local identity only, not an authentication credential. Omission currently defaults
-          to operator. Real identity/account authorization is required before a production or agent integration.
+        description: Selects a simulated workspace role and defaults to operator. Hosted mutations also require
+          an active isolated demo workspace.
         schema:
           type: string
           enum:
@@ -51,7 +53,7 @@ paths:
             examples:
               householdRead:
                 summary: Read February household billing
-                value: &id005
+                value: &id006
                   query: 'query DisclosureWorkspace($audience: String!, $caseId: ID!, $limit: Int, $offset: Int,
                     $pageChanges: Boolean) { disclosureWorkspace(audience: $audience, caseId: $caseId, limit: $limit,
                     offset: $offset, pageChanges: $pageChanges) }'
@@ -63,7 +65,7 @@ paths:
                     pageChanges: true
               saveDraftPolicy:
                 summary: Save a draft; does not activate or bill
-                value: &id006
+                value: &id007
                   query: 'mutation DisclosureCommand($action: String!, $idempotencyKey: String!, $input: JSON!)
                     { disclosureCommand(action: $action, idempotencyKey: $idempotencyKey, input: $input) { data
                     errors { code message path } } }'
@@ -85,7 +87,7 @@ paths:
                     idempotencyKey: docs-save-policy-001
               submitPayoutRequest:
                 summary: Draft September payout request; does not execute payment
-                value: &id007
+                value: &id008
                   query: 'mutation MedallionCommand($action: MedallionCommand!, $idempotencyKey: String!, $input:
                     JSON!) { medallionCommand(action: $action, idempotencyKey: $idempotencyKey, input: $input) {
                     data errors { code message path } } }'
@@ -146,9 +148,11 @@ paths:
               schema:
                 $ref: '#/components/schemas/HttpError'
       security:
-      - CloudflareAccessSession: []
-      x-hosted-access: The existing Cloudflare Access gate can redirect an unauthenticated request to login or reject
-        it before the application handles the request.
+      - {}
+      - DemoWorkspaceSession: []
+      x-hosted-access: Prepared synthetic queries are public. Hosted mutations require an active demo workspace.
+        Choose Start your own demo in the working app to create a workspace. The browser sends the workspace cookie
+        and the server scopes changes to that workspace.
       x-limits:
         proxy_body_character_limit: 1048576
         rails_body_utf8_byte_limit: 1048576
@@ -156,11 +160,13 @@ paths:
         graphql_max_depth: 10
         graphql_max_complexity: 150
   /graphql:
-    servers:
+    servers: &id001
+    - url: http://127.0.0.1:3101
+      description: Fresh-clone Rails API on loopback.
     - url: http://127.0.0.1:3108
-      description: API slot A Rails API; loopback only.
+      description: Device-hosted Rails API slot A on loopback.
     - url: http://127.0.0.1:3109
-      description: API slot B Rails API slot; loopback only.
+      description: Device-hosted Rails API slot B on loopback.
     post:
       summary: Execute GraphQL directly on the loopback Rails API
       operationId: executeLocalGraphQL
@@ -174,8 +180,8 @@ paths:
       - name: X-Demo-Role
         in: header
         required: false
-        description: Simulated local identity only, not an authentication credential. Omission currently defaults
-          to operator. Real identity/account authorization is required before a production or agent integration.
+        description: Selects a simulated workspace role and defaults to operator. Hosted mutations also require
+          an active isolated demo workspace.
         schema:
           type: string
           enum:
@@ -290,8 +296,6 @@ paths:
               schema:
                 $ref: '#/components/schemas/HttpError'
       security: []
-      x-hosted-access: The existing Cloudflare Access gate can redirect an unauthenticated request to login or reject
-        it before the application handles the request.
       x-limits:
         proxy_body_character_limit: 1048576
         rails_body_utf8_byte_limit: 1048576
@@ -299,11 +303,7 @@ paths:
         graphql_max_depth: 10
         graphql_max_complexity: 150
   /health:
-    servers:
-    - url: http://127.0.0.1:3108
-      description: API slot A Rails health; loopback only.
-    - url: http://127.0.0.1:3109
-      description: API slot B Rails health slot; loopback only.
+    servers: *id001
     get:
       operationId: localHealth
       summary: Inspect local synthetic service health
@@ -344,12 +344,12 @@ paths:
                 - engine_version
 components:
   securitySchemes:
-    CloudflareAccessSession:
+    DemoWorkspaceSession:
       type: apiKey
       in: cookie
-      name: CF_Authorization
-      description: Existing Cloudflare Access browser session. This documents the hosted gate; it is not OAuth for
-        an MCP client. Do not put a session cookie in documentation or source.
+      name: savvy_demo_session
+      description: HTTP-only cookie set by Start your own demo. Required for hosted mutations and used to scope
+        reads to an active workspace. Anonymous queries use the prepared sample.
   schemas:
     GraphQLRequest:
       type: object
@@ -453,7 +453,7 @@ components:
       - errors
       description: Command-specific data is a GraphQL JSON scalar. Run is optionally selected on Payload. Empty
         errors alone does not establish cash execution or accounting recognition.
-    MinorUnits: &id001
+    MinorUnits: &id002
       type: string
       description: Exact minor units as a decimal integer string; unknown amounts are null, not zero.
       pattern: ^-?[0-9]+$
@@ -486,19 +486,19 @@ components:
             validated by DisclosurePolicy.
         minimum_minor:
           anyOf:
-          - *id001
+          - *id002
           - type: 'null'
         fixed_amount_minor:
           anyOf:
-          - *id001
+          - *id002
           - type: 'null'
         hourly_rate_minor:
           anyOf:
-          - *id001
+          - *id002
           - type: 'null'
         optional_amount_minor:
           anyOf:
-          - *id001
+          - *id002
           - type: 'null'
         optional_service:
           enum:
@@ -526,13 +526,13 @@ components:
           type: string
         policy:
           $ref: '#/components/schemas/HouseholdPolicy'
-        effective_from: &id002
+        effective_from: &id003
           type: string
           description: API end dates are exclusive; UI last-day dates are inclusive.
           format: date
         effective_to:
           anyOf:
-          - *id002
+          - *id003
           - type: 'null'
         reason:
           type: string
@@ -600,8 +600,8 @@ components:
           type: string
         subject_id:
           const: disclosure-alder-household
-        effective_from: *id002
-        effective_to: *id002
+        effective_from: *id003
+        effective_to: *id003
         reason:
           type: string
         supersedes_assignment_id:
@@ -640,7 +640,7 @@ components:
           - one_time_credit
           - compensation_entitlement
           - payout_request
-        amount_minor: &id004
+        amount_minor: &id005
           type: string
           description: Exact minor units as a decimal integer string; unknown amounts are null, not zero.
           pattern: ^[1-9][0-9]*$
@@ -654,7 +654,7 @@ components:
           type: string
         reason:
           type: string
-        economic_date: *id002
+        economic_date: *id003
         posting_period:
           type: string
           pattern: ^\d{4}-\d{2}$
@@ -692,7 +692,7 @@ components:
     SubmitEventInput:
       type: object
       properties:
-        case_id: &id003
+        case_id: &id004
           type: string
           enum:
           - advisor
@@ -708,7 +708,7 @@ components:
     ReviewEventInput:
       type: object
       properties:
-        case_id: *id003
+        case_id: *id004
         scenario_id:
           type: string
           default: baseline
@@ -738,7 +738,7 @@ components:
           type: string
         currency:
           const: USD
-        amount_minor: *id004
+        amount_minor: *id005
         posting_period:
           type: string
           pattern: ^\d{4}-\d{2}$
@@ -810,8 +810,8 @@ components:
           description: Validated typed primitive graph; mandatory assessed USD charge obligation and source requirements.
         input_requirements:
           type: object
-        minimum_minor: *id001
-        cap_minor: *id001
+        minimum_minor: *id002
+        cap_minor: *id002
         compensation:
           type: object
       required:
@@ -901,10 +901,10 @@ components:
       properties:
         policy:
           $ref: '#/components/schemas/SharedPolicy'
-        effective_from: *id002
+        effective_from: *id003
         effective_to:
           anyOf:
-          - *id002
+          - *id003
           - type: 'null'
         reason:
           type: string
@@ -923,8 +923,8 @@ components:
           type: string
         subject_id:
           type: string
-        service_start: *id002
-        service_end_exclusive: *id002
+        service_start: *id003
+        service_end_exclusive: *id003
       required:
       - policy_id
       - subject_id
@@ -977,8 +977,8 @@ components:
           type: string
         subject_id:
           type: string
-        effective_from: *id002
-        effective_to: *id002
+        effective_from: *id003
+        effective_to: *id003
         reason:
           type: string
         expected_schedule_hash:
@@ -996,8 +996,8 @@ components:
       properties:
         subject_id:
           type: string
-        service_start: *id002
-        service_end_exclusive: *id002
+        service_start: *id003
+        service_end_exclusive: *id003
         purpose:
           enum:
           - billing
@@ -1014,7 +1014,7 @@ components:
           type: string
         posting_period:
           type: string
-        due_on: *id002
+        due_on: *id003
       required:
       - run_id
       - posting_period
@@ -1102,7 +1102,7 @@ components:
           type: string
         expected_ledger_hash:
           type: string
-        amount_minor: *id004
+        amount_minor: *id005
         posting_period:
           type: string
         reason:
@@ -1142,7 +1142,7 @@ components:
           type: string
         expected_ledger_hash:
           type: string
-        amount_minor: *id004
+        amount_minor: *id005
         posting_period:
           type: string
         reason:
@@ -1262,8 +1262,8 @@ components:
           uniqueItems: true
           items:
             type: string
-        service_start: *id002
-        service_end_exclusive: *id002
+        service_start: *id003
+        service_end_exclusive: *id003
         reason:
           type: string
         run_at:
@@ -1500,7 +1500,7 @@ x-graphql-operations:
     type: Boolean
     required: false
   returns: JSON!
-  request: *id005
+  request: *id006
   example_note: Replace identifiers prefixed REPLACE_WITH using IDs from a preceding read.
 - name: entitlementLedger
   kind: query
@@ -1924,7 +1924,7 @@ x-command-examples:
   action: SAVE_POLICY
   schema: SavePolicyInput
   role: operator
-  request: *id006
+  request: *id007
 - family: disclosureCommand
   action: COMPARE_POLICY
   schema: ComparePolicyInput
@@ -2003,7 +2003,7 @@ x-command-examples:
   action: SUBMIT_EVENT
   schema: SubmitEventInput
   role: operator or finance
-  request: *id007
+  request: *id008
 - family: medallionCommand
   action: REVIEW_EVENT
   schema: ReviewEventInput

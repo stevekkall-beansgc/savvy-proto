@@ -18,9 +18,10 @@ and CLM remain mocked; supplied payment/accounting observations do not imply a l
 operation. Real disclosures retain view/download options; signed agreements remain
 absent. Earlier household/book examples remain under Demo identity.
 
-Fresh setup explicitly runs `script/seed_presentation.rb` and
-`script/seed_billing_platform.rb` and `script/seed_billing_closure.rb` after schema preparation and base seeds. Page reads
-and preview activation never seed. Read `FOUR-CAPABILITY-CLOSURE-VALIDATION.md` for current scope and limits.
+To run a fresh copy, follow [Run a fresh clone](../README.md#run-a-fresh-clone).
+The setup script loads presentation, shared billing, and closure fixtures after
+schema preparation and base seeds. Page reads and preview activation never seed.
+See [closure validation](FOUR-CAPABILITY-CLOSURE-VALIDATION.md) for tested scope.
 
 The four-capability baseline is served from `savvy-billing-complete-db` at
 55441; the prior candidate-b/API3109/database55440 pair remains preserved. Read

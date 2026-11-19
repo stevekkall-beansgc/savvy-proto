@@ -23,23 +23,14 @@ jobs:
       - uses: actions/setup-python@6d4fd22b20465ccc0f7354476588e8df7c9ca0e0 # v7.1.0
         with:
           python-version: '3.12'
-      - name: Install frontend and synthetic API runtime
-        run: |
-          npm ci --prefix apps/web --no-audit --no-fund
-          docker compose build api
-          docker compose up -d db
+      - name: Set up the documented fresh-clone demo
+        run: ./scripts/setup.sh
       - name: Python, Ruby, PostgreSQL and frontend checks
         run: ./scripts/check.sh
       - name: Seed isolated reporting fixture
-        run: |
-          docker compose run --rm api bundle exec rails db:prepare db:seed
-          docker compose exec -T db psql -U savvy_demo -d advisor_economics_synthetic -v ON_ERROR_STOP=1 < analytics/bootstrap.sql
+        run: docker compose exec -T db psql -U savvy_demo -d advisor_economics_synthetic -v ON_ERROR_STOP=1 < analytics/bootstrap.sql
       - name: Hosted frontend origin boundaries
         run: |
-          docker compose up -d api
-          docker compose run --rm api bundle exec rails runner script/seed_presentation.rb
-          docker compose run --rm api bundle exec rails runner script/seed_billing_platform.rb
-          docker compose run --rm api bundle exec rails runner script/seed_billing_closure.rb
           SAVVY_DEMO_SESSIONS=1 SAVVY_PUBLIC_ORIGIN=https://savvy-proto.beanshop.top npm --prefix apps/web run start > /tmp/savvy-web.log 2>&1 &
           savvy_web_pid=$!
           trap 'kill "$savvy_web_pid" 2>/dev/null || true' EXIT
