@@ -20,6 +20,7 @@
     "apps/api/app/services/billing_policy.rb",
     "apps/api/app/services/billing_worker.rb",
     "apps/api/app/services/billing_workspace.rb",
+    "apps/api/app/services/demo_session.rb",
     "apps/api/app/services/disclosure_policy.rb",
     "apps/api/app/services/disclosure_workbench.rb",
     "apps/api/app/services/medallion_workbench.rb",
@@ -36,5 +37,5 @@
     "docs/architecture/lifecycle-run.json",
     "docs/architecture/sample-run.json"
   ],
-  "source_commit": "471c5ac19ac1c6d891fe5d4a64fbc6375d34bd69"
+  "source_commit": "435ea0411957b27af941153c20f0c5d747e94785"
 }
