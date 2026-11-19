@@ -44,7 +44,7 @@ async function check() {
     }
     await startingRecord.selectOption({label:'Report or export · report-demo'});
     const chart = page.getByRole('figure',{name:'Trace gaps by record type',exact:true});
-    assert.ok(await chart.getByRole('img').count() > 3);
+    assert.ok(await chart.locator('.cycle-card[data-evidence=supplied]').count() > 0);
     const expected = page.getByRole('button',{name:'Preview Billing rollup',exact:true});
     await expected.click();
     assert.deepEqual(await field('Total amount').getByRole('cell').allTextContents(), ['—','To confirm']);
@@ -66,6 +66,18 @@ async function check() {
     assert.doesNotMatch(demo, /customer-demo|channel-demo|gl-demo/);
     if (process.env.SAVVY_GAP_SAMPLE_OUTPUT) await fs.writeFile(process.env.SAVVY_GAP_SAMPLE_OUTPUT, demo);
 
+    await page.getByRole('button',{name:'Try one rollup',exact:true}).click();
+    await chart.locator('#cycle-anchor[data-evidence=start]').getByText(/monthly-billing-rollup/).waitFor();
+    await chart.locator('.cycle-card[data-evidence=partial]').getByRole('button',{name:'Preview Savvy invoice',exact:true}).click();
+    const contribution = preview.getByRole('table',{name:'Illustrative invoice contribution',exact:true});
+    assert.deepEqual(await contribution.getByRole('cell').allTextContents(),
+      ['To confirm','1319.18','USD','2026-10-01 – 2026-10-31','Entity / month']);
+    assert.deepEqual(await field('Total amount').getByRole('cell').allTextContents(), ['—','To confirm']);
+    assert.match(await preview.innerText(), /contributor_count and total_amount/);
+    await page.keyboard.press('Escape');
+    assert.match(await page.locator('#single-scope').innerText(), /Related records supplied · 0/);
+    await page.getByRole('button',{name:'Clear imports',exact:true}).click();
+
     await input.setInputFiles(fixture);
     await page.waitForFunction(() => document.querySelector('#download-gaps').disabled);
     await page.getByRole('button', {name:'Confirm types & build map',exact:true}).click();
@@ -83,8 +95,10 @@ async function check() {
     const scope = page.locator('#single-scope');
     assert.match(await scope.innerText(), /Related records supplied · 0/);
     assert.match(await scope.innerText(), /Excluded 1 relationship or lineage row/);
-    assert.equal(await chart.getByRole('img',{name:'Downstream gaps for Invoice · 1'}).count(), 1);
-    assert.equal(await chart.getByRole('img').count(),3);
+    await chart.locator('#cycle-anchor[data-evidence=start]').waitFor();
+    await chart.locator('#cycle-downstream .cycle-card[data-evidence=partial]').getByRole('button',{name:'Preview Campfire accounting'}).waitFor();
+    assert.ok(await chart.locator('.cycle-card[data-evidence=missing]').count() > 0);
+    assert.equal(await chart.locator('.cycle-card[data-evidence=supplied]').count(), 0);
     assert.doesNotMatch(await startingRecord.innerText(), /outside-reference|report-demo/);
     await page.getByRole('button',{name:'Preview Campfire accounting',exact:true}).click();
     assert.deepEqual(await field('Record ID').getByRole('cell').allTextContents(), ['unseen-journal','Reference']);
@@ -112,7 +126,7 @@ async function check() {
     await page.keyboard.press('Escape');
     assert.deepEqual(requests, []);
     assert.deepEqual(errors, []);
-    console.log('Evidence map, gap chart, single-record provenance, offline CSV export, and mobile layout passed.');
+    console.log('Evidence map flow, example contribution, single-record provenance, offline CSV, and mobile layout passed.');
   } finally {
     await browser.close();
   }

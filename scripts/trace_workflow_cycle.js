@@ -36,7 +36,29 @@ const traceCycle = (() => {
     event: [['source?', 'policy?'], ['calculation?', 'invoice?', 'payable?', 'payout?']],
   };
 
-  function plan(entry, entries) {
+  function rollupContributor(entry) {
+    if (entry.type !== 'aggregate' || entry.state === 'reference only') return null;
+    const fields = {...entry.preview?.fields, ...entry.evidence};
+    const normalized = value => String(value || '').toLowerCase().replace(/[-_]/g, ' ').trim();
+    const measure = normalized(fields.measure), basis = normalized(fields.basis);
+    if (/\b(?:bank|cash|settlement|payments?|collected|journal|ledger)\b/.test(measure + ' ' + basis)) return null;
+    if (!/\binvoic(?:e|es|ed|ing)\b/.test(measure) && basis !== 'issued originals') return null;
+    const members = entry.preview?.sections?.members;
+    const oneInvoice = fields.contributor_count === '1' && measure === 'original invoice total' &&
+      basis === 'issued originals' && (!members || members.total === 0 ||
+        (members.total === 1 && members.rows[0]?.kind === 'invoice'));
+    const amount = oneInvoice && /^-?\d{1,20}(?:\.\d{1,12})?$/.test(fields.total_amount) ? fields.total_amount : null;
+    const currency = /^[A-Z]{3}$/.test(fields.currency) ? fields.currency : null;
+    const grain = fields.grain || null;
+    const start = fields.period_start || null, end = fields.period_end || null;
+    if (![amount, currency, grain, start, end].some(Boolean)) return null;
+    return {
+      amount, currency, grain, start, end,
+      source: entry.id || entry.label,
+    };
+  }
+
+  function plan(entry, entries, {singleRecord = false} = {}) {
     const evidence = entry.evidence;
     let [upstream, downstream] = paths[entry.type] || [
       ['source?', 'normalized?', 'calculation?'], ['aggregate?', 'statement?', 'journal?'],
@@ -86,6 +108,7 @@ const traceCycle = (() => {
 
     function stageCards(keys, direction) {
       const connections = entry[direction];
+      const contribution = singleRecord && direction === 'upstream' ? rollupContributor(entry) : null;
       const shown = new Set();
       const cards = keys.map(key => {
         const conditional = key.endsWith('?');
@@ -94,8 +117,9 @@ const traceCycle = (() => {
         actual.forEach(link => shown.add(link.node));
         const present = actual.some(link => entries[link.node].state === 'record present');
         const referenced = actual.some(link => entries[link.node].state === 'reference only');
-        const state = referenced ? (present ? 'partial' : 'reference') : present ? 'linked' : conditional ? 'conditional' : 'expected';
-        return {title, state, ask, actual, kinds};
+        const example = !present && !conditional && kinds.includes('invoice') ? contribution : null;
+        const state = referenced ? (present ? 'partial' : 'reference') : present ? 'linked' : example ? 'illustration' : conditional ? 'conditional' : 'expected';
+        return {title, state, ask, actual, kinds, example};
       });
       for (const link of connections.filter(link => !shown.has(link.node)).slice(0, 5)) {
         const node = entries[link.node];
@@ -113,6 +137,7 @@ const traceCycle = (() => {
       for (const [key, title] of fields) identityFields.push(title + ' · ' + (evidence[key] || 'unknown'));
       const amount = evidence.total_amount || evidence.amount;
       if (amount) identityFields.push('Reported total · ' + [amount, evidence.currency].filter(Boolean).join(' '));
+      if (entry.preview?.fields?.contributor_count) identityFields.push('Contributor count · ' + entry.preview.fields.contributor_count);
       if (evidence.manifest_ref) identityFields.push('Manifest reference · ' + evidence.manifest_ref);
     }
     if (entry.type === 'journal') {
@@ -129,7 +154,7 @@ const traceCycle = (() => {
     };
   }
 
-  return {plan};
+  return {plan, rollupContributor};
 })();
 
 if (typeof module !== 'undefined') module.exports = traceCycle;

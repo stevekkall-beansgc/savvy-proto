@@ -204,6 +204,7 @@
   roleSelect.append(eventOptions);
   get('try-rollup').addEventListener('click', () => {
     const rollup = {kind: 'aggregate', id: 'monthly-billing-rollup', measure: 'Original invoice total',
+      basis: 'Issued originals', grain: 'Entity / month', contributor_count: 1,
       total_amount: '1319.18', currency: 'USD', period_start: '2026-10-01', period_end: '2026-10-31'};
     void addFiles([new File([JSON.stringify(rollup)], 'sample-rollup.json', {type: 'application/json'})]);
   });

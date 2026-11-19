@@ -76,8 +76,15 @@ With one supplied object, the map names it as the sole evidence source.
 Related previews identify direct references and their original field paths.
 Fields outside the supplied object and separate crosswalk or lineage rows need
 their own evidence. To include them, supply the related records and confirm
-their links in a batch. The trace-gap chart counts supplied records by type,
-with separate bars for upstream gaps, downstream gaps, and record issues.
+their links in a batch. The flow chart colors the starting point, supplied
+related records, partial evidence, and gaps. Its arrows show upstream and
+downstream direction.
+
+`Try one rollup` illustrates an invoice contribution. The preview uses the
+rollup's grain, reporting dates and currency. Where the source states that
+an original-invoice total has exactly one contributor, that total gives
+the example contribution amount. Otherwise the amount remains open. The
+example stays separate from the invoice checklist and the evidence graph.
 For an unexplained rollup, start by confirming the measure, grain, period and
 basis before choosing between fee results, invoice activity and cash activity.
 The browser uses the supplied or confirmed references to trace actual links.

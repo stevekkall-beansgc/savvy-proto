@@ -2,7 +2,7 @@
 
 const assert = require('node:assert/strict');
 const test = require('node:test');
-const {plan} = require('../scripts/trace_workflow_cycle.js');
+const {plan, rollupContributor} = require('../scripts/trace_workflow_cycle.js');
 const {observe, review, gapRows, gapCsv} = require('../scripts/trace_workflow_dimensions.js');
 const {capture, model} = require('../scripts/trace_workflow_previews.js');
 const profiles = require('../scripts/trace_record_profiles.json');
@@ -134,4 +134,25 @@ test('record previews distinguish reference IDs from actual line values', () => 
   assert.equal(actual.rows.find(row => row.field === 'Posting period').value, '2026-11');
   assert.deepEqual(actual.sections[0].rows, [['line-1','999999999999999','0','operations']]);
   assert.equal(actual.rows.find(row => row.field === 'Currency').status, 'Not supplied');
+});
+
+test('single-record invoice rollups illustrate only fields supported by the rollup', () => {
+  const fieldValues = {measure:'Original invoice total', basis:'Issued originals', grain:'Entity / month',
+    currency:'USD', period_start:'2026-10-01', period_end:'2026-10-31', total_amount:'1319.18'};
+  const partial = point('aggregate', fieldValues);
+  const row = rollupContributor(partial);
+  assert.equal(row.currency, 'USD');
+  assert.equal(row.start, '2026-10-01');
+  assert.equal(row.amount, null);
+  assert.equal(plan(partial, []).upstream.find(card => card.title === 'Savvy invoice').example, null);
+  assert.equal(plan(partial, [], {singleRecord:true}).upstream.find(card => card.title === 'Savvy invoice').state, 'illustration');
+
+  function withContributors(count, members) {
+    const raw = {...fieldValues, contributor_count:count, ...(members ? {members} : {})};
+    return {...partial, preview:capture(raw,'aggregate',profiles)};
+  }
+  assert.equal(rollupContributor(withContributors(1)).amount, '1319.18');
+  assert.equal(rollupContributor(withContributors(2)).amount, null);
+  assert.equal(rollupContributor(withContributors(1,[{kind:'invoice'},{kind:'invoice'}])).amount, null);
+  assert.equal(rollupContributor({...partial, evidence:{...fieldValues,measure:'Cash collected on invoices'}}), null);
 });

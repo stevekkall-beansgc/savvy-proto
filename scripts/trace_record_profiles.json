@@ -4,7 +4,7 @@
     "normalized": ["source_id", "source_revision", "normalization_run_id", "mapping_version", "customer_id", "account_id", "economic_date", "amount_minor", "currency"],
     "policy": ["policy_id", "policy_version_id", "agreement_ref", "billing_subject_id", "product_id", "starts_on", "ends_on"],
     "calculation": ["input_manifest_id", "assignment_id", "policy_version_id", "billing_subject_id", "period_start", "period_end", "amount_minor", "currency"],
-    "aggregate": ["measure", "basis", "grain", "period_start", "period_end", "total_amount", "currency", "manifest_ref", "members_complete"],
+    "aggregate": ["measure", "basis", "grain", "period_start", "period_end", "total_amount", "currency", "contributor_count", "manifest_ref", "members_complete"],
     "invoice": ["invoice_number", "billing_subject_id", "period_start", "period_end", "total_amount", "amount_due", "currency", "calculation_ref", "journal_entry"],
     "statement": ["invoice_id", "invoice_line_id", "payable_id", "period_start", "period_end", "amount", "currency", "status"],
     "credit_memo": ["invoice_id", "invoice_line_id", "original_id", "amount_minor", "applied_amount", "applied_on", "currency", "reason_code", "status"],
