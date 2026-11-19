@@ -1,0 +1,12 @@
+{
+  "anchor": {"kind": "journal", "id": "journal-harbor"},
+  "as_of": "2026-11-18",
+  "complete_associations": true,
+  "line_id": "harbor-platform-line",
+  "invoices": [{"id": "invoice-harbor", "entity": "entity-demo", "invoice_number": "HARBOR-OCT", "source": "savvy", "source_id": "bp-doc-551bc9c2-81bf-4e44-ac98-23a8fb64fda6", "currency": "USD", "invoice_date": "2026-11-18", "period_start": "2026-10-01", "period_end": "2026-10-31", "total_amount": "250.00", "amount_due": "35.00", "journal_entry": "journal-harbor", "contract": "mock-terms-harbor", "lines": [{"id": "harbor-platform-line", "currency": "USD", "amount": "250.00", "tax": "0.00"}]}],
+  "credit_memos": [{"id": "credit-harbor", "invoice_id": "invoice-harbor", "currency": "USD", "applied_amount": "90.00", "applied_on": "2026-11-18"}],
+  "payments": [{"id": "payment-harbor", "invoice_id": "invoice-harbor", "currency": "USD", "amount": "125.00", "payment_date": "2026-11-18", "voided_date": null, "application_kind": "receipt", "cash_confirmation_id": "fictional-custodian-receipt"}],
+  "journals": [{"id": "journal-harbor", "invoice_id": "invoice-harbor", "posting_date": "2026-11-18", "schedule_id": "mock-october-ria"}],
+  "statements": [{"id": "statement-oct", "invoice_id": "invoice-harbor", "invoice_line_id": "harbor-platform-line"}],
+  "lineage": [{"invoice_id": "invoice-harbor", "invoice_line_id": "harbor-platform-line", "expected_line_amount": "250.00", "currency": "USD", "agreement_ref": "mock-terms-harbor"}]
+}

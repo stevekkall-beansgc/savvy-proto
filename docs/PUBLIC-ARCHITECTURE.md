@@ -4,8 +4,9 @@ Architecture hostname: **https://savvy.beanshop.top/**.
 Source: **https://github.com/stevekkall-beansgc/savvy-proto** (public).
 
 This publication serves the standalone architecture document, not the Rails
-application. It has no login, provider connection, GraphQL endpoint, database,
-local-file viewer, payment action or accounting posting. The public synthetic
+application. It includes the architecture, API reference and a browser-only
+evidence map. The site has no provider connection, GraphQL endpoint, database,
+payment action or accounting posting. The public synthetic
 device-hosted app at `savvy-proto.beanshop.top` remains a separate route.
 
 ## Build and verification
@@ -20,7 +21,8 @@ python3 scripts/package_architecture.py
 
 The allowlisted publication directory is `.runtime/publication/site/` and
 contains only `index.html`, `404.html`, `_headers`, `robots.txt`,
-`build-metadata.json`, `api/index.html`, `api/openapi.yaml` and `api/schema.graphql`. Credentials, repository source files and local service
+`build-metadata.json`, `api/index.html`, `api/openapi.yaml`, `api/schema.graphql`
+and `evidence/index.html`. Credentials, repository source files and local service
 scripts are not copied into it. The HTML retains selected source excerpts and
 links to the exact source commit on GitHub. There are no local-file links.
 
@@ -50,6 +52,15 @@ GraphQL documents/variables, action enums, typed command examples and source
 drift. `--live` performs only three loopback reads; it sends no mutations.
 The architecture workflow checks generation, validation and desktop/mobile
 reference navigation, filtering and downloads.
+
+## Evidence map
+
+The [Evidence map](https://savvy.beanshop.top/evidence/) runs in the browser.
+The published page includes only a fictional walkthrough. People can drop
+redacted JSON or CSV for an assessment and download a gap list from
+`Reporting dimension coverage`. Imported files and generated CSVs stay on the
+visitor's device. The static bundle has no upload endpoint. The browser test
+checks that the file import and CSV work after network access is disabled.
 
 ## Publish
 

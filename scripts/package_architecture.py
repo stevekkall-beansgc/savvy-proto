@@ -8,6 +8,8 @@ import json
 from pathlib import Path
 import re
 import subprocess
+import trace_campfire
+import trace_workflow_map
 
 ROOT = Path(__file__).resolve().parent.parent
 
@@ -27,7 +29,10 @@ def package(output):
         raise ValueError('Embedded source-link template contains a loopback/file URL.')
     api_html = (ROOT / 'docs/api/index.html').read_text()
     Links().feed(api_html)
-    scripts = re.findall(r'<script(?![^>]*type="application/json")[^>]*>(.*?)</script>', html + api_html, re.S)
+    with (ROOT / 'fixtures/campfire-trace/dimension-walkthrough.json').open(encoding='utf-8') as fixture:
+        evidence_html = trace_workflow_map.render(trace_workflow_map.build([trace_campfire.load(fixture)]))
+    Links().feed(evidence_html)
+    scripts = re.findall(r'<script(?![^>]*type="application/json")[^>]*>(.*?)</script>', html + api_html + evidence_html, re.S)
     hashes = ['sha256-' + base64.b64encode(sha256(script.encode()).digest()).decode() for script in scripts]
     csp = "default-src 'none'; script-src " + ' '.join("'"+h+"'" for h in hashes) + "; style-src 'unsafe-inline'; font-src data:; img-src data:; connect-src 'none'; base-uri 'none'; frame-ancestors 'none'; form-action 'none'"
     (output / 'index.html').write_text(html)
@@ -35,14 +40,16 @@ def package(output):
     (output / 'api/index.html').write_text(api_html)
     (output / 'api/openapi.yaml').write_bytes((ROOT / 'docs/api/openapi.yaml').read_bytes())
     (output / 'api/schema.graphql').write_bytes((ROOT / 'contracts/schema.graphql').read_bytes())
+    (output / 'evidence').mkdir(exist_ok=True)
+    (output / 'evidence/index.html').write_text(evidence_html, encoding='utf-8')
     (output / '404.html').write_text('<!doctype html><html lang="en"><meta charset="utf-8"><title>Page not found</title><h1>Page not found</h1><a href="/">Open the architecture walkthrough</a></html>')
     (output / 'robots.txt').write_text('User-agent: *\nDisallow: /\n')
     (output / '_headers').write_text('/*\n  Cache-Control: public, max-age=0, must-revalidate, no-transform\n  X-Content-Type-Options: nosniff\n  Referrer-Policy: strict-origin-when-cross-origin\n  X-Robots-Tag: noindex\n  Content-Security-Policy: '+csp+'\n')
     commit = subprocess.check_output(['git','rev-parse','HEAD'],cwd=ROOT,text=True).strip()
     data = json.loads(re.search(r'<script id="architecture-data" type="application/json">(.*?)</script>',html,re.S).group(1))
-    metadata = {'document_commit':commit,'engine_source_commit':data['source_commit'],'html_sha256':sha256(html.encode()).hexdigest(),'api_html_sha256':sha256(api_html.encode()).hexdigest(),'openapi_sha256':sha256((output/'api/openapi.yaml').read_bytes()).hexdigest(),'static_only':True,'authentication_required':False}
+    metadata = {'document_commit':commit,'engine_source_commit':data['source_commit'],'html_sha256':sha256(html.encode()).hexdigest(),'api_html_sha256':sha256(api_html.encode()).hexdigest(),'openapi_sha256':sha256((output/'api/openapi.yaml').read_bytes()).hexdigest(),'evidence_html_sha256':sha256(evidence_html.encode()).hexdigest(),'static_only':True,'authentication_required':False}
     (output / 'build-metadata.json').write_text(json.dumps(metadata,indent=2)+'\n')
-    expected={'index.html','404.html','robots.txt','_headers','build-metadata.json','api/index.html','api/openapi.yaml','api/schema.graphql'}
+    expected={'index.html','404.html','robots.txt','_headers','build-metadata.json','api/index.html','api/openapi.yaml','api/schema.graphql','evidence/index.html'}
     if {p.relative_to(output).as_posix() for p in output.rglob('*') if p.is_file()} != expected:
         raise ValueError('Unexpected file in static publication directory.')
     print(json.dumps({'files':sorted(expected),'html_bytes':len(html.encode()),**metadata}))

@@ -6,6 +6,7 @@ Internal Product and Internal Finance a shared view of the same evidence.
 
 **[Open the demo](https://savvy-proto.beanshop.top/) ·
 [Explore the architecture](https://savvy.beanshop.top/) ·
+[Review evidence and gaps](https://savvy.beanshop.top/evidence/) ·
 [API reference](https://savvy.beanshop.top/api/)**
 
 Start with the [Savvy review guide](docs/SAVVY-REVIEW.md). Both the affiliated

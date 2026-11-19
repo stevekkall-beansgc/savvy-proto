@@ -1,0 +1,17 @@
+{
+  "batch": {
+    "payload": [
+      {
+        "billingRecord": {
+          "recordKey": "bill-redacted-A",
+          "billNumber": "oct-platform-A",
+          "issuedOn": "2026-11-18",
+          "coverage": {"serviceStart": "2026-10-01", "serviceEnd": "2026-10-31"},
+          "totals": {"grossAmount": "250.00", "remainingBalance": "35.00", "currencyCode": "USD"},
+          "ledgerEntry": {"id": "posting-redacted-A"},
+          "details": [{"entryKey": "line-redacted-A", "extendedAmount": "250.00"}]
+        }
+      }
+    ]
+  }
+}

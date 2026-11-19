@@ -1,0 +1,209 @@
+{
+  "invoices": [
+    {
+      "id": "invoice-harbor",
+      "entity": "entity-demo",
+      "invoice_number": "HARBOR-OCT",
+      "source": "savvy",
+      "source_id": "bp-doc-551bc9c2-81bf-4e44-ac98-23a8fb64fda6",
+      "currency": "USD",
+      "invoice_date": "2026-11-18",
+      "period_start": "2026-10-01",
+      "period_end": "2026-10-31",
+      "total_amount": "250.00",
+      "amount_due": "35.00",
+      "journal_entry": "journal-harbor",
+      "contract": "mock-terms-harbor",
+      "lines": [
+        {
+          "id": "harbor-platform-line",
+          "currency": "USD",
+          "amount": "250.00",
+          "tax": "0.00"
+        }
+      ]
+    },
+    {
+      "id": "invoice-alder",
+      "entity": "entity-demo",
+      "invoice_number": "ALDER-OCT",
+      "source": "savvy",
+      "currency": "USD",
+      "invoice_date": "2026-11-18",
+      "period_start": "2026-10-01",
+      "period_end": "2026-10-31",
+      "total_amount": "1069.18",
+      "amount_due": "534.59",
+      "journal_entry": "journal-alder",
+      "lines": [
+        {
+          "id": "alder-advisory",
+          "currency": "USD",
+          "amount": "1019.18"
+        },
+        {
+          "id": "alder-planning",
+          "currency": "USD",
+          "amount": "50.00"
+        }
+      ]
+    }
+  ],
+  "credit_memos": [
+    {
+      "id": "credit-harbor",
+      "invoice_id": "invoice-harbor",
+      "currency": "USD",
+      "applied_amount": "90.00",
+      "applied_on": "2026-11-18"
+    }
+  ],
+  "payments": [
+    {
+      "id": "payment-harbor",
+      "invoice_id": "invoice-harbor",
+      "currency": "USD",
+      "amount": "125.00",
+      "payment_date": "2026-11-18",
+      "voided_date": null,
+      "application_kind": "receipt",
+      "cash_confirmation_id": "fictional-custodian-receipt"
+    },
+    {
+      "id": "payment-unattached",
+      "invoice_id": "invoice-not-in-export",
+      "currency": "USD",
+      "amount": "75.00",
+      "payment_date": "2026-11-18",
+      "payment_type": "other"
+    }
+  ],
+  "journals": [
+    {
+      "id": "journal-harbor",
+      "invoice_id": "invoice-harbor",
+      "posting_date": "2026-11-18",
+      "schedule_id": "mock-october-ria"
+    }
+  ],
+  "statements": [
+    {
+      "id": "statement-oct",
+      "invoice_id": "invoice-harbor",
+      "invoice_line_id": "harbor-platform-line"
+    },
+    {
+      "id": "statement-alder",
+      "invoice_id": "invoice-alder",
+      "invoice_line_id": "alder-advisory",
+      "currency": "USD"
+    }
+  ],
+  "lineage": [
+    {
+      "invoice_id": "invoice-harbor",
+      "invoice_line_id": "harbor-platform-line",
+      "expected_line_amount": "250.00",
+      "currency": "USD",
+      "agreement_ref": "mock-terms-harbor"
+    },
+    {
+      "invoice_id": "invoice-alder",
+      "invoice_line_id": "alder-advisory",
+      "agreement_ref": "alder-terms-v1",
+      "policy_version_id": "advisor-policy-v1",
+      "assignment_id": "alder-assignment",
+      "source_record_ids": [
+        "alder-source-day-01"
+      ],
+      "normalization_run_id": "sample-normalization-run",
+      "normalized_record_ids": [
+        "alder-balance-day-01"
+      ],
+      "calculation_id": "alder-calculation-oct",
+      "input_manifest_id": "alder-manifest-oct",
+      "savvy_invoice_line_id": "alder-native-line-A"
+    }
+  ],
+  "reconciliations": [
+    {
+      "invoice_id": "invoice-harbor",
+      "as_of": "2026-11-18",
+      "complete_associations": true
+    }
+  ],
+  "entries": [
+    {
+      "kind": "source",
+      "id": "custody-delivery-A",
+      "entity": "entity-demo"
+    },
+    {
+      "kind": "normalized",
+      "id": "alder-balance-day-01",
+      "entity": "entity-demo"
+    },
+    {
+      "kind": "calculation",
+      "id": "alder-calculation-oct",
+      "entity": "entity-demo",
+      "input_manifest_id": "alder-manifest-oct"
+    },
+    {
+      "kind": "policy",
+      "id": "alder-assignment",
+      "entity": "entity-demo",
+      "agreement_ref": "alder-terms-v1"
+    }
+  ],
+  "aggregates": [
+    {
+      "id": "billed-rollup-oct",
+      "entity": "entity-demo",
+      "currency": "USD",
+      "measure": "original-invoice-total",
+      "grain": "entity/month",
+      "basis": "issued-originals",
+      "period_start": "2026-10-01",
+      "period_end": "2026-10-31",
+      "total_amount": "1319.18",
+      "members": [
+        {
+          "kind": "invoice",
+          "id": "invoice-harbor"
+        },
+        {
+          "kind": "invoice",
+          "id": "invoice-alder"
+        }
+      ]
+    },
+    {
+      "id": "unexplained-ledger-total",
+      "currency": "USD",
+      "total_amount": "3800.00"
+    }
+  ],
+  "links": [
+    {
+      "from": {
+        "kind": "source",
+        "id": "custody-delivery-A"
+      },
+      "to": {
+        "kind": "normalized",
+        "id": "alder-balance-day-01"
+      }
+    },
+    {
+      "from": {
+        "kind": "aggregate",
+        "id": "billed-rollup-oct"
+      },
+      "to": {
+        "kind": "journal",
+        "id": "monthly-accounting-review-unprovided"
+      }
+    }
+  ]
+}

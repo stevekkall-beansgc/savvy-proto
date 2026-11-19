@@ -1,0 +1,338 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; style-src 'unsafe-inline'; script-src 'unsafe-inline'; connect-src 'none'; form-action 'none'; base-uri 'none'">
+<title>Savvy · Billing evidence map</title>
+<style>
+:root{color-scheme:light;--ink:#17332b;--sub:#486157;--pine:#124237;--line:#d4ddd2;--paper:#f5f3eb}*{box-sizing:border-box}body{margin:0;background:var(--paper);color:var(--ink);font:15px/1.5 system-ui,sans-serif}main{max-width:1120px;margin:auto;padding:34px 26px 60px}h1,h2,h3,p{margin:0}h1{font:clamp(40px,6vw,70px)/1 Georgia,serif;letter-spacing:-.04em}h2{font:28px/1.2 Georgia,serif}h3{font-size:16px}p{color:var(--sub)}.kicker{color:var(--pine);font-size:11px;letter-spacing:.15em;font-weight:750;text-transform:uppercase;margin-bottom:10px}.intro{margin-top:10px;max-width:680px}.overview{display:flex;gap:12px;flex-wrap:wrap;margin:20px 0}.tile{min-width:148px;padding:10px 14px;background:#fff;border:1px solid var(--line);border-radius:8px}.tile strong{display:block;font-size:23px}.panel{border:1px solid var(--line);background:#fff;border-radius:10px;margin:14px 0;padding:17px}.controls{display:flex;justify-content:space-between;align-items:end;gap:8px;flex-wrap:wrap}.controls p{margin-top:5px}.controls label{font-size:13px;display:grid;gap:4px}.controls select{min-width:170px;max-width:100%;padding:8px;font:inherit;border:1px solid #91a59a;border-radius:5px;background:#fff;color:var(--ink)}.chain,.outcomes{display:grid;gap:13px;margin:15px 0}.chain{grid-template-columns:repeat(5,minmax(0,1fr))}.outcomes{grid-template-columns:repeat(3,minmax(0,1fr));margin-top:7px}.flow-label{font-size:12px;color:var(--sub);margin-top:12px}.node{position:relative;text-align:left;min-width:0;font:inherit;border:1px solid var(--line);border-radius:8px;min-height:105px;padding:10px;background:#f9faf7;color:var(--ink);cursor:pointer}.node .group,.node .status{display:block;font-size:12px}.node strong{display:block;line-height:1.25;margin:5px 0}.node .group{color:var(--sub)}.node .status{color:#654719}.node[data-state='linked'],.node[data-state='tied out'],.node[data-state='references']{background:#eaf3e9}.node[data-state='linked'] .status,.node[data-state='tied out'] .status,.node[data-state='references'] .status{color:#225345}.node[data-state='variance']{background:#faeee6}.chain .node:not(:last-child)::after{content:'→';position:absolute;right:-12px;top:42%;font-size:12px}.node[aria-pressed=true]{outline:2px solid #28624c;outline-offset:1px}button:focus-visible,select:focus-visible,summary:focus-visible{outline:2px solid #246450;outline-offset:2px}.detail{padding:13px 15px;background:#f4f5ee;border-radius:8px}.detail p,.detail ul{margin-top:7px}.detail ul{padding-left:20px}.record{display:grid;gap:6px;padding:8px 0}.record div{font-size:13px;overflow-wrap:anywhere}.record small{font-weight:680;display:inline-block;margin-right:7px}table{border-collapse:collapse;width:100%;font-size:13px}th,td{text-align:left;border-bottom:1px solid var(--line);padding:8px 6px;vertical-align:top;overflow-wrap:anywhere}th[scope=col]{color:var(--sub)}summary{cursor:pointer;font-weight:650}.log{font-size:13px;margin-top:6px}.muted{margin:6px 0;font-size:13px;color:var(--sub)}[hidden]{display:none!important}
+.entry-flow{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;margin:14px 0}.entry-flow>div{border:1px solid var(--line);border-radius:8px;padding:12px;min-width:0}.entry-flow>div:nth-child(2){background:#eaf3e9}.entry-links{list-style:none;padding:0;margin:7px 0 0;max-height:270px;overflow:auto}.entry-links li{border-bottom:1px solid var(--line);padding:5px 0}.entry-links button{border:0;background:none;padding:2px;color:var(--pine);font:inherit;text-align:left;text-decoration:underline;cursor:pointer;overflow-wrap:anywhere}.entry-links small{display:block;color:var(--sub);overflow-wrap:anywhere}.entry-flow .record strong{overflow-wrap:anywhere}
+.drop-zone{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:9px;border:1px dashed #789387;border-radius:8px;padding:14px;margin-top:13px;background:#f6f9f3}.drop-zone[data-drag=true]{border-color:#124237;outline:2px solid #548670}.actions{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin:12px 0 0}.action{font:inherit;font-size:14px;font-weight:650;border:1px solid #789387;background:#fff;color:var(--pine);padding:7px 11px;border-radius:5px;cursor:pointer}.action.primary{background:var(--pine);color:#fff;border-color:var(--pine)}.action:disabled{opacity:.55;cursor:default}.import-editor{margin-top:13px;padding-top:13px;border-top:1px solid var(--line)}.import-editor select,.import-editor input{width:100%;min-width:0;border:1px solid #91a59a;border-radius:5px;padding:7px;font:inherit;color:var(--ink);background:#fff}.import-fields{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(190px,100%),1fr));gap:8px;margin:9px 0}.import-fields label{display:grid;gap:3px;min-width:0;font-size:13px;align-content:start}.import-editor details{margin:12px 0}.import-editor p,.import-editor li{overflow-wrap:anywhere}.import-editor ul{padding-left:19px}.import-editor li .action{margin-left:8px}.import-message[data-error=true]{color:#8e3023}.trace-origin{margin-top:12px}
+.cycle-map{border-top:1px solid var(--line);padding-top:16px;margin:16px 0}.cycle-context{margin-top:6px;max-width:76ch}.cycle-grid{display:grid;grid-template-columns:1fr .86fr 1fr;gap:12px;align-items:start;margin-top:14px}.cycle-grid section{min-width:0}.cycle-grid h4{font-size:13px;margin:0 0 8px}.cycle-stack{display:grid;gap:6px}.cycle-card,.cycle-anchor{background:#f9faf7;border:1px solid var(--line);border-radius:7px;padding:8px 10px;overflow-wrap:anywhere}.cycle-card strong,.cycle-anchor strong{display:block;font-size:14px}.cycle-card p,.cycle-anchor p{font-size:12px;margin-top:3px}.cycle-card[data-state=expected],.cycle-card[data-state=reference],.cycle-card[data-state=partial]{background:#fff8e7;border-color:#e2cb97}.cycle-card[data-state=conditional]{border-style:dashed}.cycle-card[data-state=linked],.cycle-anchor{background:#eaf3e9}.cycle-card .cycle-state,.cycle-anchor .cycle-state{display:block;font-size:11px;font-weight:700;color:#55472c}.cycle-card[data-state=linked] .cycle-state{color:var(--pine)}.cycle-card .entry-links{margin-top:3px;font-size:12px;max-height:124px}.cycle-card .entry-links li:last-child{border-bottom:0}.cycle-anchor .record{padding-bottom:0}.cycle-anchor .cycle-facts{border-top:1px solid var(--line);margin-top:9px;padding-top:8px}.drop-zone .actions{margin:0}body[data-generated=ready] .template-notice,body:not([data-generated=ready]) main>:not(.template-notice){display:none}
+.dimension-review{margin:16px 0;padding-top:16px;border-top:1px solid var(--line);scroll-margin:14px}.dimension-review>p{margin:5px 0 10px}.dimension-review th[scope=row]{min-width:10ch}.dimension-review td{font-size:13px}.dimension-review td:nth-child(2){min-width:10ch}.dimension-review td:nth-child(3){min-width:16ch}.dimension-review [data-coverage=missing],.dimension-review [data-coverage=dropped],.dimension-warning{color:#764815}.dimension-review td strong{display:block}.dimension-review td p{margin-top:4px}.dimension-review details{margin-top:11px}.dimension-review td details{margin-top:5px}.dimension-review td details p{margin-top:5px}.dimension-review .dimension-path{display:block;overflow-wrap:anywhere;margin:2px 0}
+@media(max-width:680px){.cycle-grid{grid-template-columns:1fr}.cycle-grid section:nth-child(2){grid-row:1}.dimension-review table,.dimension-review tbody,.dimension-review tr,.dimension-review td,.dimension-review th{display:block}.dimension-review thead{position:absolute;clip-path:inset(50%);width:1px;height:1px;overflow:hidden}.dimension-review tr{border-bottom:1px solid var(--line);padding:6px 0}.dimension-review td,.dimension-review th{border:0;padding:2px 0}.dimension-review td::before{content:attr(data-label);display:block;font-size:11px;font-weight:680;color:var(--sub)}}
+@media(max-width:680px){.entry-flow{grid-template-columns:1fr}.entry-flow>div:nth-child(2){grid-row:1}.entry-links{max-height:185px}}
+@media(max-width:740px){main{padding:24px 14px}.chain{grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}.chain .node::after{display:none}.outcomes{grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}.tile{min-width:110px}.controls select{min-width:144px}.panel{padding:12px}th,td{padding:6px 4px}}
+</style>
+</head>
+<body data-generated="@@GENERATED@@">
+<main>
+<!-- TEMPLATE_NOTICE -->
+<section class="panel template-notice"><h2>Open the billing evidence map</h2><p><a href="../.runtime/meeting/Savvy-Billing-Evidence-Map.html">Open the generated offline viewer</a> to drop a record and trace its billing cycle.</p></section>
+<!-- TEMPLATE_NOTICE -->
+<header><div class="kicker">Savvy billing review</div><h1>Billing evidence map</h1><p class="intro">Start with any record. See what feeds it, what consumes it and which links still need evidence.</p></header>
+<section class="panel" aria-labelledby="import-title">
+<div class="controls"><div><h2 id="import-title">Trace your records</h2><p>Drop a single JSON or CSV record to see what may come before and after it. Files stay in this browser.</p></div><button class="action" id="show-sample" type="button" hidden>Show original map</button></div>
+<div class="drop-zone" id="drop-zone"><div><strong>Drop record files here</strong><p class="muted">Single records, lists, and exports with mixed types</p></div><div class="actions"><button class="action" id="try-rollup" type="button">Try one rollup</button><button class="action" id="choose-files" type="button">Choose files</button></div><input type="file" id="record-files" accept=".json,.csv" multiple hidden></div>
+<p class="muted import-message" id="import-message" role="status"></p>
+<div class="import-editor" id="import-editor" hidden>
+<div class="import-fields"><label>Record to review<select id="review-record"></select></label><label>Event type<select id="review-kind"></select></label><label id="event-name-row">Event name<input id="event-name" type="text" maxlength="120" placeholder="e.g. Custodian balance update"></label></div>
+<p class="muted" id="review-path"></p>
+<div class="import-fields" id="review-id"></div>
+<details id="review-fields-details"><summary>Review field mappings</summary><p class="muted">Check the suggested source fields. Use only references whose meaning you can confirm.</p><div class="import-fields" id="review-fields"></div></details>
+<details id="review-links"><summary>Confirm relationships</summary><p class="muted">Choose the upstream record and the record that uses it.</p><div class="import-fields"><label>From upstream record<select id="review-from"></select></label><label>To downstream record<select id="review-to"></select></label></div><button class="action" id="add-relationship" type="button">Add relationship</button><ul id="review-relationships" class="log"></ul></details>
+<div class="actions"><button class="action primary" id="build-import" type="button">Confirm types &amp; build map</button><button class="action" id="clear-import" type="button">Clear imports</button></div>
+</div>
+<p class="muted trace-origin" id="trace-origin"></p>
+</section>
+<div class="overview" id="totals" aria-label="Map counts"></div>
+<section class="panel" id="entry-panel" aria-label="Trace any entry">
+<div class="controls"><div><h2>Trace any entry</h2><p>Choose a record. Follow any link to make it the new starting point.</p></div><label>Starting record<select id="entries"></select></label></div>
+<section class="cycle-map" aria-labelledby="cycle-title"><h3 id="cycle-title" tabindex="-1">Billing cycle</h3><p class="cycle-context" id="cycle-context"></p>
+<div class="cycle-grid">
+<section aria-label="Likely upstream"><h4>Likely upstream</h4><div class="cycle-stack" id="cycle-upstream"></div></section>
+<section aria-label="Starting point"><h4>Starting point</h4><div class="cycle-anchor" id="cycle-anchor"></div></section>
+<section aria-label="Likely downstream"><h4>Likely downstream</h4><div class="cycle-stack" id="cycle-downstream"></div></section>
+</div></section>
+<section class="dimension-review" id="dimension-review" aria-labelledby="dimension-title" hidden>
+<div class="controls"><div><h3 id="dimension-title" tabindex="-1">Reporting dimension coverage</h3><p>Compare fields in your starting record and any linked records with the reviewed prototype.</p></div>
+<label>Show dimensions<select id="dimension-filter"><option value="all">All relevant fields</option><option value="gaps">Gaps and questions</option><option value="supplied">Found in supplied data</option><option value="profile">All reviewed dimensions</option></select></label></div>
+<div class="actions"><button class="action primary" id="download-gaps" type="button" disabled>Download gap list (CSV)</button><p class="muted" id="gap-export-status" role="status"></p></div>
+<p class="muted">A field absent from a sample needs verification. A labeled contract gap comes from the prototype’s code and reporting models.</p>
+<table><thead><tr><th scope="col">Dimension</th><th scope="col">Supplied evidence</th><th scope="col">Prototype and handoffs</th><th scope="col">Where to assign or carry it</th></tr></thead><tbody id="dimension-rows"></tbody></table>
+<details><summary>Prototype paths reviewed</summary><p class="muted">Silver normalization and policy assignment feed the Gold input manifest. Native obligations and invoice-line marts retain commercial lineage. BillingLifecycle builds and accepts the mock posting package. The snapshot rollup and shared mock accounting mart expose reportable results.</p></details>
+</section>
+<details id="supplied-evidence"><summary>Inspect supplied evidence</summary>
+<div class="entry-flow" id="entry-flow">
+<div><h3>Upstream</h3><div id="upstream"></div></div>
+<div><h3>Selected record</h3><div class="record" id="selected-entry" aria-live="polite"></div></div>
+<div><h3>Downstream</h3><div id="downstream"></div></div>
+</div>
+<div class="detail" id="entry-gaps"></div>
+</details>
+</section>
+<section class="panel" id="invoice-panel" aria-label="Invoice workflow">
+<div class="controls"><div><h2>Invoice workflow</h2><p id="invoice-context"></p></div><label>Invoice<select id="invoices"></select></label></div>
+<p class="flow-label">From source data to an issued invoice</p><div class="chain" id="chain"></div>
+<p class="flow-label">Evidence connected to that invoice</p><div class="outcomes" id="outcomes"></div>
+<div class="detail" id="detail" aria-live="polite"></div>
+</section>
+<section class="panel"><h2>Trace gaps by record type</h2><p class="muted">Missing links and references that still need a record. Use the selected entry for the specific next question.</p>
+<table><thead><tr><th scope="col">Record type</th><th scope="col">Records</th><th scope="col">Upstream gaps</th><th scope="col">Downstream gaps</th><th scope="col">Record issues</th></tr></thead><tbody id="entry-coverage"></tbody></table></section>
+<section class="panel" id="empty" hidden><h2>Invoice detail</h2><p>There is no mapped invoice in this review. Use Trace any entry to follow the supplied records or inspect the input findings for mapping candidates.</p></section>
+<section class="panel" id="invoice-coverage"><h2>Gap summary</h2><p class="muted">Counts indicate what the supplied records leave open. They do not measure production coverage or the quality of a team’s records.</p><table><thead><tr><th scope="col">Workflow stage</th><th scope="col">Invoices to review</th><th scope="col">Ask for</th></tr></thead><tbody id="gaps"></tbody></table></section>
+<section class="panel"><h2>Input findings</h2><div id="findings"></div></section>
+<p class="muted">References are supplied evidence. Confirm them in the source systems.</p>
+</main>
+<script id="map-data" type="application/json">@@MAP_DATA@@</script>
+<script id="map-config" type="application/json">@@MAP_CONFIG@@</script>
+<script>
+/*@@CYCLE_JS@@*/
+/*@@DIMENSIONS_JS@@*/
+/*@@IMPORT_JS@@*/
+</script>
+<script>
+'use strict';
+const originalData = document.body.dataset.generated === 'ready' ? JSON.parse(document.querySelector('#map-data').textContent) : null;
+let data = originalData;
+let mapNeedsBuild = false;
+let gapRows = [];
+const el = (tag, text, cls) => {const item = document.createElement(tag); if (text !== undefined) item.textContent = text; if (cls) item.className = cls; return item;};
+const get = id => document.getElementById(id);
+const statuses = {'references':'References supplied', 'linked':'Linked by ID', 'tied out':'Balance ties out', 'partial':'Review needed', 'missing':'Missing evidence', 'variance':'Amount variance'};
+const label = name => name.replaceAll('_',' ').replace(/^./, c => c.toUpperCase());
+function flatten(value) {
+  if (Array.isArray(value)) return value.map(flatten).filter(Boolean).join(', ');
+  if (value && typeof value === 'object') return Object.entries(value).map(([key,val])=>`${label(key)} ${flatten(val)}`).join(' · ');
+  return value == null ? '—' : String(value);
+}
+function showStage(stage) {
+  document.querySelectorAll('.node').forEach(button=>button.setAttribute('aria-pressed', String(button.dataset.stage===stage.id)));
+  const target = get('detail');
+  target.replaceChildren(el('h3', `${stage.title} · ${statuses[stage.state]}`));
+  target.append(el('p', stage.ask_for), el('p', `Likely reviewer: ${stage.owner}`, 'muted'));
+  if (stage.gaps.length) {const notes = el('ul'); for (const gap of stage.gaps) notes.append(el('li', gap)); target.append(notes);}
+  for (const record of stage.evidence) {
+    const block = el('div', undefined, 'record');
+    for (const [key,value] of Object.entries(record)) {
+      if (value == null || (Array.isArray(value) && !value.length)) continue;
+      const row = el('div'); row.append(el('small', label(key)), document.createTextNode(' ' + flatten(value))); block.append(row);
+    }
+    if (block.childNodes.length) target.append(block);
+  }
+}
+function node(stage) {
+  const button = el('button', undefined, 'node'); button.type='button'; button.dataset.stage=stage.id; button.dataset.state=stage.state;
+  button.append(el('span', stage.group, 'group'), el('strong', stage.title), el('span', statuses[stage.state], 'status'));
+  button.addEventListener('click',()=>showStage(stage)); return button;
+}
+function renderInvoice() {
+  const invoice = data.invoices[Number(get('invoices').value)];
+  if (!invoice) return;
+  get('invoice-context').textContent = [invoice.label, invoice.entity, invoice.currency].filter(Boolean).join(' · ');
+  get('chain').replaceChildren(...invoice.stages.slice(0,5).map(node));
+  get('outcomes').replaceChildren(...invoice.stages.slice(5).map(node));
+  showStage(invoice.stages.find(s=>s.gaps.length) || invoice.stages[0]);
+}
+const entrySelect=get('entries');
+const entryLabel=entry=>`${entry.evidence.event_type || entry.label} · ${entry.id || '(missing ID)'}`;
+function renderLinks(target, links) {
+  target.replaceChildren();
+  if (!links.length) {target.append(el('p','No connected record supplied.', 'muted'));return;}
+  const list=el('ul',undefined,'entry-links');
+  for (const link of links) {
+    const entry=data.graph.entries[link.node];
+    const row=el('li'); const button=el('button',entryLabel(entry)); button.type='button';
+    button.addEventListener('click',()=>{entrySelect.value=String(entry.node);renderEntry();entrySelect.focus();});
+    row.append(button,el('small',`${entry.state} · ${link.distance === 1 ? link.basis : link.distance + ' links away'}`));list.append(row);
+  }
+  target.append(list);
+}
+const cycleStates = {
+  expected: 'Likely · evidence missing', conditional: 'Possible · depends on the workflow',
+  reference: 'Reference only · record needed', linked: 'Record linked', partial: 'Some records still needed',
+};
+function updateGapDownload() {
+  get('download-gaps').disabled = mapNeedsBuild || !gapRows.length;
+  get('gap-export-status').textContent = mapNeedsBuild ? 'Build the map to export the latest inputs.' :
+    gapRows.length ? `${gapRows.length} findings for this starting point` : 'No gaps or open questions for this starting point.';
+}
+function renderDimensions(entry) {
+  const panel = get('dimension-review');
+  panel.hidden = entry.state === 'reference only';
+  const body = get('dimension-rows');
+  body.replaceChildren();
+  if (panel.hidden) {gapRows = []; updateGapDownload(); return;}
+  const filter = get('dimension-filter').value;
+  const relevant = traceDimensions.review(entry, data.graph.entries);
+  gapRows = traceDimensions.gapRows(entry, relevant);
+  updateGapDownload();
+  const dimensions = filter === 'profile' ? traceDimensions.review(entry, data.graph.entries, {includeAll:true}) :
+    relevant.filter(item => filter === 'all' || (filter === 'supplied' ? item.fields.length : item.status !== 'carried' || item.handoffs.length));
+  if (!dimensions.length) {
+    const row = el('tr');
+    const cell = el('td', 'No matching dimensions from this starting point. For an unfamiliar field, include a report column list or a named dimensions object.');
+    cell.colSpan = 4;
+    row.append(cell);
+    body.append(row);
+  }
+  for (const dimension of dimensions) {
+    const row = el('tr');
+    const header = el('th', dimension.dimension);
+    header.scope = 'row';
+    const fields = dimension.fields;
+    const evidence = el('td');
+    evidence.dataset.label = 'Supplied evidence';
+    if (!fields.length) evidence.append(el('p', 'Unseen in supplied records'));
+    const fieldLine = field => el('small',
+      `${field.declared ? 'Declared' : 'Observed'} · ${field.path} (${field.point})`, 'dimension-path');
+    for (const field of fields.slice(0, 3)) evidence.append(fieldLine(field));
+    if (fields.length > 3) {
+      const more = el('details');
+      more.append(el('summary', `${fields.length - 3} more field paths`), ...fields.slice(3).map(fieldLine));
+      evidence.append(more);
+    }
+    const coverage = el('td');
+    coverage.dataset.coverage = dimension.status;
+    coverage.dataset.label = 'Prototype and handoffs';
+    coverage.append(el('strong', traceDimensions.coverageLabels[dimension.status]), el('p', dimension.contract));
+    if (dimension.handoffs.length) {
+      const checks = el('details');
+      checks.append(el('summary', 'Possible loss in supplied handoff', 'dimension-warning'));
+      for (const handoff of dimension.handoffs) checks.append(el('p', `${handoff.before} → ${handoff.after}. ${handoff.verify}`));
+      coverage.append(checks);
+    }
+    const assignment = el('td', dimension.assignment);
+    assignment.dataset.label = 'Where to assign or carry it';
+    row.append(header, evidence, coverage, assignment);
+    body.append(row);
+  }
+}
+function renderCycle(entry) {
+  const cycle = traceCycle.plan(entry, data.graph.entries);
+  get('cycle-context').textContent = cycle.context || 'The cycle shows likely steps, possible branches and records connected by supplied evidence.';
+  const anchor = get('cycle-anchor');
+  const status = entry.state === 'reference only' ? 'Reference only' :
+    data.cycle_preview && entry.type !== 'unmapped' ? 'Supplied record · type suggested' :
+    entry.type === 'unmapped' ? 'Position uncertain' : 'Supplied record';
+  anchor.replaceChildren(el('span', status, 'cycle-state'), el('strong', entryLabel(entry)));
+  if (entry.classification) anchor.append(el('p', entry.classification));
+  for (const fact of cycle.identityFields) {
+    const row = el('p', fact);
+    if (fact.endsWith(' · unknown')) row.style.fontWeight = '650';
+    anchor.append(row);
+  }
+  if (cycle.anchorAsk) anchor.append(el('p', 'Check: ' + cycle.anchorAsk, 'cycle-facts'));
+  if (entry.state !== 'reference only') {
+    const actions = el('div', undefined, 'actions');
+    if (data.cycle_preview) {
+      const type = el('button', 'Review event type', 'action');
+      type.type = 'button';
+      type.addEventListener('click', () => get('review-kind').focus());
+      actions.append(type);
+    }
+    const review = el('button', 'Review reporting dimensions', 'action');
+    review.type = 'button';
+    review.addEventListener('click', () => get('dimension-title').focus());
+    actions.append(review);
+    anchor.append(actions);
+  }
+  for (const [direction, cards] of [['upstream', cycle.upstream], ['downstream', cycle.downstream]]) {
+    const stack = get('cycle-' + direction);
+    stack.replaceChildren();
+    if (!cards.length) stack.append(el('p', 'This is a boundary of the modeled cycle.', 'muted'));
+    for (const card of cards) {
+      const item = el('article', undefined, 'cycle-card');
+      item.dataset.state = card.state;
+      item.append(el('span', cycleStates[card.state], 'cycle-state'), el('strong', card.title), el('p', 'Check: ' + card.ask));
+      if (card.actual.length) {
+        const records = el('div');
+        renderLinks(records, card.actual);
+        item.append(records);
+      }
+      stack.append(item);
+    }
+  }
+}
+function renderEntry() {
+  const entry=data.graph.entries[Number(entrySelect.value)];
+  if (!entry) return;
+  renderCycle(entry);
+  renderDimensions(entry);
+  const root=get('selected-entry');
+  root.replaceChildren(el('strong',entryLabel(entry)),el('p',entry.state,'muted'));
+  for (const [field,value] of Object.entries(entry.evidence)) {
+    const pair=el('div');pair.append(el('small',label(field)),document.createTextNode(' '+flatten(value)));root.append(pair);
+  }
+  renderLinks(get('upstream'),entry.upstream);renderLinks(get('downstream'),entry.downstream);
+  const issues=get('entry-gaps');issues.replaceChildren(el('h3','What to check next'));
+  for (const gap of entry.gaps) issues.append(el('p',gap));
+  for (const clue of entry.guidance) issues.append(el('p',`${clue.direction} · ${clue.state}. ${clue.ask_for}`));
+}
+function renderMap(report) {
+data = report;
+mapNeedsBuild = false;
+get('supplied-evidence').open = false;
+get('totals').hidden = Boolean(data.cycle_preview);
+const unmapped = data.inputs.reduce((sum, input)=>sum + input.unmapped_count, 0);
+const entryCount = data.graph.entries.filter(entry=>entry.state!=='reference only').length;
+for (const id of ['totals', 'entries', 'entry-coverage', 'invoices', 'gaps', 'findings']) get(id).replaceChildren();
+for (const [number,text] of [[data.input_count,'Input files'],[entryCount,'Records found'],[data.graph.links,'Supplied links'],[unmapped,'Unmapped objects']]) {
+  const tile=el('div',undefined,'tile');tile.append(el('strong',String(number)),el('span',text));get('totals').append(tile);
+}
+get('entry-panel').hidden=!entryCount;
+for(const entry of data.graph.entries){const option=el('option',entryLabel(entry));option.value=String(entry.node);entrySelect.append(option);}
+const firstAggregate=data.graph.entries.find(entry=>entry.type==='aggregate' && entry.state==='record present');
+if(firstAggregate)entrySelect.value=String(firstAggregate.node);
+renderEntry();
+for (const item of data.graph.coverage) {
+  const row=el('tr');const head=el('th',item.type);head.scope='row';
+  row.append(head,...[item.records,item.upstream_gaps,item.downstream_gaps,item.record_gaps].map(value=>el('td',String(value))));
+  get('entry-coverage').append(row);
+}
+get('invoice-panel').hidden=!data.invoices.length;
+get('empty').hidden=data.interactive_import || Boolean(data.invoices.length);
+get('invoice-coverage').hidden=Boolean(data.interactive_import);
+for (const [index,invoice] of data.invoices.entries()){ const option=el('option',invoice.label);option.value=String(index);get('invoices').append(option); }
+renderInvoice();
+for (const item of data.coverage) {
+  const row=el('tr'); const head=el('th',item.title); head.scope='row';
+  row.append(head,el('td',item.total ? `${item.needs_review} of ${item.total}` : '—'),el('td',item.ask_for));get('gaps').append(row);
+}
+const findings=get('findings');
+for(const gap of data.graph.link_gaps) findings.append(el('p',gap,'muted'));
+if (data.duplicate_invoice_ids.length) findings.append(el('p',`Duplicate invoice IDs require review before linking: ${data.duplicate_invoice_ids.join(', ')}`, 'muted'));
+if (data.unattached.length){
+  const list=el('ul',undefined,'log');
+  for(const row of data.unattached){list.append(el('li',`${label(row.kind)} ${row.record_id || '(missing ID)'} · invoice reference ${row.invoice_ref || '(missing)'}`));}
+  findings.append(el('h3','Unattached records'),list);
+}
+for(const input of data.inputs){
+  const pane=el('details');pane.append(el('summary',`Input ${input.input} · ${flatten(input.recognized) || 'no recognized records'} · ${input.unmapped_count} unmapped`));
+  if(input.unmapped_count){
+    pane.append(el('p', data.cycle_preview ? 'Set the event type to narrow the likely cycle.' :
+      'Run discovery on this input and confirm the field mapping before joining it.', 'muted'));
+    const candidates = el('ul',undefined,'log');
+    for(const row of input.discovery || []) candidates.append(el('li',`${row.proposed_kind ? 'Possible ' + label(row.proposed_kind) : 'Uncertain record'} at ${JSON.stringify(row.record_path)}`));
+    if(!candidates.childNodes.length) for(const row of input.fields_seen || []) candidates.append(el('li',`Fields at ${JSON.stringify(row.record_path)}: ${row.fields.map(field=>JSON.stringify(field.path)+' ('+field.shape+')').join(', ')}`));
+    if(candidates.childNodes.length) pane.append(candidates);
+  }
+  findings.append(pane);
+}
+}
+entrySelect.addEventListener('change',renderEntry);
+get('dimension-filter').addEventListener('change', () => {
+  const entry = data?.graph.entries[Number(entrySelect.value)];
+  if (entry) renderDimensions(entry);
+});
+get('download-gaps').addEventListener('click', () => {
+  if (mapNeedsBuild || !gapRows.length) return;
+  const csv = new Blob(['\uFEFF', traceDimensions.gapCsv(gapRows)], {type:'text/csv;charset=utf-8'});
+  const url = URL.createObjectURL(csv);
+  const link = el('a');
+  link.href = url;
+  link.download = 'savvy-reporting-gaps.csv';
+  document.body.append(link);
+  link.click();
+  link.remove();
+  setTimeout(() => URL.revokeObjectURL(url), 1000);
+});
+get('invoices').addEventListener('change',renderInvoice);
+if (originalData) renderMap(originalData);
+</script>
+<script>
+/*@@IMPORT_UI_JS@@*/
+</script>
+</body>
+</html>

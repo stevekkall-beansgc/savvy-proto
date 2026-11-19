@@ -9,6 +9,10 @@ on:
       - 'contracts/schema.graphql'
       - 'scripts/api*'
       - 'scripts/architecture*'
+      - 'scripts/trace*'
+      - 'scripts/evidence_map_ui_check.cjs'
+      - 'tests/trace_workflow_cycle.test.cjs'
+      - 'fixtures/campfire-trace/**'
       - 'scripts/package_architecture.py'
       - 'deploy/publish-architecture.py'
       - '.github/workflows/architecture.yml'
@@ -41,6 +45,7 @@ jobs:
           python3 scripts/api_contract_check.py
           python3 docs/architecture/build.py
           python3 scripts/package_architecture.py
+          node --test tests/trace_workflow_cycle.test.cjs
           python3 -m py_compile docs/architecture/build.py scripts/architecture_preview.py scripts/package_architecture.py deploy/publish-architecture.py
           git diff --exit-code -- docs/architecture/index.html docs/architecture/source-map.json docs/api/openapi.yaml docs/api/index.html
       - name: Install browser acceptance tools
@@ -58,3 +63,4 @@ jobs:
           done
           SAVVY_PLAYWRIGHT_MODULE="$PWD/docs/architecture/node_modules/playwright" node scripts/architecture_ui_check.cjs
           SAVVY_PLAYWRIGHT_MODULE="$PWD/docs/architecture/node_modules/playwright" ARCHITECTURE_ORIGIN=http://127.0.0.1:3105 node scripts/api_reference_ui_check.cjs
+          SAVVY_PLAYWRIGHT_MODULE="$PWD/docs/architecture/node_modules/playwright" node scripts/evidence_map_ui_check.cjs

@@ -1,0 +1,73 @@
+{
+  "entries": [
+    {
+      "kind": "source",
+      "id": "source-demo",
+      "provider": "custodian-demo",
+      "account_id": "account-demo",
+      "customer_id": "customer-demo",
+      "currency": "USD",
+      "dimensions": {"partnerChannel": "channel-demo"}
+    },
+    {
+      "kind": "normalized",
+      "id": "fact-demo",
+      "account_id": "account-demo",
+      "customer_id": "customer-demo",
+      "currency": "USD",
+      "dimensions": {"partnerChannel": "channel-demo"}
+    },
+    {
+      "kind": "policy",
+      "id": "policy-demo",
+      "product_id": "platform-demo"
+    },
+    {
+      "kind": "calculation",
+      "id": "calculation-demo",
+      "account_id": "account-demo",
+      "customer_id": "customer-demo",
+      "product_id": "platform-demo",
+      "currency": "USD",
+      "component": "platform-charge",
+      "amount_minor": "25000"
+    },
+    {
+      "kind": "invoice",
+      "id": "invoice-demo",
+      "journal_entry": "journal-demo",
+      "currency": "USD",
+      "posting_period": "2026-11",
+      "lines": [{"id": "line-demo", "custodial_account_id": "account-demo", "customer_id": "customer-demo"}]
+    },
+    {
+      "kind": "accounting_package",
+      "id": "package-demo",
+      "posting_period": "2026-11",
+      "currency": "USD",
+      "lines": [{"id": "posting-input-demo", "invoice_line_id": "line-demo"}]
+    },
+    {
+      "kind": "journal",
+      "id": "journal-demo",
+      "invoice_id": "invoice-demo",
+      "posting_period": "2026-11",
+      "currency": "USD",
+      "lines": [{"id": "journal-line-demo", "gl_account_code": "gl-demo", "cost_center": "center-demo"}]
+    },
+    {
+      "kind": "report",
+      "id": "report-demo",
+      "columns": ["Billing Product", "Customer ID", "Cost Center", "Posting Period", "Partner Channel", "Amount"]
+    }
+  ],
+  "links": [
+    {"from": {"kind": "source", "id": "source-demo"}, "to": {"kind": "normalized", "id": "fact-demo"}},
+    {"from": {"kind": "normalized", "id": "fact-demo"}, "to": {"kind": "calculation", "id": "calculation-demo"}},
+    {"from": {"kind": "policy", "id": "policy-demo"}, "to": {"kind": "calculation", "id": "calculation-demo"}},
+    {"from": {"kind": "calculation", "id": "calculation-demo"}, "to": {"kind": "invoice", "id": "invoice-demo"}},
+    {"from": {"kind": "invoice", "id": "invoice-demo"}, "to": {"kind": "accounting_package", "id": "package-demo"}},
+    {"from": {"kind": "accounting_package", "id": "package-demo"}, "to": {"kind": "journal", "id": "journal-demo"}},
+    {"from": {"kind": "journal", "id": "journal-demo"}, "to": {"kind": "report", "id": "report-demo"}}
+  ]
+}
